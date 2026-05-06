@@ -7,6 +7,12 @@ stepsCompleted:
   - step-03-success
   - step-04-journeys
   - step-05-domain
+  - step-06-innovation
+  - step-07-project-type
+  - step-08-scoping
+  - step-09-functional
+  - step-10-nonfunctional
+  - step-11-polish
 inputDocuments:
   - _bmad-output/brainstorming/session-2026-05-04.md
 workflowType: "prd"
@@ -77,6 +83,8 @@ Postgres stores the data, the AI layer makes it accessible. The value isn't proa
 | **Key actions**          | 1) Modify inventory (CRUD), 2) Check stock levels, 3) Get AI predictions, 4) Create purchase orders, 5) Manage vendors |
 | **Aha moment**           | "damn, this makes things much more easier and faster"                                                                  |
 | **Ease of use**          | Any team member (admin/staff) can use without training                                                                 |
+| **Mobile experience**     | Bottom navigation (5 items), responsive design                                                                          |
+| **Visual feedback**       | Color-coded stock indicators, progress bars, toast notifications                                                           |
 
 ### Business Success
 
@@ -243,3 +251,232 @@ Simple audit trail: timestamps + user ID on every record.
 - Password hashing (bcrypt)
 - Session management
 - Basic role-based access (Admin vs Staff)
+
+---
+
+## Innovation & Novel Patterns
+
+### Detected Innovation Areas
+
+1. **AI-Powered Speed** — Predictions based on data, but faster than manual computation. The "AI touch" makes it smarter without user needing to be a data analyst.
+
+2. **Simplicity as Innovation** — Challenging the assumption that inventory software must be complex. "Only complex if it needs to be" — this is a genuine differentiator from enterprise tools.
+
+3. **Natural Language Interface (NLP)** — No more learning complex dashboards. Just ask questions in plain English. Still includes traditional dashboard for users who prefer that.
+
+4. **Human-in-the-Loop Trust** — AI assists, human decides. Not a black box — critical for SMBs who need control.
+
+### Validation Approach
+
+- Compare time-to-insight vs traditional spreadsheets
+- Track prediction accuracy vs manual forecasting
+- Measure user task completion (can new staff use it without training?)
+
+### Risk Mitigation
+
+- If AI predictions fail, fallback to basic inventory metrics
+- Human always approves — no auto-actions
+- Traditional dashboard available as fallback for non-NL users
+
+---
+
+## Web Application Specific Requirements
+
+### Project-Type Overview
+
+- **Architecture:** Single Page Application (SPA) using Next.js App Router
+- **Target Browsers:** Modern browsers (Chrome, Firefox, Safari, Edge)
+- **Rendering:** Server Components with client-side interactivity
+
+### Technical Considerations
+
+| Feature | Decision | Priority |
+|---------|----------|----------|
+| **Rendering** | Next.js App Router with Server Actions | Required |
+| **Real-time** | Polling/manual refresh for MVP, WebSockets future consideration | Future |
+| **SEO** | Not required for MVP | Skip |
+| **Accessibility** | WCAG compliance required | Required |
+| **Performance** | Lighthouse: target 100 on all except performance | Target |
+
+### Accessibility Requirements
+
+- WCAG 2.1 AA compliance
+- Keyboard navigation support
+- Screen reader compatible
+- Color contrast ratios met
+- Focus indicators visible
+
+### Lighthouse Targets
+
+| Metric | Target |
+|--------|--------|
+| Accessibility | 100 |
+| Best Practices | 100 |
+| SEO | 100 (skip for MVP) |
+| Performance | Target based on content |
+
+### Implementation Considerations
+
+- Server Actions for all mutations with revalidation
+- Optimistic UI updates for instant feedback
+- Responsive design for mobile/tablet
+- Toast notifications for user feedback
+
+---
+
+## Project Scoping & Phased Development
+
+### MVP Strategy & Philosophy
+
+**MVP Approach:** Problem-solving MVP — core inventory management + AI insights
+**Resource Requirements:** Solo developer using BMad method
+**Timeline:** 2 months for MVP
+
+### MVP Feature Set (Phase 1)
+
+**Core User Journeys Supported:**
+- Small Business Owner: Dashboard → AI chat → PO creation
+- Staff: Inventory CRUD operations
+- Human-in-the-loop for all AI suggestions
+
+**Must-Have Capabilities:**
+- Inventory CRUD (add, edit, delete, view)
+- Vendor CRUD
+- Purchase Order creation (draft → approve → export)
+- AI chat interface (Gemini API integration)
+- Low stock dashboard alerts
+- Basic auth (login/logout, password reset)
+
+### Post-MVP Features
+
+**Growth (Phase 2):**
+- Reports & analytics
+- CSV import/export
+- Multi-location support
+- Advanced filtering/sorting
+- Role-based permissions (Admin vs Staff)
+
+**Vision (Phase 3):**
+- Barcode scanning
+- Auto-reorder rules
+- Multi-warehouse
+- Full e-commerce integrations
+- Subscription billing (SaaS)
+
+### Risk Mitigation
+
+**Technical Risks:** AI integration (Gemini API) — mitigate by starting with simple prompts, test extensively with sample data. Fallback: If Gemini unavailable, show "AI is unavailable right now" with basic inventory metrics.
+
+**Market Risks:** SMB adoption — validate early with real users, focus on "easy to use" differentiator
+
+**Resource Risks:** Solo developer — scope tightly to MVP, use BMad method for efficiency, avoid feature creep
+
+### Testing Requirements
+
+- Seed data needed for testing (use faker.js or manual input)
+- Validate with sample inventory, vendors, and POs
+- Problem validation needed: survey real SMB owners to confirm this solves their problem
+
+---
+
+## Functional Requirements
+
+### Inventory Management
+
+- FR1: Users can create new inventory items
+- FR2: Users can view inventory items with current stock levels
+- FR3: Users can edit inventory item details
+- FR4: Users can delete inventory items
+- FR5: System prevents negative inventory quantities
+- FR6: System alerts users when inventory falls below reorder point
+
+### Vendor Management
+
+- FR7: Users can create new vendor records
+- FR8: Users can view vendor information
+- FR9: Users can edit vendor details
+- FR10: Users can delete vendor records
+
+### Purchase Order Management
+
+- FR11: Users can create purchase orders
+- FR12: Users can view existing purchase orders
+- FR13: Users can edit draft purchase orders
+- FR14: Users can approve purchase orders
+- FR15: Users can export purchase orders
+- FR16: System tracks purchase order status (Draft → Approved → Sent)
+
+### AI Chat Interface
+
+- FR17: Users can ask questions in natural language about inventory
+- FR18: System provides AI-powered demand predictions
+- FR19: Users can request reorder suggestions from AI
+- FR20: System requires human approval for all AI suggestions
+
+### Dashboard
+
+- FR21: Users can view dashboard with low stock alerts
+- FR22: Users can see inventory metrics
+- FR23: System displays color-coded stock indicators (red/yellow/green)
+- FR24: System shows progress bars for stock vs reorder point
+
+### Authentication & Authorization
+
+- FR25: Users can log in
+- FR26: Users can log out
+- FR27: Users can reset forgotten passwords
+- FR28: System enforces role-based access (Admin vs Staff)
+
+### Navigation & Layout
+
+- FR29: System provides mobile-first bottom navigation (5 items max)
+- FR30: System provides desktop left sidebar navigation at md breakpoint
+- FR31: Toast notifications auto-dismiss after 3-5 seconds
+
+### Data Management
+
+- FR27: Users can export inventory data (CSV)
+- FR28: Users can import inventory data (CSV)
+
+### Reporting & Analytics
+
+- FR29: Users can view reports and analytics
+- FR30: Users can filter and sort inventory data
+
+### Audit Trail
+
+- FR31: System tracks creation and modification timestamps
+- FR32: System tracks who created and modified records
+
+---
+
+## Non-Functional Requirements
+
+### Performance
+
+- NFR1: Dashboard loads within 2 seconds for 95th percentile under normal load
+- NFR2: AI chat responses return within 5 seconds for typical queries
+- NFR3: Inventory search returns results within 1 second for datasets up to 10,000 items
+
+### Security
+
+- NFR4: All passwords hashed using bcrypt with salt rounds ≥ 10
+- NFR5: User sessions managed securely with HTTP-only cookies
+- NFR6: Inventory and PO data accessible only to authenticated users with proper role
+- NFR7: All data encrypted in transit (TLS 1.2+)
+
+### Accessibility
+
+- NFR8: UI meets WCAG 2.1 AA compliance standards
+- NFR9: All interactive elements keyboard navigable
+- NFR10: Color contrast ratios meet 4.5:1 minimum for normal text
+
+### Reliability
+
+- NFR11: System maintains 99.9% uptime during business hours (measured by cloud provider)
+- NFR12: AI service failures gracefully fall back to basic inventory metrics
+
+### Scalability (Growth)
+
+- NFR13: System supports up to 100 concurrent users with <10% performance degradation
+- NFR14: Database handles up to 100,000 inventory items without performance impact
