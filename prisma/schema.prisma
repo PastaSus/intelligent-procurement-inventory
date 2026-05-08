@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Enums
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  APPROVED
+  SENT
+}
+
+// Models
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password_hash String
+  role          Role     @default(STAFF)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  created_by    String?
+  updated_by    String?
+  deleted       Boolean  @default(false)
+}
+
+model InventoryItem {
+  id            String   @id @default(cuid())
+  sku           String   @unique
+  name          String
+  description   String?
+  quantity      Int      @default(0)
+  reorder_point Int      @default(0)
+  category      String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  created_by    String?
+  updated_by    String?
+  deleted       Boolean  @default(false)
+
+  @@index([sku])
+  @@index([deleted])
+  @@index([created_at])
+}
+
+model Vendor {
+  id           String   @id @default(cuid())
+  name         String
+  contact_name String?
+  email        String?
+  phone        String?
+  address      String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  created_by   String?
+  updated_by   String?
+  deleted      Boolean  @default(false)
+
+  purchase_orders PurchaseOrder[]
+
+  @@index([deleted])
+  @@index([created_at])
+}
+
+model PurchaseOrder {
+  id         String   @id @default(cuid())
+  po_number  String   @unique
+  vendor_id  String
+  vendor     Vendor   @relation(fields: [vendor_id], references: [id])
+  status     PurchaseOrderStatus @default(DRAFT)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?
+  updated_by String?
+  deleted    Boolean  @default(false)
+
+  line_items POItem[]
+
+  @@index([vendor_id])
+  @@index([status])
+  @@index([deleted])
+  @@index([created_at])
+}
+
+model POItem {
+  id                String   @id @default(cuid())
+  purchase_order_id String
+  purchase_order    PurchaseOrder @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade)
+  item_name         String
+  quantity          Int
+  unit_price        Decimal  @db.Decimal(10, 2)
+  total             Decimal  @db.Decimal(10, 2)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  @@index([purchase_order_id])
+}
