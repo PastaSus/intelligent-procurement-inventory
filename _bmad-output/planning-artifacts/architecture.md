@@ -72,6 +72,7 @@ Full-stack web application using Next.js 15+ with App Router, based on project r
 ### Current Project State
 
 The project has been initialized with `create-next-app` (Next.js 16.2.4) and includes:
+
 - TypeScript configured with strict mode
 - Tailwind CSS v4 (CSS-first configuration)
 - App Router structure with `/app` directory
@@ -79,6 +80,7 @@ The project has been initialized with `create-next-app` (Next.js 16.2.4) and inc
 - PostCSS configuration
 
 **Dependencies already installed:**
+
 - `next: 16.2.4`
 - `react: 19.2.4`
 - `react-dom: 19.2.4`
@@ -88,6 +90,7 @@ The project has been initialized with `create-next-app` (Next.js 16.2.4) and inc
 ### Starter Options Considered
 
 **Option 1: Keep Existing Scaffold + Add Dependencies (Selected)**
+
 - **Approach:** Add Prisma, shadcn/ui, and optional tRPC to existing `create-next-app` scaffold
 - **Pros:**
   - No need to restart project
@@ -97,6 +100,7 @@ The project has been initialized with `create-next-app` (Next.js 16.2.4) and inc
 - **Cons:** Manual setup required for each addition
 
 **Option 2: Re-scaffold with `create-t3-app`**
+
 - **Stack:** Next.js + TypeScript + Tailwind + Prisma + tRPC + NextAuth.js
 - **Pros:** All-in-one setup, end-to-end type safety
 - **Cons:**
@@ -105,12 +109,14 @@ The project has been initialized with `create-next-app` (Next.js 16.2.4) and inc
   - Less control over what's included
 
 **Option 3: Use a Pre-built Boilerplate (e.g., Taxonomy, Relivator)**
+
 - **Pros:** Production-ready examples, Stripe integration, auth patterns
 - **Cons:** Too opinionated, includes unnecessary features, harder to customize
 
 ### Selected Approach: Extend Existing Scaffold
 
 **Rationale for Selection:**
+
 - Project already scaffolded with `create-next-app` (Next.js 16.2.4)
 - Tailwind v4 already configured (matches PRD requirement)
 - Cleaner to add only what's needed (Prisma, shadcn/ui) per PRD
@@ -140,25 +146,30 @@ pnpm add -D @types/bcrypt
 **Architectural Decisions Made:**
 
 **Language & Runtime:**
+
 - TypeScript (already configured)
 - Next.js 16.2.4 with App Router (already scaffolded)
 - Node.js runtime
 
 **Styling Solution:**
+
 - Tailwind CSS v4 with CSS-first configuration (already configured)
 - PostCSS with @tailwindcss/postcss plugin
 - Ready for shadcn/ui integration
 
 **Database:**
+
 - Prisma ORM for PostgreSQL (to be added)
 - Schema will be defined in `/prisma/schema.prisma`
 
 **UI Framework:**
+
 - shadcn/ui component library (to be added)
 - Radix UI primitives under the hood
 - Accessible components (WCAG 2.1 AA compliant)
 
 **Authentication:**
+
 - Session-based authentication with bcrypt (per PRD)
 - HTTP-only cookies for session storage
 - Custom implementation (not NextAuth.js)
@@ -170,18 +181,21 @@ pnpm add -D @types/bcrypt
 ### Decision Priority Analysis
 
 **Critical Decisions (Block Implementation):**
+
 - Database: PostgreSQL with Prisma ORM + @prisma/adapter-pg
 - API Pattern: Server Actions + API Routes
 - Authentication: bcrypt + session-based with HTTP-only cookies
 - UI Framework: Tailwind CSS v4 + shadcn/ui (preset b0)
 
 **Important Decisions (Shape Architecture):**
+
 - State Management: React state + Server Components (minimal client state)
 - Deployment: Vercel (free tier) + Supabase/Neon PostgreSQL (free tier)
 - Validation: Zod (server-side) + HTML5 (client-side)
 - Caching: Next.js built-in fetch caching + revalidation
 
 **Deferred Decisions (Post-MVP):**
+
 - WebSocket real-time updates (polling for MVP)
 - Multi-location/warehouse support
 - Advanced reporting & analytics
@@ -190,23 +204,27 @@ pnpm add -D @types/bcrypt
 ### Data Architecture
 
 **Database Choice:**
+
 - **Technology:** PostgreSQL (via Prisma ORM)
 - **Version:** Latest stable (managed via Supabase/Neon free tier)
 - **Rationale:** Relational data with complex relationships (inventory ↔ vendors ↔ POs), ACID compliance for financial data, free tier available per PRD budget ($0)
 
 **Data Modeling Approach:**
+
 - **ORM:** Prisma with schema-first development
 - **Schema location:** `/prisma/schema.prisma`
 - **Migrations:** Prisma Migrate (`prisma migrate dev`)
 - **Connection:** `@prisma/adapter-pg` with connection pooling
 
 **Data Validation Strategy:**
+
 - **Server-side:** Zod schemas for input validation (works with Server Actions)
 - **Client-side:** HTML5 validation + React form validation
 - **Database:** Prisma schema constraints (NOT NULL, foreign keys, unique)
 - **Audit fields:** `created_at`, `updated_at`, `created_by`, `updated_by` on all models
 
 **Caching Strategy:**
+
 - **Static data:** Next.js `fetch()` with `revalidate` option (products, vendors)
 - **User-specific data:** No caching (dashboard, POs) - use `no-store`
 - **AI responses:** Cache with short TTL (5 min) to reduce API calls
@@ -214,27 +232,32 @@ pnpm add -D @types/bcrypt
 ### Authentication & Security
 
 **Authentication Method:**
+
 - **Approach:** Session-based authentication
 - **Password hashing:** bcrypt (10 rounds minimum)
 - **Session storage:** HTTP-only cookies (prevents XSS access)
 - **Session validation:** Middleware checks on protected routes
 
 **Authorization Patterns:**
+
 - **Roles:** Admin (full access), Staff (CRUD operations), Viewer (future, read-only)
 - **Implementation:** Middleware + server-side checks using `session.user.role`
 - **RBAC enforcement:** Server Actions validate permissions before mutations
 
 **Security Middleware:**
+
 - **Next.js Middleware:** Protects `/dashboard/*` and `/api/*` routes
 - **Rate limiting:** API routes implement basic rate limiting (100 req/min per IP)
 - **CORS:** Restrict API access to same origin for MVP
 
 **Data Encryption:**
+
 - **Passwords:** bcrypt hash (never stored plaintext)
 - **Sensitive data:** None beyond passwords for MVP
 - **HTTPS:** Enforced by Vercel hosting (automatic SSL)
 
 **API Security:**
+
 - **Input sanitization:** Zod schemas reject malformed data
 - **SQL injection:** Prisma ORM (parameterized queries by default)
 - **XSS protection:** React's built-in escaping + CSP headers
@@ -242,57 +265,67 @@ pnpm add -D @types/bcrypt
 ### API & Communication Patterns
 
 **API Design Pattern:**
+
 - **Primary:** Server Actions for mutations (create/update/delete inventory, POs, vendors)
 - **Secondary:** API Routes for GET queries (dashboard data, AI chat endpoint)
 - **Rationale:** Server Actions simpler for forms, API Routes for data fetching and external API (Gemini)
 
 **Server Actions Usage:**
+
 - Form submissions (inventory CRUD, PO creation)
 - Require `'use server'` directive
 - Return typed responses with success/error states
 - Revalidate cache via `revalidatePath()` after mutations
 
 **API Routes Usage:**
+
 - `GET /api/dashboard` - Low stock alerts, summary stats
 - `POST /api/ai/chat` - Gemini API proxy (hides API key)
 - `GET /api/inventory` - Paginated inventory list with filters
 
 **Error Handling Standards:**
+
 - **Server Actions:** Return `{ success: boolean, data?: T, error?: string }`
 - **API Routes:** HTTP status codes + JSON `{ error: string }`
 - **Client-side:** Toast notifications for user feedback
 
 **Rate Limiting Strategy:**
+
 - **AI endpoint:** 10 requests/minute per user (Gemini free tier protection)
 - **General API:** 100 requests/minute per IP (DDoS protection)
 
 ### Frontend Architecture
 
 **State Management Approach:**
+
 - **Server state:** Next.js Server Components (default) - no client-side fetching
 - **Client state:** React `useState` for forms, `useTransition` for pending states
 - **Global state:** None needed for MVP (user session in cookie, no cart/complex state)
 - **Optimistic updates:** `useOptimistic` hook for instant UI feedback
 
 **Component Architecture:**
+
 - **Base components:** shadcn/ui (Button, Input, Table, Dialog, etc.)
 - **Feature components:** Co-located with routes (`/app/inventory/components/`)
 - **Layouts:** Root layout (`app/layout.tsx`), Dashboard layout (`app/dashboard/layout.tsx`)
 - **Client boundary:** Minimal `'use client'` - only for interactivity (forms, dialogs)
 
 **Routing Strategy:**
+
 - **App Router:** File-system based (already scaffolded)
 - **Protected routes:** `/dashboard/*` group with middleware check
 - **Public routes:** `/`, `/login`, `/forgot-password`
 - **Route groups:** `(auth)` for public, `(dashboard)` for protected
 
 **Performance Optimization:**
+
 - **Server Components:** Default for all data-fetching pages
 - **Dynamic imports:** `next/dynamic` for heavy client components (charts, AI chat)
 - **Image optimization:** `next/image` for vendor logos, product images
 - **Bundle:** Turbopack for fast development builds
 
 **Accessibility (WCAG 2.1 AA):**
+
 - **shadcn/ui:** Radix primitives under the hood (accessible by default)
 - **Keyboard navigation:** All interactive elements focusable
 - **Screen readers:** ARIA labels on forms, tables, dialogs
@@ -301,34 +334,40 @@ pnpm add -D @types/bcrypt
 ### Infrastructure & Deployment
 
 **Hosting Strategy:**
+
 - **Platform:** Vercel (free tier)
 - **Rationale:** Native Next.js support, automatic SSL, preview deployments
 - **Build command:** `pnpm build` (Next.js production build)
 - **Environment:** Automatic based on Git branch (main = production, others = preview)
 
 **Database Hosting:**
+
 - **Provider:** Supabase or Neon (free tier per PRD)
 - **Connection:** `postgresql://` URL in `DATABASE_URL` env var
 - **Backups:** Managed by provider (free tier includes daily backups)
 
 **CI/CD Pipeline:**
+
 - **Provider:** GitHub Actions (via Vercel integration)
 - **On push to main:** Automatic build + deploy to production
 - **Preview deployments:** Every PR gets a unique URL for testing
 - **Tests:** `pnpm test` (when implemented) must pass before merge
 
 **Environment Configuration:**
+
 - **Local:** `.env` (gitignored, Prisma reads via dotenv)
 - **Production:** Vercel dashboard environment variables
 - **Secrets:** `DATABASE_URL`, `GEMINI_API_KEY`, `SESSION_SECRET`
 - **Public vars:** `NEXT_PUBLIC_APP_URL`
 
 **Monitoring and Logging:**
+
 - **Vercel Analytics:** Built-in (free tier includes core web vitals)
 - **Error tracking:** Console logs for MVP (Vercel logs available)
 - **Uptime monitoring:** Vercel dashboard (free tier)
 
 **Scaling Strategy:**
+
 - **MVP:** Free tiers sufficient (up to 1000 DB rows, limited AI calls)
 - **Growth:** Upgrade to paid tiers when reaching limits
 - **Database:** Neon auto-scales, Supabase has paid plans
@@ -337,6 +376,7 @@ pnpm add -D @types/bcrypt
 ### Decision Impact Analysis
 
 **Implementation Sequence:**
+
 1. Install dependencies (Prisma, shadcn/ui, bcrypt)
 2. Set up Prisma schema + initial migration
 3. Implement authentication (login, sessions, middleware)
@@ -346,6 +386,7 @@ pnpm add -D @types/bcrypt
 7. Deploy to Vercel + connect database
 
 **Cross-Component Dependencies:**
+
 - Prisma schema → Server Actions (type-safe queries)
 - Server Actions → UI forms (pass as props or use in components)
 - API routes → Dashboard data fetching (client-side fetch or server components)
@@ -362,6 +403,7 @@ pnpm add -D @types/bcrypt
 ### Naming Patterns
 
 **Database Naming Conventions (Prisma):**
+
 - **Tables:** `snake_case` plural (`users`, `inventory_items`, `purchase_orders`)
 - **Columns:** `snake_case` (`user_id`, `created_at`, `reorder_point`)
 - **Foreign keys:** `{referenced_table_singular}_id` (`user_id`, `vendor_id`)
@@ -369,6 +411,7 @@ pnpm add -D @types/bcrypt
 - **Enums:** `PascalCase` (`Role`, `OrderStatus`, `StockStatus`)
 
 **API Naming Conventions:**
+
 - **REST endpoints:** Plural, kebab-case (`/api/inventory-items`, `/api/purchase-orders`)
 - **Route parameters:** `snake_case` (`:user_id`, `:inventory_id`)
 - **Query parameters:** `snake_case` (`?sort_by=name`, `?page_number=1`)
@@ -376,6 +419,7 @@ pnpm add -D @types/bcrypt
 - **Headers:** `kebab-case` (`x-request-id`, `x-user-role`)
 
 **Code Naming Conventions:**
+
 - **Components:** `PascalCase` (`InventoryTable.tsx`, `CreatePODialog.tsx`)
 - **Files:** `kebab-case` for components (`inventory-table.tsx`), `camelCase` for utils (`formatDate.ts`)
 - **Functions:** `camelCase` (`getDashboardData`, `validateSession`)
@@ -385,6 +429,7 @@ pnpm add -D @types/bcrypt
 ### Structure Patterns
 
 **Project Organization:**
+
 - **Components:** Co-located with routes (`app/inventory/components/InventoryTable.tsx`)
 - **Server Actions:** Separate files in `/app/_actions/` folder (`app/_actions/inventory.ts`)
 - **API Routes:** Next.js 15 pattern (`app/api/inventory/route.ts`)
@@ -393,6 +438,7 @@ pnpm add -D @types/bcrypt
 - **Tests:** Co-located with files (`__tests__/inventory.test.ts` or `inventory.test.ts`)
 
 **File Structure Patterns:**
+
 - **Config files:** Root level (`next.config.ts`, `prisma.config.ts`)
 - **Environment:** `.env` (local), Vercel dashboard (production)
 - **Static assets:** `/public/` (images, icons, favicon)
@@ -401,15 +447,17 @@ pnpm add -D @types/bcrypt
 ### Format Patterns
 
 **API Response Formats (for API Routes):**
+
 ```typescript
 // Success response
 { data: T, status: 200 }
 
-// Error response  
+// Error response
 { error: string, status: 400 | 401 | 403 | 404 | 500 }
 ```
 
 **Server Action Response Format:**
+
 ```typescript
 // Success
 { success: true, data?: T, message?: string }
@@ -419,6 +467,7 @@ pnpm add -D @types/bcrypt
 ```
 
 **Data Exchange Formats:**
+
 - **JSON fields:** `camelCase` (standard JSON convention)
 - **Dates:** ISO 8601 strings (`"2026-05-07T14:30:00.000Z"`)
 - **Booleans:** Native `true/false` (not 1/0)
@@ -427,6 +476,7 @@ pnpm add -D @types/bcrypt
 ### Communication Patterns
 
 **Server Action Patterns:**
+
 - **Naming:** Verb + noun (`createInventoryItem`, `deleteVendor`)
 - **Location:** `/app/_actions/{domain}.ts` (barrel export from `index.ts`)
 - **Directives:** Always `'use server'` at top of file
@@ -434,6 +484,7 @@ pnpm add -D @types/bcrypt
 - **Error handling:** Try-catch with typed error responses
 
 **State Management Patterns:**
+
 - **Server state:** Server Components (default) - no client fetching
 - **Client state:** `useState` for form inputs, `useTransition` for pending
 - **Optimistic updates:** `useOptimistic` for instant UI feedback
@@ -444,6 +495,7 @@ pnpm add -D @types/bcrypt
 ### Process Patterns
 
 **Error Handling Patterns:**
+
 - **Server Actions:** Return `{ success, error }` - never throw
 - **API Routes:** HTTP status codes + JSON `{ error }`
 - **Client-side:** Toast notifications via shadcn `useToast()`
@@ -451,12 +503,14 @@ pnpm add -D @types/bcrypt
 - **Logging:** `console.error()` for MVP (Vercel captures)
 
 **Loading State Patterns:**
+
 - **Server Actions:** `useTransition()` - `isPending` boolean
 - **API fetches:** `loading.tsx` for route-level loading
 - **Component-level:** `loading` prop passed to components
 - **Buttons:** `disabled={isPending}` with spinner icon
 
 **Validation Patterns:**
+
 - **Server-side:** Zod schemas in `/lib/validators/{domain}.ts`
 - **Client-side:** HTML5 validation + React form validation
 - **Database:** Prisma schema constraints (required, unique, etc.)
@@ -465,6 +519,7 @@ pnpm add -D @types/bcrypt
 ### Enforcement Guidelines
 
 **All AI Agents MUST:**
+
 1. Use Prisma `$snake_case` for all database identifiers
 2. Use `camelCase` for all TypeScript variables/functions
 3. Use `PascalCase` for components and type definitions
@@ -474,6 +529,7 @@ pnpm add -D @types/bcrypt
 7. Use `revalidatePath()` after ALL Server Action mutations
 
 **Pattern Enforcement:**
+
 - Agents should reference this architecture document before implementing
 - When in doubt, check existing code in the project for pattern matching
 - All new code must follow patterns defined here, not personal preferences
@@ -481,23 +537,24 @@ pnpm add -D @types/bcrypt
 ### Pattern Examples
 
 **Good Examples:**
+
 ```typescript
 // Server Action (app/_actions/inventory.ts)
-'use server'
-import { z } from 'zod'
+"use server";
+import { z } from "zod";
 
 const CreateInventorySchema = z.object({
   name: z.string().min(1),
   sku: z.string().min(3),
   quantity: z.number().min(0),
   reorderPoint: z.number().min(0),
-})
+});
 
 export async function createInventoryItem(formData: FormData) {
-  const validated = CreateInventorySchema.parse(Object.fromEntries(formData))
+  const validated = CreateInventorySchema.parse(Object.fromEntries(formData));
   // ... implementation
-  revalidatePath('/inventory')
-  return { success: true, data: newItem }
+  revalidatePath("/inventory");
+  return { success: true, data: newItem };
 }
 ```
 
@@ -505,15 +562,16 @@ export async function createInventoryItem(formData: FormData) {
 // API Route (app/api/dashboard/route.ts)
 export async function GET(request: Request) {
   try {
-    const data = await getDashboardData()
-    return Response.json({ data, status: 200 })
+    const data = await getDashboardData();
+    return Response.json({ data, status: 200 });
   } catch (error) {
-    return Response.json({ error: 'Failed to fetch dashboard', status: 500 })
+    return Response.json({ error: "Failed to fetch dashboard", status: 500 });
   }
 }
 ```
 
 **Anti-Patterns (AVOID):**
+
 - Mixing `snake_case` and `camelCase` in database schemas
 - Putting all components in `/components/` regardless of usage
 - Using `'use client'` on every file "just in case"
@@ -699,6 +757,7 @@ intelligent-procurement-inventory/
 ### Complete Project Directory Structure
 
 ```
+
 intelligent-procurement-inventory/
 │
 ├── README.md
@@ -707,170 +766,171 @@ intelligent-procurement-inventory/
 ├── tsconfig.json
 ├── postcss.config.mjs
 ├── eslint.config.mjs
-├── .env.local                    # Gitignored (local only)
-├── .env.example                  # Template for DATABASE_URL, GEMINI_API_KEY, SESSION_SECRET
+├── .env.local # Gitignored (local only)
+├── .env.example # Template for DATABASE_URL, GEMINI_API_KEY, SESSION_SECRET
 ├── .gitignore
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 │
-├── app/                                    # Next.js App Router
-│   ├── globals.css                         # Tailwind + shadcn CSS variables
-│   ├── layout.tsx                          # Root layout (fonts, providers)
-│   ├── page.tsx                            # Landing page (login redirect if auth)
-│   ├── not-found.tsx                        # 404 page
-│   ├── error.tsx                            # Error boundary
-│   ├── loading.tsx                          # Root loading UI
-│   │
-│   ├── _actions/                            # Server Actions (barrel export via index.ts)
-│   │   ├── index.ts                         # Re-exports all actions
-│   │   ├── auth.ts                          # login, logout, register, resetPassword
-│   │   ├── inventory.ts                     # createInventoryItem, updateInventoryItem, deleteInventoryItem
-│   │   ├── vendors.ts                       # createVendor, updateVendor, deleteVendor
-│   │   ├── purchase-orders.ts               # createPO, updatePOStatus, approvePO
-│   │   └── dashboard.ts                    # getDashboardStats, getLowStockItems
-│   │
-│   ├── (auth)/                              # Public routes group (no layout protection)
-│   │   ├── layout.tsx                       # Auth layout (minimal, no nav)
-│   │   ├── login/
-│   │   │   ├── page.tsx                    # Login form
-│   │   │   └── components/
-│   │   │       └── LoginForm.tsx           # Client component with form
-│   │   ├── register/
-│   │   │   ├── page.tsx                    # Registration form
-│   │   │   └── components/
-│   │   │       └── RegisterForm.tsx
-│   │   └── forgot-password/
-│   │       ├── page.tsx                    # Email input for reset
-│   │       └── components/
-│   │           └── ForgotPasswordForm.tsx
-│   │
-│   ├── (dashboard)/                         # Protected routes group
-│   │   ├── layout.tsx                       # Dashboard layout (sidebar, header, user menu)
-│   │   ├── dashboard/
-│   │   │   ├── page.tsx                    # Main dashboard with stats + low stock alerts
-│   │   │   ├── loading.tsx                 # Dashboard loading UI
-│   │   │   └── components/
-│   │   │       ├── StatsCards.tsx           # Total items, low stock count (Server)
-│   │   │       ├── LowStockTable.tsx        # Low stock items table (Server)
-│   │   │       └── AIChat/
-│   │   │           ├── AIChat.tsx           # Chat interface (Client - 'use client')
-│   │   │           ├── ChatMessage.tsx       # Individual message component
-│   │   │           └── ChatInput.tsx        # Input form for questions
-│   │   │
-│   │   ├── inventory/
-│   │   │   ├── page.tsx                    # Inventory list with filters, pagination
-│   │   │   ├── loading.tsx
-│   │   │   ├── new/
-│   │   │   │   ├── page.tsx               # Add new inventory item form
-│   │   │   │   └── components/
-│   │   │   │       └── InventoryForm.tsx   # Form (Client)
-│   │   │   └── [inventory_id]/
-│   │   │       ├── page.tsx                # Edit inventory item
-│   │   │       └── components/
-│   │   │           └── InventoryForm.tsx   # Pre-filled form (Client)
-│   │   │
-│   │   ├── vendors/
-│   │   │   ├── page.tsx                    # Vendor list
-│   │   │   ├── new/
-│   │   │   │   ├── page.tsx               # Add vendor form
-│   │   │   │   └── components/
-│   │   │   │       └── VendorForm.tsx
-│   │   │   └── [vendor_id]/
-│   │   │       ├── page.tsx                # Edit vendor
-│   │   │       └── components/
-│   │   │           └── VendorForm.tsx
-│   │   │
-│   │   ├── purchase-orders/
-│   │   │   ├── page.tsx                    # PO list (draft, approved, sent)
-│   │   │   ├── new/
-│   │   │   │   ├── page.tsx               # Create PO
-│   │   │   │   └── components/
-│   │   │   │       ├── POForm.tsx          # PO form (Client)
-│   │   │   │       └── AddItemDialog.tsx  # Add line items dialog
-│   │   │   └── [po_id]/
-│   │   │       ├── page.tsx                # View/approve PO
-│   │   │       └── components/
-│   │   │           ├── POStatusBadge.tsx   # Draft/Approved/Sent badge
-│   │   │           └── POActions.tsx       # Approve, Export, Send buttons
-│   │   │
-│   │   └── settings/
-│   │       └── page.tsx
-│   │
-│   └── api/                                 # API Routes
-│       ├── dashboard/
-│       │   └── route.ts                     # GET /api/dashboard - stats + alerts
-│       ├── ai/
-│       │   └── chat/
-│       │       └── route.ts                 # POST /api/ai/chat - Gemini proxy
-│       ├── inventory/
-│       │   └── route.ts                    # GET /api/inventory - paginated list
-│       └── vendors/
-│           └── route.ts                    # GET /api/vendors - list
+├── app/ # Next.js App Router
+│ ├── globals.css # Tailwind + shadcn CSS variables
+│ ├── layout.tsx # Root layout (fonts, providers)
+│ ├── page.tsx # Landing page (login redirect if auth)
+│ ├── not-found.tsx # 404 page
+│ ├── error.tsx # Error boundary
+│ ├── loading.tsx # Root loading UI
+│ │
+│ ├── \_actions/ # Server Actions (barrel export via index.ts)
+│ │ ├── index.ts # Re-exports all actions
+│ │ ├── auth.ts # login, logout, register, resetPassword
+│ │ ├── inventory.ts # createInventoryItem, updateInventoryItem, deleteInventoryItem
+│ │ ├── vendors.ts # createVendor, updateVendor, deleteVendor
+│ │ ├── purchase-orders.ts # createPO, updatePOStatus, approvePO
+│ │ └── dashboard.ts # getDashboardStats, getLowStockItems
+│ │
+│ ├── (auth)/ # Public routes group (no layout protection)
+│ │ ├── layout.tsx # Auth layout (minimal, no nav)
+│ │ ├── login/
+│ │ │ ├── page.tsx # Login form
+│ │ │ └── components/
+│ │ │ └── LoginForm.tsx # Client component with form
+│ │ ├── register/
+│ │ │ ├── page.tsx # Registration form
+│ │ │ └── components/
+│ │ │ └── RegisterForm.tsx
+│ │ └── forgot-password/
+│ │ ├── page.tsx # Email input for reset
+│ │ └── components/
+│ │ └── ForgotPasswordForm.tsx
+│ │
+│ ├── (dashboard)/ # Protected routes group
+│ │ ├── layout.tsx # Dashboard layout (sidebar, header, user menu)
+│ │ ├── dashboard/
+│ │ │ ├── page.tsx # Main dashboard with stats + low stock alerts
+│ │ │ ├── loading.tsx # Dashboard loading UI
+│ │ │ └── components/
+│ │ │ ├── StatsCards.tsx # Total items, low stock count (Server)
+│ │ │ ├── LowStockTable.tsx # Low stock items table (Server)
+│ │ │ └── AIChat/
+│ │ │ ├── AIChat.tsx # Chat interface (Client - 'use client')
+│ │ │ ├── ChatMessage.tsx # Individual message component
+│ │ │ └── ChatInput.tsx # Input form for questions
+│ │ │
+│ │ ├── inventory/
+│ │ │ ├── page.tsx # Inventory list with filters, pagination
+│ │ │ ├── loading.tsx
+│ │ │ ├── new/
+│ │ │ │ ├── page.tsx # Add new inventory item form
+│ │ │ │ └── components/
+│ │ │ │ └── InventoryForm.tsx # Form (Client)
+│ │ │ └── [inventory_id]/
+│ │ │ ├── page.tsx # Edit inventory item
+│ │ │ └── components/
+│ │ │ └── InventoryForm.tsx # Pre-filled form (Client)
+│ │ │
+│ │ ├── vendors/
+│ │ │ ├── page.tsx # Vendor list
+│ │ │ ├── new/
+│ │ │ │ ├── page.tsx # Add vendor form
+│ │ │ │ └── components/
+│ │ │ │ └── VendorForm.tsx
+│ │ │ └── [vendor_id]/
+│ │ │ ├── page.tsx # Edit vendor
+│ │ │ └── components/
+│ │ │ └── VendorForm.tsx
+│ │ │
+│ │ ├── purchase-orders/
+│ │ │ ├── page.tsx # PO list (draft, approved, sent)
+│ │ │ ├── new/
+│ │ │ │ ├── page.tsx # Create PO
+│ │ │ │ └── components/
+│ │ │ │ ├── POForm.tsx # PO form (Client)
+│ │ │ │ └── AddItemDialog.tsx # Add line items dialog
+│ │ │ └── [po_id]/
+│ │ │ ├── page.tsx # View/approve PO
+│ │ │ └── components/
+│ │ │ ├── POStatusBadge.tsx # Draft/Approved/Sent badge
+│ │ │ └── POActions.tsx # Approve, Export, Send buttons
+│ │ │
+│ │ └── settings/
+│ │ └── page.tsx
+│ │
+│ └── api/ # API Routes
+│ ├── dashboard/
+│ │ └── route.ts # GET /api/dashboard - stats + alerts
+│ ├── ai/
+│ │ └── chat/
+│ │ └── route.ts # POST /api/ai/chat - Gemini proxy
+│ ├── inventory/
+│ │ └── route.ts # GET /api/inventory - paginated list
+│ └── vendors/
+│ └── route.ts # GET /api/vendors - list
 │
-├── components/                              # Shared UI components
-│   ├── ui/                                # shadcn/ui components
-│   │   ├── button.tsx
-│   │   ├── input.tsx
-│   │   ├── table.tsx
-│   │   ├── dialog.tsx
-│   │   ├── select.tsx
-│   │   ├── badge.tsx
-│   │   ├── toast.tsx
-│   │   └── ...
-│   ├── layout/
-│   │   ├── Sidebar.tsx                    # Dashboard sidebar navigation
-│   │   ├── Header.tsx                     # Top header with user menu
-│   │   └── Breadcrumbs.tsx               # Breadcrumb navigation
-│   └── common/
-│       ├── EmptyState.tsx                  # "No items found" state
-│       ├── Pagination.tsx                  # Reusable pagination
-│       ├── ConfirmDialog.tsx               # Delete confirmation dialog
-│       └── LoadingSpinner.tsx             # Loading indicator
+├── components/ # Shared UI components
+│ ├── ui/ # shadcn/ui components
+│ │ ├── button.tsx
+│ │ ├── input.tsx
+│ │ ├── table.tsx
+│ │ ├── dialog.tsx
+│ │ ├── select.tsx
+│ │ ├── badge.tsx
+│ │ ├── toast.tsx
+│ │ └── ...
+│ ├── layout/
+│ │ ├── Sidebar.tsx # Dashboard sidebar navigation
+│ │ ├── Header.tsx # Top header with user menu
+│ │ └── Breadcrumbs.tsx # Breadcrumb navigation
+│ └── common/
+│ ├── EmptyState.tsx # "No items found" state
+│ ├── Pagination.tsx # Reusable pagination
+│ ├── ConfirmDialog.tsx # Delete confirmation dialog
+│ └── LoadingSpinner.tsx # Loading indicator
 │
-├── lib/                                   # Utility functions and configurations
-│   ├── prisma.ts                         # Prisma client singleton
-│   ├── auth.ts                            # Session management, password hashing
-│   ├── validators/                         # Zod schemas for validation
-│   │   ├── inventory.ts                   # Inventory item schema
-│   │   ├── vendor.ts                     # Vendor schema
-│   │   ├── purchase-order.ts              # PO schema
-│   │   └── auth.ts                       # Login/register schema
-│   ├── ai.ts                              # Gemini API integration
-│   └── utils.ts                           # cn() helper + misc utilities
+├── lib/ # Utility functions and configurations
+│ ├── prisma.ts # Prisma client singleton
+│ ├── auth.ts # Session management, password hashing
+│ ├── validators/ # Zod schemas for validation
+│ │ ├── inventory.ts # Inventory item schema
+│ │ ├── vendor.ts # Vendor schema
+│ │ ├── purchase-order.ts # PO schema
+│ │ └── auth.ts # Login/register schema
+│ ├── ai.ts # Gemini API integration
+│ └── utils.ts # cn() helper + misc utilities
 │
-├── types/                                  # TypeScript type definitions
-│   ├── inventory.ts                       # TInventory, TInventoryForm
-│   ├── vendor.ts                         # TVendor, TVendorForm
-│   ├── purchase-order.ts                  # TPurchaseOrder, TPOStatus
-│   ├── user.ts                           # TUser, TRole
-│   └── api.ts                           # API response types
+├── types/ # TypeScript type definitions
+│ ├── inventory.ts # TInventory, TInventoryForm
+│ ├── vendor.ts # TVendor, TVendorForm
+│ ├── purchase-order.ts # TPurchaseOrder, TPOStatus
+│ ├── user.ts # TUser, TRole
+│ └── api.ts # API response types
 │
 ├── prisma/
-│   ├── schema.prisma                     # Database schema (Prisma)
-│   ├── prisma.config.ts                  # Prisma configuration
-│   └── migrations/                       # Database migrations
+│ ├── schema.prisma # Database schema (Prisma)
+│ ├── prisma.config.ts # Prisma configuration
+│ └── migrations/ # Database migrations
 │
-├── generated/                             # Generated code
-│   └── prisma/                          # Prisma client output
-│       └── client/
+├── generated/ # Generated code
+│ └── prisma/ # Prisma client output
+│ └── client/
 │
-├── middleware.ts                          # Next.js middleware (auth check)
+├── middleware.ts # Next.js middleware (auth check)
 │
-├── public/                                # Static assets
-│   ├── favicon.ico
-│   ├── logo.svg
-│   └── images/
+├── public/ # Static assets
+│ ├── favicon.ico
+│ ├── logo.svg
+│ └── images/
 │
-├── docs/                                  # Project documentation
+├── docs/ # Project documentation
 │
-├── _bmad/                                 # BMad method config
+├── \_bmad/ # BMad method config
 │
-└── _bmad-output/                          # Planning artifacts
-    ├── planning-artifacts/
-    │   ├── prd.md
-    │   └── architecture.md
-    ├── implementation-artifacts/
-    └── test-artifacts/
+└── \_bmad-output/ # Planning artifacts
+├── planning-artifacts/
+│ ├── prd.md
+│ └── architecture.md
+├── implementation-artifacts/
+└── test-artifacts/
+
 ```
 
 ### Architectural Boundaries
@@ -1058,7 +1118,7 @@ No critical or important issues found during validation. Architecture is coheren
 
 **Requirements Analysis**
 - [x] Project context thoroughly analyzed
-- [x] Scale and complexity assessed  
+- [x] Scale and complexity assessed
 - [x] Technical constraints identified
 - [x] Cross-cutting concerns mapped
 
@@ -1118,3 +1178,4 @@ No critical or important issues found during validation. Architecture is coheren
 5. Create API routes (dashboard data, AI proxy)
 6. Build UI with shadcn components
 7. Deploy to Vercel + connect database
+```
