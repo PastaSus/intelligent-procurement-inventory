@@ -1,30 +1,12 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// Enums
-enum Role {
-  ADMIN
-  STAFF
-}
-
-enum PurchaseOrderStatus {
-  DRAFT
-  APPROVED
-  SENT
-}
-
-// Models
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -57,18 +39,17 @@ model InventoryItem {
 }
 
 model Vendor {
-  id           String   @id @default(cuid())
-  name         String
-  contact_name String?
-  email        String?
-  phone        String?
-  address      String?
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
-  created_by   String?
-  updated_by   String?
-  deleted      Boolean  @default(false)
-
+  id              String          @id @default(cuid())
+  name            String
+  contact_name    String?
+  email           String?
+  phone           String?
+  address         String?
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+  created_by      String?
+  updated_by      String?
+  deleted         Boolean         @default(false)
   purchase_orders PurchaseOrder[]
 
   @@index([deleted])
@@ -76,18 +57,17 @@ model Vendor {
 }
 
 model PurchaseOrder {
-  id         String   @id @default(cuid())
-  po_number  String   @unique
+  id         String              @id @default(cuid())
+  po_number  String              @unique
   vendor_id  String
-  vendor     Vendor   @relation(fields: [vendor_id], references: [id])
   status     PurchaseOrderStatus @default(DRAFT)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime            @default(now())
+  updated_at DateTime            @updatedAt
   created_by String?
   updated_by String?
-  deleted    Boolean  @default(false)
-
+  deleted    Boolean             @default(false)
   line_items POItem[]
+  vendor     Vendor              @relation(fields: [vendor_id], references: [id])
 
   @@index([vendor_id])
   @@index([status])
@@ -96,15 +76,26 @@ model PurchaseOrder {
 }
 
 model POItem {
-  id                String   @id @default(cuid())
+  id                String        @id @default(cuid())
   purchase_order_id String
-  purchase_order    PurchaseOrder @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade)
   item_name         String
   quantity          Int
-  unit_price        Decimal  @db.Decimal(10, 2)
-  total             Decimal  @db.Decimal(10, 2)
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  unit_price        Decimal       @db.Decimal(10, 2)
+  total             Decimal       @db.Decimal(10, 2)
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+  purchase_order    PurchaseOrder @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade)
 
   @@index([purchase_order_id])
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  APPROVED
+  SENT
 }
