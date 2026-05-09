@@ -44,8 +44,8 @@ story_location: _bmad-output/implementation-artifacts
 development_status:
   # Epic 1: User Authentication & Navigation
   epic-1: in-progress
-  1-1-user-login: ready-for-dev
-  1-2-user-logout: backlog
+  1-1-user-login: done
+  1-2-user-logout: done
   1-3-password-reset: backlog
   1-4-role-based-access-control: backlog
   1-5-mobile-bottom-navigation: backlog
