@@ -2,9 +2,25 @@
 
 import { loginSchema } from '@/lib/validators/auth';
 import { createSession, comparePasswords } from '@/lib/auth';
+import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+
+const SESSION_COOKIE_NAME = 'session';
+
+export async function logout() {
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete(SESSION_COOKIE_NAME);
+    revalidatePath('/login');
+    revalidatePath('/dashboard');
+    redirect('/login');
+  } catch (error) {
+    console.error('Logout error:', error);
+    redirect('/login');
+  }
+}
 
 export async function login(formData: FormData) {
   try {
