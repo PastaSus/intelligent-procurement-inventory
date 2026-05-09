@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { LoginForm } from './components/LoginForm';
@@ -18,6 +19,11 @@ export default async function LoginPage() {
           </h2>
         </div>
         <LoginForm />
+        <div className="text-center">
+          <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+            Forgot your password?
+          </Link>
+        </div>
       </div>
     </div>
   );

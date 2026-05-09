@@ -4,6 +4,7 @@ import { useTransition } from 'react';
 import { logout } from '@/app/_actions/auth';
 import { LogOut, User } from 'lucide-react';
 import type { SessionPayload } from '@/lib/auth';
+import { useToast } from '@/lib/toast-context';
 
 interface DashboardHeaderProps {
   user: SessionPayload;
@@ -11,11 +12,11 @@ interface DashboardHeaderProps {
 
 export default function DashboardHeader({ user }: DashboardHeaderProps) {
   const [isPending, startTransition] = useTransition();
+  const { addToast } = useToast();
 
   const handleLogout = async () => {
     startTransition(async () => {
       await logout();
-      window.location.href = '/login';
     });
   };
 

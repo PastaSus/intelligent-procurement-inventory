@@ -4,10 +4,12 @@ import { useState, useTransition } from 'react';
 import { login } from '@/app/_actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/lib/toast-context';
 
 export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { addToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -19,6 +21,9 @@ export function LoginForm() {
 
       if (!result.success) {
         setError(result.error || 'Login failed');
+        addToast(result.error || 'Login failed', 'error');
+      } else {
+        addToast('Login successful!', 'success');
       }
     });
   };
