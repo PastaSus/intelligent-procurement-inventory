@@ -53,13 +53,13 @@ development_status:
   1-7-toast-notifications: backlog
   epic-1-retrospective: optional
 
-  # Epic 2: Inventory Management
-  epic-2: backlog
-  2-1-inventory-database-schema-setup: backlog
-  2-2-create-inventory-item: backlog
-  2-3-view-inventory-list-with-stock-levels: backlog
-  2-4-edit-inventory-item: backlog
-  2-5-delete-inventory-item-soft-delete: backlog
+# Epic 2: Inventory Management
+  epic-2: in-progress
+  2-1-inventory-database-schema-setup: done
+  2-2-create-inventory-item: done
+  2-3-view-inventory-list-with-stock-levels: done
+  2-4-edit-inventory-item: done
+  2-5-delete-inventory-item-soft-delete: ready-for-dev
   2-6-low-stock-alerts-display: backlog
   epic-2-retrospective: optional
 
