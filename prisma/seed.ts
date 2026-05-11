@@ -1,5 +1,6 @@
 import "dotenv/config";
 import * as bcrypt from "bcrypt";
+import { randomUUID } from "crypto";
 
 async function main() {
   const { Client } = await import("pg");
@@ -56,6 +57,26 @@ async function main() {
     console.log(`✓ Created/verified staff user: ${staffEmail}`);
   } catch (error) {
     console.log(`✓ Staff user already exists: ${staffEmail}`);
+  }
+
+  const vendors = [
+    { id: `vendor_${randomUUID()}_1`, name: 'Acme Supplies Co.', contact_name: 'John Smith', email: 'john@acmesupplies.com', phone: '555-0101', address: '123 Main St, Anytown, USA' },
+    { id: `vendor_${randomUUID()}_2`, name: 'Global Parts Inc.', contact_name: 'Jane Doe', email: 'jane@globalparts.com', phone: '555-0102', address: '456 Oak Ave, Somewhere, USA' },
+    { id: `vendor_${randomUUID()}_3`, name: 'FastShip Warehouse', contact_name: 'Bob Wilson', email: 'bob@fastship.com', phone: '555-0103', address: '789 Industrial Blvd, Cityville, USA' },
+  ];
+
+  for (const vendor of vendors) {
+    try {
+      await client.query(
+        `INSERT INTO "Vendor" (id, name, contact_name, email, phone, address, created_at, updated_at, created_by, updated_by, deleted)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), $7, $8, false)
+         ON CONFLICT DO NOTHING`,
+        [vendor.id, vendor.name, vendor.contact_name, vendor.email, vendor.phone, vendor.address, 'system', 'system']
+      );
+      console.log(`✓ Created/verified vendor: ${vendor.name}`);
+    } catch (error) {
+      console.log(`✓ Vendor already exists: ${vendor.name}`);
+    }
   }
 
   await client.end();
