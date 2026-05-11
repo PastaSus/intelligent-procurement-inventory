@@ -6,7 +6,7 @@ import { LayoutDashboard, Package, Users, ShoppingCart, MoreHorizontal, ChevronL
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Inventory', href: '/inventory', icon: Package },
+  { label: 'Inventory', href: '/dashboard/inventory', icon: Package },
   { label: 'Vendors', href: '/vendors', icon: Users },
   { label: 'Orders', href: '/orders', icon: ShoppingCart },
   { label: 'More', href: '#', icon: MoreHorizontal, disabled: true },
