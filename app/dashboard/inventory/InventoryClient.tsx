@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Plus, Package, AlertTriangle, Search, X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { useState, useMemo, useTransition } from 'react';
+import { Plus, Package, AlertTriangle, Search, X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import { AddProductForm } from './components/AddProductForm';
 import { EditProductForm } from './components/EditProductForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { deleteInventoryItem } from '@/app/_actions/inventory';
 
 interface InventoryItem {
   id: string;
@@ -31,6 +32,8 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
   const [items] = useState(initialItems);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [deletingItem, setDeletingItem] = useState<InventoryItem | null>(null);
+  const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [stockStatus, setStockStatus] = useState<'all' | 'low' | 'critical' | 'normal'>('all');
@@ -43,6 +46,25 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
     setTimeout(() => {
       window.location.href = '/dashboard/inventory';
     }, 300);
+  };
+
+  const handleDelete = () => {
+    if (!deletingItem) return;
+    
+    const formData = new FormData();
+    formData.set('id', deletingItem.id);
+
+    startTransition(async () => {
+      const result = await deleteInventoryItem(formData);
+      if (result.success) {
+        setDeletingItem(null);
+        setTimeout(() => {
+          window.location.href = '/dashboard/inventory';
+        }, 300);
+      } else {
+        alert(result.error || 'Failed to delete item');
+      }
+    });
   };
 
   const filteredItems = useMemo(() => {
@@ -230,11 +252,11 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
                   <th className="text-left p-3 text-sm font-medium"><SortHeader column="sku" label="SKU" /></th>
                   <th className="text-left p-3 text-sm font-medium"><SortHeader column="name" label="Name" /></th>
                   <th className="text-left p-3 text-sm font-medium"><SortHeader column="category" label="Category" /></th>
-                  <th className="text-right p-3 text-sm font-medium"><SortHeader column="quantity" label="Qty" /></th>
-                  <th className="text-right p-3 text-sm font-medium">Reorder</th>
-                  <th className="text-right p-3 text-sm font-medium">Status</th>
-                  <th className="text-right p-3 text-sm font-medium"><SortHeader column="updated_at" label="Updated" /></th>
-                  <th className="text-center p-3 text-sm font-medium">Actions</th>
+                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="quantity" label="Qty" /></th>
+                  <th className="text-center p-3 text-sm font-medium">Reorder</th>
+                  <th className="text-center p-3 text-sm font-medium">Status</th>
+                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="updated_at" label="Updated" /></th>
+                  <th className="text-center w-[100px] p-3 text-sm font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -256,32 +278,69 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
                         </div>
                       </td>
                       <td className="p-3 text-sm">{item.category || '-'}</td>
-                      <td className="p-3 text-right text-sm font-medium">{item.quantity}</td>
-                      <td className="p-3 text-right text-sm text-muted-foreground">{item.reorder_point}</td>
-                      <td className="p-3 text-right">
-                        {isCritical ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            CRITICAL
-                          </span>
-                        ) : isLowStock ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            LOW
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            OK
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-3 text-right text-sm text-muted-foreground">{formatDate(item.updated_at)}</td>
+                      <td className="p-3 text-center text-sm font-medium">{item.quantity}</td>
+                      <td className="p-3 text-center text-sm text-muted-foreground">{item.reorder_point}</td>
                       <td className="p-3 text-center">
-                        <button
-                          onClick={() => setEditingItem(item)}
-                          className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                          title="Edit"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
+                        {(() => {
+                          const reorderPoint = item.reorder_point || 1;
+                          const percentage = item.reorder_point > 0 
+                            ? Math.min((item.quantity / reorderPoint) * 100, 100)
+                            : 100;
+                          
+                          return isCritical ? (
+                            <div className="space-y-1">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                CRITICAL
+                              </span>
+                              <div className="w-16 h-1.5 bg-red-200 rounded-full mx-auto">
+                                <div className="h-full bg-red-500 rounded-full" style={{ width: `${percentage}%` }} />
+                              </div>
+                            </div>
+                          ) : isLowStock ? (
+                            <div className="space-y-1">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                LOW
+                              </span>
+                              <div className="w-16 h-1.5 bg-yellow-200 rounded-full mx-auto">
+                                <div 
+                                  className="h-full bg-yellow-500 rounded-full" 
+                                  style={{ width: `${percentage}%` }} 
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                OK
+                              </span>
+                              <div className="w-16 h-1.5 bg-green-200 rounded-full mx-auto">
+                                <div 
+                                  className="h-full bg-green-500 rounded-full" 
+                                  style={{ width: `${percentage}%` }} 
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </td>
+                      <td className="p-3 text-center text-sm text-muted-foreground">{formatDate(item.updated_at)}</td>
+                      <td className="p-3 text-center w-[100px]">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => setEditingItem(item)}
+                            className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                            title="Edit"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingItem(item)}
+                            className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-red-600 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -333,6 +392,39 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
           onClose={() => setEditingItem(null)}
           onSuccess={handleSuccess}
         />
+      )}
+
+      {deletingItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg border p-6 max-w-md w-full mx-4 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-full">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold">Delete Item</h3>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              Are you sure you want to delete <strong className="text-foreground">{deletingItem.name}</strong> ({deletingItem.sku})? 
+              This action can be undone by an admin.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setDeletingItem(null)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isPending}
+              >
+                {isPending ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

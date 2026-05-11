@@ -118,3 +118,44 @@ export async function updateInventoryItem(formData: FormData) {
     return { success: false, error: 'Failed to update inventory item. Please try again.' };
   }
 }
+
+export async function deleteInventoryItem(formData: FormData) {
+  try {
+    const session = await getSession();
+    if (!session?.userId) {
+      return { success: false, error: 'You must be logged in to delete inventory items' };
+    }
+
+    const id = formData.get('id') as string;
+    if (!id) {
+      return { success: false, error: 'Item ID is required' };
+    }
+
+    const existingItem = await prisma.inventoryItem.findUnique({
+      where: { id },
+    });
+
+    if (!existingItem) {
+      return { success: false, error: 'Item not found' };
+    }
+
+    if (existingItem.deleted) {
+      return { success: false, error: 'Item has already been deleted' };
+    }
+
+    await prisma.inventoryItem.update({
+      where: { id },
+      data: {
+        deleted: true,
+        updated_by: session.userId,
+      },
+    });
+
+    revalidatePath('/dashboard/inventory');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Delete inventory item error:', error);
+    return { success: false, error: 'Failed to delete inventory item. Please try again.' };
+  }
+}
