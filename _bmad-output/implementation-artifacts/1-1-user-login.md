@@ -1,6 +1,6 @@
 # Story 1.1: User Login
 
-Status: review
+Status: done (code review passed)
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -262,3 +262,45 @@ opencode/hy3-preview-free
 - tsconfig.json (MODIFIED)
 - pnpm-workspace.yaml (MODIFIED)
 - package.json (MODIFIED - added jose)
+
+---
+
+## Code Review Findings
+
+**Review Date:** 2026-05-11
+**Reviewer:** bmad-code-review
+**Scope:** Epic 1, Story 1-1 (User Login)
+
+### ✅ Verified Security Practices
+
+| Area | Status | Notes |
+|------|--------|-------|
+| Password hashing | ✅ | bcrypt with 10 salt rounds |
+| HTTP-only cookies | ✅ | httpOnly: true, secure in prod |
+| JWT signing | ✅ | HS256, 7-day expiry |
+| User enumeration prevention | ✅ | Generic "Invalid email or password" for both missing user and wrong password |
+| Input validation | ✅ | Zod schema validates email format |
+
+### ⚠️ Issues Found
+
+| Severity | Issue | Recommendation |
+|----------|-------|----------------|
+| **Low** | Session secret has fallback value | Ensure strong SESSION_SECRET in production |
+| **Low** | No rate limiting on login endpoint | Consider adding for brute force protection |
+
+### 📝 Optional Improvements
+
+1. Add login attempt tracking - lock after N failed attempts
+2. Add "Remember me" option for extended sessions
+3. Normalize email case (lowercase) on insert
+
+### 🎯 Verdict
+
+**APPROVED** ✅ - Implementation follows security best practices.
+
+### Review Notes
+
+All acceptance criteria verified:
+- Valid credentials → session created → redirect to dashboard ✅
+- Invalid credentials → generic error, no session ✅
+- Logged-in user → redirected to dashboard ✅
