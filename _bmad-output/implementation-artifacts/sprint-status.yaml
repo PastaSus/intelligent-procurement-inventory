@@ -54,13 +54,13 @@ development_status:
   epic-1-retrospective: optional
 
 # Epic 2: Inventory Management
-  epic-2: in-progress
+  epic-2: done
   2-1-inventory-database-schema-setup: done
   2-2-create-inventory-item: done
   2-3-view-inventory-list-with-stock-levels: done
   2-4-edit-inventory-item: done
-  2-5-delete-inventory-item-soft-delete: ready-for-dev
-  2-6-low-stock-alerts-display: backlog
+  2-5-delete-inventory-item-soft-delete: done
+  2-6-low-stock-alerts-display: done
   epic-2-retrospective: optional
 
   # Epic 3: Vendor Management
