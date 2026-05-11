@@ -1,6 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
+import Link from 'next/link';
 import { logout } from '@/app/_actions/auth';
 import { LogOut, User } from 'lucide-react';
 import type { SessionPayload } from '@/lib/auth';
@@ -26,10 +27,10 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-semibold">Intelligent Procurement</h1>
           <nav className="hidden md:flex gap-4">
-            <a href="/dashboard" className="text-sm hover:text-primary">Dashboard</a>
-            <a href="/inventory" className="text-sm hover:text-primary">Inventory</a>
-            <a href="/vendors" className="text-sm hover:text-primary">Vendors</a>
-            <a href="/orders" className="text-sm hover:text-primary">Orders</a>
+            <Link href="/dashboard" className="text-sm hover:text-primary">Dashboard</Link>
+            <Link href="/dashboard/inventory" className="text-sm hover:text-primary">Inventory</Link>
+            <Link href="/dashboard/vendors" className="text-sm hover:text-primary">Vendors</Link>
+            <Link href="/dashboard/purchase-orders" className="text-sm hover:text-primary">Orders</Link>
           </nav>
         </div>
 

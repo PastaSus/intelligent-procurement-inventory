@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { LayoutDashboard, Package, Users, ShoppingCart, MoreHorizontal, ChevronLeft } from 'lucide-react';
 
 const navItems = [
@@ -22,22 +23,31 @@ export function BottomNavigation() {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
 
+          if (item.disabled) {
+            return (
+              <div
+                key={item.href}
+                className="flex flex-col items-center gap-1 px-4 py-3 text-xs opacity-50 cursor-not-allowed"
+              >
+                <Icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </div>
+            );
+          }
+
           return (
-            <a
+            <Link
               key={item.href}
-              href={item.disabled ? '#' : item.href}
-              onClick={(e) => item.disabled && e.preventDefault()}
+              href={item.href}
               className={`flex flex-col items-center gap-1 px-4 py-3 text-xs transition-colors ${
-                item.disabled
-                  ? 'opacity-50 cursor-not-allowed'
-                  : isActive
+                isActive
                   ? 'text-primary border-t-2 border-primary'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Icon className="h-5 w-5" />
               <span>{item.label}</span>
-            </a>
+            </Link>
           );
         })}
       </div>
@@ -73,15 +83,25 @@ export function Sidebar() {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
 
+          if (item.disabled) {
+            return (
+              <div
+                key={item.href}
+                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors opacity-50 cursor-not-allowed`}
+                title={isCollapsed ? item.label : ''}
+              >
+                <Icon className="h-5 w-5 flex-shrink-0" />
+                {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
+              </div>
+            );
+          }
+
           return (
-            <a
+            <Link
               key={item.href}
-              href={item.disabled ? '#' : item.href}
-              onClick={(e) => item.disabled && e.preventDefault()}
+              href={item.href}
               className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                item.disabled
-                  ? 'opacity-50 cursor-not-allowed'
-                  : isActive
+                isActive
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
@@ -89,7 +109,7 @@ export function Sidebar() {
             >
               <Icon className="h-5 w-5 flex-shrink-0" />
               {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
-            </a>
+            </Link>
           );
         })}
       </nav>
