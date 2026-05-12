@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Building2, Search, X, Pencil, Trash2 } from 'lucide-react';
 import { AddVendorForm } from './components/AddVendorForm';
@@ -26,12 +26,16 @@ interface VendorsClientProps {
 
 export function VendorsClient({ initialVendors }: VendorsClientProps) {
   const router = useRouter();
-  const [vendors] = useState(initialVendors);
+  const [vendors, setVendors] = useState(initialVendors);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [deletingVendor, setDeletingVendor] = useState<Vendor | null>(null);
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    setVendors(initialVendors);
+  }, [initialVendors]);
 
   const handleSuccess = () => {
     setIsFormOpen(false);
