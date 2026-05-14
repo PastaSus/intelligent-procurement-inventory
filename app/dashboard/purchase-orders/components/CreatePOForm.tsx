@@ -32,6 +32,7 @@ interface PurchaseOrder {
 interface CreatePOFormProps {
   onClose: () => void;
   onSuccess?: () => void;
+  onBack?: () => void;
   prefilledData?: {
     vendorId: string;
     vendorName: string;
@@ -40,11 +41,13 @@ interface CreatePOFormProps {
   editingPO?: PurchaseOrder | null;
 }
 
-export function CreatePOForm({ onClose, onSuccess, prefilledData, editingPO }: CreatePOFormProps) {
+export function CreatePOForm({ onClose, onSuccess, onBack, prefilledData, editingPO }: CreatePOFormProps) {
   const [isPending, startTransition] = useTransition();
   const { addToast } = useToast();
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isEditing, setIsEditing] = useState(!prefilledData && !editingPO);
+  // For AI suggestions (prefilledData), allow editing by default
+  // For manual creation or editing existing POs, follow standard flow
+  const [isEditing, setIsEditing] = useState(!!prefilledData || (!prefilledData && !editingPO));
   const [vendorId, setVendorId] = useState(editingPO?.vendor.id || prefilledData?.vendorId || '');
   const [vendorName, setVendorName] = useState(editingPO?.vendor.name || prefilledData?.vendorName || '');
   const [notes, setNotes] = useState('');
@@ -60,7 +63,7 @@ export function CreatePOForm({ onClose, onSuccess, prefilledData, editingPO }: C
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEditingMode = !!editingPO;
-  const canEdit = isEditing || (!prefilledData && !editingPO);
+  const canEdit = isEditing;
 
   const handleAddLineItem = useCallback(() => {
     setLineItems((prev) => [...prev, { itemName: '', quantity: 1, unitPrice: 0 }]);
@@ -117,6 +120,17 @@ export function CreatePOForm({ onClose, onSuccess, prefilledData, editingPO }: C
       return;
     }
 
+    const priceErrors: Record<string, string> = {};
+    for (let i = 0; i < lineItems.length; i++) {
+      if (lineItems[i].itemName.trim() && lineItems[i].unitPrice < 0.01) {
+        priceErrors[`unitPrice_${i}`] = 'Unit price must be at least $0.01';
+      }
+    }
+    if (Object.keys(priceErrors).length > 0) {
+      setErrors(priceErrors);
+      return;
+    }
+
     const filteredItems = lineItems.filter((item) => item.itemName.trim() !== '');
     const formData = new FormData();
     formData.set('vendorId', vendorId);
@@ -151,9 +165,18 @@ export function CreatePOForm({ onClose, onSuccess, prefilledData, editingPO }: C
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto py-8">
       <div className="bg-background rounded-lg shadow-lg w-full max-w-2xl mx-4">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-semibold">
-            {editingPO ? 'Edit Purchase Order' : prefilledData ? 'Create Purchase Order' : 'New Purchase Order'}
-          </h2>
+          <div className="flex items-center gap-2">
+            {onBack && (
+              <button onClick={onBack} className="p-1 hover:bg-muted rounded-md" aria-label="Back">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+              </button>
+            )}
+            <h2 className="text-xl font-semibold">
+              {editingPO ? 'Edit Purchase Order' : prefilledData ? 'Create Purchase Order' : 'New Purchase Order'}
+            </h2>
+          </div>
           <button onClick={onClose} className="p-1 hover:bg-muted rounded-md" aria-label="Close">
             <X className="h-5 w-5" />
           </button>
@@ -180,7 +203,7 @@ export function CreatePOForm({ onClose, onSuccess, prefilledData, editingPO }: C
                     setVendorId('');
                   }}
                   placeholder="Enter vendor name or ID"
-                  disabled={!canEdit}
+                  disabled={!canEdit || isSubmitting}
                   className={errors.vendorId ? 'border-destructive' : ''}
                   aria-invalid={!!errors.vendorId}
                 />
@@ -238,7 +261,7 @@ export function CreatePOForm({ onClose, onSuccess, prefilledData, editingPO }: C
                           value={item.itemName}
                           onChange={(e) => handleLineItemChange(index, 'itemName', e.target.value)}
                           placeholder="Item name"
-                          disabled={isPending || !canEdit}
+                          disabled={isPending || !canEdit || isSubmitting}
                         />
                       </td>
                       <td className="p-2">
@@ -250,7 +273,7 @@ export function CreatePOForm({ onClose, onSuccess, prefilledData, editingPO }: C
                           onChange={(e) =>
                             handleLineItemChange(index, 'quantity', parseInt(e.target.value) || 0)
                           }
-                          disabled={isPending || !canEdit}
+                          disabled={isPending || !canEdit || isSubmitting}
                           className="text-center"
                         />
                       </td>
@@ -265,9 +288,13 @@ export function CreatePOForm({ onClose, onSuccess, prefilledData, editingPO }: C
                             handleLineItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)
                           }
                           disabled={isPending || !canEdit}
-                          className="text-right"
+                          className={`text-right ${errors[`unitPrice_${index}`] ? 'border-destructive' : ''}`}
                           placeholder="0.00"
+                          aria-invalid={!!errors[`unitPrice_${index}`]}
                         />
+                        {errors[`unitPrice_${index}`] && (
+                          <p className="text-xs text-destructive mt-0.5" role="alert">{errors[`unitPrice_${index}`]}</p>
+                        )}
                       </td>
                       <td className="p-2 text-right font-medium">
                         {formatCurrency(calculateLineTotal(item.quantity, item.unitPrice))}
@@ -317,7 +344,7 @@ export function CreatePOForm({ onClose, onSuccess, prefilledData, editingPO }: C
               placeholder="Optional notes or special instructions..."
               rows={2}
               className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={isPending}
+              disabled={isPending || isSubmitting}
             />
           </div>
 

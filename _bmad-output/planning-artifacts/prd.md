@@ -408,10 +408,16 @@ Simple audit trail: timestamps + user ID on every record.
 
 ### AI Chat Interface
 
-- FR17: Users can ask questions in natural language about inventory
-- FR18: System provides AI-powered demand predictions
-- FR19: Users can request reorder suggestions from AI
-- FR20: System requires human approval for all AI suggestions
+- FR17: Users can ask questions in natural language about inventory via floating bubble (bottom-right) + full-screen route
+- FR18: System provides AI-powered demand predictions with rich suggestion cards (item, qty, reasoning, confidence bar, urgency styling)
+- FR19: Users can request reorder suggestions from AI; "Create PO" button pre-fills vendor + line items for human review
+- FR20: System requires human approval for all AI suggestions; human edits quantities before save (not just approve)
+- FR17b: Chat interface shows streaming indicator when AI is thinking, suggested prompts below input, markdown rendering, copy button, thumbs up/down feedback
+- FR17c: Notification badge on bubble when AI detects low stock or reorder suggestion (proactive alert)
+- FR17d: Full-screen chat route includes conversation history, search past chats, command palette (Ctrl+K)
+- FR19b: AI suggests reorder quantities with reasoning ("Sold 30 last month") and confidence level (low/medium/high)
+- FR19c: "Edit" option on suggestion cards allows human to modify qty/items before creating PO
+- FR19d: Dismiss option on suggestion cards with feedback logging for AI improvement
 
 ### Dashboard
 
@@ -474,7 +480,7 @@ Simple audit trail: timestamps + user ID on every record.
 ### Reliability
 
 - NFR11: System maintains 99.9% uptime during business hours (measured by cloud provider)
-- NFR12: AI service failures gracefully fall back to basic inventory metrics
+- NFR12: AI service failures gracefully fall back to dashboard stats with friendly message ("AI is currently not available, here's your current status instead"); retry button with countdown timer; subtle "AI degraded" indicator on bubble when service is degraded
 
 ### Scalability (Growth)
 

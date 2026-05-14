@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-07T00:00:00Z
-  last_updated: 2026-05-12T00:00:00Z
+  last_updated: 2026-05-14T00:00:00Z
 project: intelligent-procurement-inventory
 project_key: NOKEY
 tracking_system: file-system
@@ -83,14 +83,14 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: Dashboard & AI Chat Interface
-  epic-5: backlog
-  5-1-dashboard-stats-api-data-fetching: backlog
-  5-2-dashboard-ui-with-stats-cards: backlog
-  5-3-ai-chat-interface-ui: backlog
-  5-4-gemini-api-integration: backlog
-  5-5-ai-demand-predictions-reorder-suggestions: backlog
-  5-6-human-in-the-loop-approval-for-ai: backlog
-  5-7-ai-service-fallback-handling: backlog
+  epic-5: done
+  5-1-dashboard-stats-api-data-fetching: done
+  5-2-dashboard-ui-with-stats-cards: done
+  5-3-ai-chat-interface-ui: done
+  5-4-gemini-api-integration: done
+  5-5-ai-demand-predictions-reorder-suggestions: done
+  5-6-human-in-the-loop-approval-for-ai: done
+  5-7-ai-service-fallback-handling: done
   epic-5-retrospective: optional
 
   # Epic 6: Data Management & Reporting (Growth/Post-MVP)
