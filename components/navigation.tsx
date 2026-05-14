@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Package, Users, ShoppingCart, MoreHorizontal, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, Package, Users, ShoppingCart, MessageCircle, ChevronLeft } from 'lucide-react';
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Inventory', href: '/dashboard/inventory', icon: Package },
   { label: 'Vendors', href: '/dashboard/vendors', icon: Users },
   { label: 'Orders', href: '/dashboard/purchase-orders', icon: ShoppingCart },
-  { label: 'More', href: '#', icon: MoreHorizontal, disabled: true },
+  { label: 'Chat', href: '/dashboard/chat', icon: MessageCircle },
 ];
 
 export function BottomNavigation() {
@@ -22,18 +22,6 @@ export function BottomNavigation() {
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
-
-          if (item.disabled) {
-            return (
-              <div
-                key={item.href}
-                className="flex flex-col items-center gap-1 px-4 py-3 text-xs opacity-50 cursor-not-allowed"
-              >
-                <Icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </div>
-            );
-          }
 
           return (
             <Link
@@ -82,19 +70,6 @@ export function Sidebar() {
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
-
-          if (item.disabled) {
-            return (
-              <div
-                key={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors opacity-50 cursor-not-allowed`}
-                title={isCollapsed ? item.label : ''}
-              >
-                <Icon className="h-5 w-5 flex-shrink-0" />
-                {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
-              </div>
-            );
-          }
 
           return (
             <Link

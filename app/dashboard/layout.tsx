@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import DashboardHeader from './components/DashboardHeader';
 import { Sidebar, BottomNavigation } from '@/components/navigation';
+import { ChatBubble } from '@/components/ChatBubble';
 
 export default async function DashboardLayout({
   children,
@@ -24,6 +25,7 @@ export default async function DashboardLayout({
         </main>
       </div>
       <BottomNavigation />
+      <ChatBubble />
     </div>
   );
 }
