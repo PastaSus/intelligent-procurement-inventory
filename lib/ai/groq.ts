@@ -1,7 +1,7 @@
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 import { prisma } from "@/lib/prisma";
 
-const GEMINI_TIMEOUT_MS = 5000;
+const GROQ_TIMEOUT_MS = 5000;
 
 interface InventoryContext {
   totalItems: number;
@@ -151,24 +151,31 @@ export async function callGemini(
   context: InventoryContext,
   apiKey: string,
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey });
+  const openai = new OpenAI({
+    baseURL: "https://api.groq.com/openai/v1",
+    apiKey: apiKey,
+  });
 
   const prompt = buildPrompt(userMessage, context);
 
   const result = await Promise.race([
-    ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: prompt,
+    openai.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 1024,
     }),
     new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Gemini API timeout")),
-        GEMINI_TIMEOUT_MS,
-      ),
+      setTimeout(() => reject(new Error("Groq API timeout")), GROQ_TIMEOUT_MS),
     ),
   ]);
 
-  return result.text || "";
+  return result.choices[0]?.message?.content || "";
 }
 
 export function validateApiKey(
