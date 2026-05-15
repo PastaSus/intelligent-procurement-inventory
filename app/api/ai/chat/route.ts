@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getInventoryContext, callGemini, validateApiKey } from '@/lib/ai/gemini';
+import { getInventoryContext, callGroq, validateApiKey } from '@/lib/ai/groq';
 
 export const maxDuration = 10;
 
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
 
     if (!validateApiKey(apiKey)) {
       return NextResponse.json(
-        { error: 'AI service not configured. Please set GEMINI_API_KEY environment variable.' },
+        { error: 'AI service not configured. Please set GROQ_API_KEY environment variable.' },
         { status: 503 }
       );
     }
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const context = await getInventoryContext();
 
-    const response = await callGemini(message.trim(), context, apiKey);
+    const response = await callGroq(message.trim(), context, apiKey);
 
     return NextResponse.json({ response });
   } catch (error) {
