@@ -1,26 +1,58 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
-  timestamp: Date;
+  timestamp: string;
+}
+
+const STORAGE_KEY = 'ai-chat-messages';
+
+const initialMessage: Message = {
+  role: 'assistant',
+  content: 'Hi! I can help you with inventory insights. What would you like to know?',
+  timestamp: new Date().toISOString(),
+};
+
+function loadMessages(): Message[] {
+  if (typeof window === 'undefined') return [initialMessage];
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed.length > 0 ? parsed : [initialMessage];
+    }
+  } catch (e) {
+    console.error('Failed to load chat messages:', e);
+  }
+  return [initialMessage];
 }
 
 export function AIChat() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: 'Hi! I can help you with inventory insights. What would you like to know?',
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([initialMessage]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load messages from localStorage on mount
+  useEffect(() => {
+    const loaded = loadMessages();
+    setMessages(loaded);
+    setIsHydrated(true);
+  }, []);
+
+  // Save messages to localStorage when they change
+  useEffect(() => {
+    if (isHydrated && messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages, isHydrated]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -33,7 +65,7 @@ export function AIChat() {
     const userMessage: Message = {
       role: 'user',
       content: input,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -55,7 +87,7 @@ export function AIChat() {
       const aiMessage: Message = {
         role: 'assistant',
         content: data.response || 'No response received',
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
@@ -66,12 +98,17 @@ export function AIChat() {
         {
           role: 'assistant',
           content: `Sorry, something went wrong: ${errorMessage}`,
-          timestamp: new Date(),
+          timestamp: new Date().toISOString(),
         },
       ]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleClearChat = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setMessages([initialMessage]);
   };
 
   return (
@@ -80,9 +117,19 @@ export function AIChat() {
       aria-label="AI Chat Assistant"
     >
       {/* Header */}
-      <div className="border-b p-4">
-        <h3 className="font-semibold">AI Assistant</h3>
-        <p className="text-sm text-muted-foreground">Ask questions about your inventory</p>
+      <div className="border-b p-4 flex flex-row items-center justify-between">
+        <div>
+          <h3 className="font-semibold">AI Assistant</h3>
+          <p className="text-sm text-muted-foreground">Ask questions about your inventory</p>
+        </div>
+        <button
+          onClick={handleClearChat}
+          className="text-muted-foreground hover:text-foreground transition-colors p-1"
+          aria-label="Clear chat history"
+          title="Clear chat"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Messages container */}
@@ -94,10 +141,10 @@ export function AIChat() {
       >
         {messages.map((message, index) => (
           <ChatMessage
-            key={`${message.timestamp.getTime()}-${index}`}
+            key={`${message.timestamp}-${index}`}
             role={message.role}
             content={message.content}
-            timestamp={message.timestamp}
+            timestamp={new Date(message.timestamp)}
           />
         ))}
         <div ref={messagesEndRef} aria-hidden="true" />
