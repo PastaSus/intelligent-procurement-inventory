@@ -1,7 +1,7 @@
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 import { prisma } from "@/lib/prisma";
 
-const GEMINI_TIMEOUT_MS = 5000;
+const GROQ_TIMEOUT_MS = 5000;
 
 interface InventoryContext {
   totalItems: number;
@@ -146,29 +146,58 @@ User question: ${userMessage}
 Provide a helpful, accurate response based on the data above. If you don't have enough information to answer the question, say so. Keep responses concise and actionable.`;
 }
 
-export async function callGemini(
+export async function callGroq(
   userMessage: string,
-  context: InventoryContext,
+  context: InventoryContext | null | undefined,
   apiKey: string,
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey });
+  if (!context) {
+    throw new Error("Failed to retrieve inventory context");
+  }
+
+  const openai = new OpenAI({
+    baseURL: "https://api.groq.com/openai/v1",
+    apiKey: apiKey,
+  });
 
   const prompt = buildPrompt(userMessage, context);
 
   const result = await Promise.race([
-    ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: prompt,
+    openai.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 1024,
     }),
     new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Gemini API timeout")),
-        GEMINI_TIMEOUT_MS,
-      ),
+      setTimeout(() => reject(new Error("Groq API timeout")), GROQ_TIMEOUT_MS),
     ),
   ]);
 
-  return result.text || "";
+  const choice = result.choices[0];
+
+  if (!choice) {
+    throw new Error("No response choices returned from AI");
+  }
+
+  if (choice.finish_reason === "content_filter") {
+    throw new Error("Response blocked by content filter");
+  }
+
+  if (choice.finish_reason === "length") {
+    throw new Error("Response truncated due to length limit");
+  }
+
+  if (!choice.message?.content) {
+    throw new Error("Empty response from AI");
+  }
+
+  return choice.message.content;
 }
 
 export function validateApiKey(
