@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
 
     if (!validateApiKey(apiKey)) {
       return NextResponse.json(
-        { error: 'AI service not configured. Please set GROQ_API_KEY environment variable.' },
+        { error: 'AI service not configured. Please contact your administrator.' },
         { status: 503 }
       );
     }
@@ -45,6 +45,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'AI service quota exceeded. Please try again later.' },
         { status: 429 }
+      );
+    }
+
+    if (errorMessage.includes('content_filter') || errorMessage.includes('truncated') || errorMessage.includes('Empty response')) {
+      return NextResponse.json(
+        { error: 'Unable to process request. Please try a different question.' },
+        { status: 500 }
+      );
+    }
+
+    if (errorMessage.includes('inventory context')) {
+      return NextResponse.json(
+        { error: 'Unable to retrieve data. Please try again.' },
+        { status: 500 }
       );
     }
 

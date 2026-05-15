@@ -146,11 +146,15 @@ User question: ${userMessage}
 Provide a helpful, accurate response based on the data above. If you don't have enough information to answer the question, say so. Keep responses concise and actionable.`;
 }
 
-export async function callGemini(
+export async function callGroq(
   userMessage: string,
-  context: InventoryContext,
+  context: InventoryContext | null | undefined,
   apiKey: string,
 ): Promise<string> {
+  if (!context) {
+    throw new Error("Failed to retrieve inventory context");
+  }
+
   const openai = new OpenAI({
     baseURL: "https://api.groq.com/openai/v1",
     apiKey: apiKey,
@@ -175,7 +179,25 @@ export async function callGemini(
     ),
   ]);
 
-  return result.choices[0]?.message?.content || "";
+  const choice = result.choices[0];
+
+  if (!choice) {
+    throw new Error("No response choices returned from AI");
+  }
+
+  if (choice.finish_reason === "content_filter") {
+    throw new Error("Response blocked by content filter");
+  }
+
+  if (choice.finish_reason === "length") {
+    throw new Error("Response truncated due to length limit");
+  }
+
+  if (!choice.message?.content) {
+    throw new Error("Empty response from AI");
+  }
+
+  return choice.message.content;
 }
 
 export function validateApiKey(
