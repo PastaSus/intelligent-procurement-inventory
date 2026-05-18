@@ -102,6 +102,36 @@ model PasswordResetToken {
   @@index([token])
 }
 
+model ChatConversation {
+  id        String   @id @default(cuid())
+  user_id   String?
+  title     String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted    Boolean  @default(false)
+  messages  ChatMessage[]
+
+  @@index([user_id])
+  @@index([deleted])
+  @@index([created_at])
+}
+
+model ChatMessage {
+  id             String           @id @default(cuid())
+  conversation_id String
+  role           ChatMessageRole
+  content        String
+  timestamp      DateTime         @default(now())
+  conversation   ChatConversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id])
+}
+
+enum ChatMessageRole {
+  USER
+  ASSISTANT
+}
+
 enum Role {
   ADMIN
   STAFF

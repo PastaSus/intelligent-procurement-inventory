@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { CreatePOForm } from '@/app/dashboard/purchase-orders/components/CreatePOForm';
-import { ReorderSuggestion } from '@/components/SuggestionCards';
+import { useEffect, useState } from "react";
+import { CreatePOForm } from "@/app/dashboard/purchase-orders/components/CreatePOForm";
+import { ReorderSuggestion } from "@/components/SuggestionCards";
 
 interface AISuggestionPODialogProps {
   suggestion: ReorderSuggestion | null;
@@ -23,9 +23,13 @@ interface Vendor {
  * 3. Add unit price
  * 4. Create the PO (explicit user action - no auto-creation)
  */
-export function AISuggestionPODialog({ suggestion, onClose, onSuccess }: AISuggestionPODialogProps) {
+export function AISuggestionPODialog({
+  suggestion,
+  onClose,
+  onSuccess,
+}: AISuggestionPODialogProps) {
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [selectedVendorId, setSelectedVendorId] = useState('');
+  const [selectedVendorId, setSelectedVendorId] = useState("");
   const [isLoadingVendors, setIsLoadingVendors] = useState(true);
   const [vendorsError, setVendorsError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -38,19 +42,23 @@ export function AISuggestionPODialog({ suggestion, onClose, onSuccess }: AISugge
       setIsLoadingVendors(true);
       setVendorsError(null);
       try {
-        const response = await fetch('/api/vendors', { signal: abortController.signal });
+        const response = await fetch("/api/vendors", {
+          signal: abortController.signal,
+        });
         if (response.ok) {
           const data = await response.json();
           setVendors(data.vendors || []);
         } else if (response.status === 401) {
-          setVendorsError('Session expired. Please log in and try again.');
+          setVendorsError("Session expired. Please log in and try again.");
         } else {
-          setVendorsError('Failed to load vendors. Please try again.');
+          setVendorsError("Failed to load vendors. Please try again.");
         }
       } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return;
-        setVendorsError('Network error while loading vendors. Please try again.');
-        console.error('Failed to load vendors:', error);
+        if (error instanceof Error && error.name === "AbortError") return;
+        setVendorsError(
+          "Network error while loading vendors. Please try again.",
+        );
+        console.error("Failed to load vendors:", error);
       } finally {
         setIsLoadingVendors(false);
       }
@@ -72,7 +80,7 @@ export function AISuggestionPODialog({ suggestion, onClose, onSuccess }: AISugge
   };
 
   const handleBackToVendorSelection = () => {
-    setSelectedVendorId('');
+    setSelectedVendorId("");
   };
 
   // If vendors aren't loaded yet, show a vendor selector
@@ -80,7 +88,9 @@ export function AISuggestionPODialog({ suggestion, onClose, onSuccess }: AISugge
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
         <div className="bg-background rounded-lg shadow-lg w-full max-w-md mx-4 p-6 space-y-4">
-          <h2 className="text-xl font-semibold">Select Vendor for {suggestion.itemName}</h2>
+          <h2 className="text-xl font-semibold">
+            Select Vendor for {suggestion.itemName}
+          </h2>
 
           {isLoadingVendors ? (
             <div className="py-8 text-center text-muted-foreground">
@@ -139,9 +149,12 @@ export function AISuggestionPODialog({ suggestion, onClose, onSuccess }: AISugge
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
         <div className="bg-background rounded-lg shadow-lg w-full max-w-md mx-4 p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-destructive">Vendor Unavailable</h2>
+          <h2 className="text-xl font-semibold text-destructive">
+            Vendor Unavailable
+          </h2>
           <p className="text-muted-foreground">
-            The selected vendor is no longer available. Please go back and choose a different vendor.
+            The selected vendor is no longer available. Please go back and
+            choose a different vendor.
           </p>
           <div className="flex gap-2 pt-4">
             <button
