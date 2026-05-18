@@ -1,14 +1,20 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useCallback, useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useCallback,
+  useState,
+  useRef,
+} from "react";
 
-export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
+export type ToastVariant = "success" | "error" | "warning" | "info";
 
 export interface Toast {
   id: string;
   message: string;
   variant: ToastVariant;
-  duration?: number; // in ms, default 4000
+  duration?: number;
 }
 
 interface ToastContextType {
@@ -21,22 +27,33 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const addToast = useCallback((message: string, variant: ToastVariant, duration = 4000) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    const toast: Toast = { id, message, variant, duration };
-
-    setToasts((prev) => [...prev, toast]);
-
-    // Auto-remove after duration
-    setTimeout(() => {
-      removeToast(id);
-    }, duration);
-  }, []);
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
 
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
+    const timer = timersRef.current.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      timersRef.current.delete(id);
+    }
   }, []);
+
+  const addToast = useCallback(
+    (message: string, variant: ToastVariant, duration = 4000) => {
+      const id = Math.random().toString(36).substr(2, 9);
+      const toast: Toast = { id, message, variant, duration };
+
+      setToasts((prev) => [...prev, toast]);
+
+      const timer = setTimeout(() => {
+        removeToast(id);
+      }, duration);
+      timersRef.current.set(id, timer);
+    },
+    [removeToast],
+  );
 
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
@@ -48,7 +65,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 export function useToast() {
   const context = useContext(ToastContext);
   if (!context) {
-    throw new Error('useToast must be used within ToastProvider');
+    throw new Error("useToast must be used within ToastProvider");
   }
   return context;
 }
