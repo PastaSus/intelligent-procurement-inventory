@@ -31,11 +31,11 @@ development_status:
   1-2-seed-data: done
 
   # Epic 2: Laboratory Room Management
-  epic-2: backlog
-  2-1-create-laboratory-room: backlog
-  2-2-view-laboratory-rooms-list: backlog
-  2-3-edit-laboratory-room: backlog
-  2-4-delete-laboratory-room: backlog
+  epic-2: done
+  2-1-create-laboratory-room: done
+  2-2-view-laboratory-rooms-list: done
+  2-3-edit-laboratory-room: done
+  2-4-delete-laboratory-room: done
 
   # Epic 3: Computer Unit Management
   epic-3: backlog
