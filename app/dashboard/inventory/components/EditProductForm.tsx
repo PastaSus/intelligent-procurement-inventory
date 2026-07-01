@@ -83,8 +83,8 @@ export function EditProductForm({ item, onClose, onSuccess, componentTypes }: Ed
           </div>
 
           <div>
-            <label htmlFor="component_type" className="block text-sm font-medium mb-1">Component Type</label>
-            <select id="component_type" name="component_type" defaultValue={item.component_type || ''}
+            <label htmlFor="componentType" className="block text-sm font-medium mb-1">Component Type</label>
+            <select id="componentType" name="componentType" defaultValue={item.component_type || ''}
               className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               disabled={isPending}>
               <option value="">-- None --</option>
@@ -100,8 +100,8 @@ export function EditProductForm({ item, onClose, onSuccess, componentTypes }: Ed
               <Input id="quantity" name="quantity" type="number" min="0" defaultValue={item.quantity} required disabled={isPending} />
             </div>
             <div>
-              <label htmlFor="reorder_point" className="block text-sm font-medium mb-1">Reorder Point <span className="text-destructive">*</span></label>
-              <Input id="reorder_point" name="reorder_point" type="number" min="0" defaultValue={item.reorder_point} required disabled={isPending} />
+              <label htmlFor="reorderPoint" className="block text-sm font-medium mb-1">Reorder Point <span className="text-destructive">*</span></label>
+              <Input id="reorderPoint" name="reorderPoint" type="number" min="0" defaultValue={item.reorder_point} required disabled={isPending} />
             </div>
           </div>
 

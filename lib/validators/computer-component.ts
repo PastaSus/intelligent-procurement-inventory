@@ -1,16 +1,8 @@
 import { z } from 'zod';
-
-const ComponentTypeEnum = z.enum([
-  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD',
-  'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
-]);
-
-const ComponentStatusEnum = z.enum([
-  'FUNCTIONAL', 'NEEDS_REPAIR', 'NEEDS_REPLACEMENT',
-]);
+import { ComponentTypeEnum, ComponentStatusEnum } from './enums';
 
 export const createComponentSchema = z.object({
-  computerUnitId: z.string().min(1, 'Computer unit is required'),
+  computerUnitId: z.string().trim().min(1, 'Computer unit is required').max(50, 'Computer unit ID too long'),
   type: ComponentTypeEnum,
   serialNumber: z.string().trim().min(1, 'Serial number is required').max(100, 'Serial number too long'),
   specifications: z.string().trim().min(1, 'Specifications are required').max(500, 'Specifications too long'),
@@ -19,10 +11,11 @@ export const createComponentSchema = z.object({
 
 export const updateComponentSchema = z.object({
   id: z.string().min(1, 'Component ID is required'),
-  type: ComponentTypeEnum,
-  serialNumber: z.string().trim().min(1, 'Serial number is required').max(100, 'Serial number too long'),
-  specifications: z.string().trim().min(1, 'Specifications are required').max(500, 'Specifications too long'),
-  status: ComponentStatusEnum,
+  computerUnitId: z.string().trim().min(1, 'Computer unit is required').max(50, 'Computer unit ID too long').optional(),
+  type: ComponentTypeEnum.optional(),
+  serialNumber: z.string().trim().min(1, 'Serial number is required').max(100, 'Serial number too long').optional(),
+  specifications: z.string().trim().min(1, 'Specifications are required').max(500, 'Specifications too long').optional(),
+  status: ComponentStatusEnum.optional(),
 });
 
 export type CreateComponent = z.infer<typeof createComponentSchema>;

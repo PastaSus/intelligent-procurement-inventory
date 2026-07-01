@@ -70,8 +70,8 @@ export function AddProductForm({ onClose, onSuccess, componentTypes }: AddProduc
           </div>
 
           <div>
-            <label htmlFor="component_type" className="block text-sm font-medium mb-1">Component Type</label>
-            <select id="component_type" name="component_type"
+            <label htmlFor="componentType" className="block text-sm font-medium mb-1">Component Type</label>
+            <select id="componentType" name="componentType"
               className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               disabled={isPending}>
               <option value="">-- None --</option>
@@ -87,8 +87,8 @@ export function AddProductForm({ onClose, onSuccess, componentTypes }: AddProduc
               <Input id="quantity" name="quantity" type="number" min="0" placeholder="0" required disabled={isPending} />
             </div>
             <div>
-              <label htmlFor="reorder_point" className="block text-sm font-medium mb-1">Reorder Point <span className="text-destructive">*</span></label>
-              <Input id="reorder_point" name="reorder_point" type="number" min="0" placeholder="2" required disabled={isPending} />
+              <label htmlFor="reorderPoint" className="block text-sm font-medium mb-1">Reorder Point <span className="text-destructive">*</span></label>
+              <Input id="reorderPoint" name="reorderPoint" type="number" min="0" placeholder="2" required disabled={isPending} />
             </div>
           </div>
 

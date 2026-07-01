@@ -3,12 +3,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, Command, Copy, Trash2, MessageCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import type { ReorderSuggestion } from '@/components/SuggestionCards';
 
 interface DashboardStats {
-  totalInventory: number;
-  lowStockCount: number;
-  pendingPOs: number;
+  totalRooms: number;
+  totalUnits: number;
+  needsRepair: number;
+  needsReplacement: number;
+  pendingRequests: number;
 }
 
 interface Message {
@@ -47,7 +48,7 @@ export function FullScreenChat() {
           {
             id: '1',
             role: 'assistant',
-            content: 'Hi! I can help you with inventory insights. What would you like to know?',
+            content: 'Hi! I can help you with lab asset insights. What would you like to know?',
             timestamp: new Date(),
           },
         ],
@@ -129,14 +130,14 @@ export function FullScreenChat() {
           const statsRes = await fetch('/api/dashboard');
           if (statsRes.ok) {
             const stats: DashboardStats = await statsRes.json();
-            statsBody = `\n\n**Current Inventory:**\n- Total items: ${stats.totalInventory}\n- Low stock items: ${stats.lowStockCount}\n- Pending purchase orders: ${stats.pendingPOs}`;
+            statsBody = `\n\n**Current Lab Status:**\n- Rooms: ${stats.totalRooms}\n- Units: ${stats.totalUnits}\n- Needs repair: ${stats.needsRepair}\n- Pending requests: ${stats.pendingRequests}`;
           }
         } catch {
           // Fallback stats unavailable — skip
         }
 
         const fallbackContent = aiUnavailable
-          ? `**AI is unavailable right now.** ${errorDetail}\n\nBasic inventory metrics are shown below instead.${statsBody}`
+          ? `**AI is unavailable right now.** ${errorDetail}\n\nBasic lab metrics are shown below instead.${statsBody}`
           : `Sorry, something went wrong: ${errorDetail || `API error (${response.status})`}${statsBody}`;
 
         const fallbackConversation = {
@@ -187,7 +188,7 @@ export function FullScreenChat() {
         const statsRes = await fetch('/api/dashboard');
         if (statsRes.ok) {
           const stats: DashboardStats = await statsRes.json();
-          statsBody = `\n\n**Current Inventory:**\n- Total items: ${stats.totalInventory}\n- Low stock items: ${stats.lowStockCount}\n- Pending purchase orders: ${stats.pendingPOs}`;
+          statsBody = `\n\n**Current Lab Status:**\n- Rooms: ${stats.totalRooms}\n- Units: ${stats.totalUnits}\n- Needs repair: ${stats.needsRepair}\n- Pending requests: ${stats.pendingRequests}`;
         }
       } catch {
         // Fallback stats unavailable — skip
@@ -358,7 +359,7 @@ export function FullScreenChat() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">AI Chat Assistant</h1>
-              <p className="text-muted-foreground">Ask questions about your inventory</p>
+              <p className="text-muted-foreground">Ask questions about your lab assets</p>
             </div>
             <div className="text-xs text-muted-foreground flex items-center gap-2">
               <Command className="h-4 w-4" />
@@ -421,10 +422,10 @@ export function FullScreenChat() {
               <p className="text-xs text-muted-foreground">Suggested prompts:</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  'What should I reorder?',
-                  'Show low stock items',
-                  'Total inventory count',
-                  'Vendor information',
+                  'What needs repair?',
+                  'Show spare parts stock',
+                  'Total unit count',
+                  'Pending requests',
                 ].map((prompt) => (
                   <button
                     key={prompt}
@@ -455,7 +456,7 @@ export function FullScreenChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask about inventory..."
+              placeholder="Ask about lab assets..."
               className="flex-1 px-4 py-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm"
               aria-label="Chat message input"
               disabled={isLoading}

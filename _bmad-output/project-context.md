@@ -31,4 +31,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ## Critical Implementation Rules
 
-_Documented after discovery phase_
+- **PATCH-style updates**: All update Zod schemas use `.partial()` — every field optional, only `id` required in the request body.
+- **camelCase↔snake_case mapping**: Server actions receive camelCase from validators, map to snake_case for Prisma DB fields (`reorderPoint`→`reorder_point`, `componentType`→`component_type`).
+- **Nullable fields**: Use `?? undefined` (not `?? null`) when passing nullable optional fields to Prisma. `null` means "set to null", `undefined` means "leave unchanged".
+- **No soft-delete on children**: `ComputerComponent` and `RequestItem` omit `deleted`/`created_by`/`updated_by` — hard cascade-delete through parent is the correct semantic.
+- **FormData server actions**: All server actions accept `FormData`, not JSON. Parse with `.get()` and manual type conversion (e.g., `parseInt` for numbers).
+- **`unitPrice` optional**: `unitPrice` on RequestItem is optional user input. `total` is auto-calculated server-side when both `quantity` and `unitPrice` are present.
+- **Revalidation paths must match routes**: `revalidatePath()` target must match the actual Next.js App Router route path.

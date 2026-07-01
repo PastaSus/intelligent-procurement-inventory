@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 export const createRequestItemSchema = z.object({
   itemName: z.string().trim().min(1, 'Item name is required').max(200, 'Item name is too long'),
-  quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+  quantity: z.number().int().min(1, 'Quantity must be at least 1').max(999999, 'Quantity exceeds maximum'),
+  unitPrice: z.number().positive('Unit price must be positive').optional(),
 });
 
 export const createPurchaseRequestSchema = z.object({

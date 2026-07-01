@@ -16,7 +16,7 @@ const STORAGE_KEY = "ai-chat-messages";
 const initialMessage: Message = {
   role: "assistant",
   content:
-    "Hi! I can help you with inventory insights. What would you like to know?",
+    "Hi! I can help you with lab asset insights. What would you like to know?",
   timestamp: new Date().toISOString(),
 };
 
@@ -119,7 +119,7 @@ export function AIChat() {
         <div>
           <h3 className="font-semibold">AI Assistant</h3>
           <p className="text-sm text-muted-foreground">
-            Ask questions about your inventory
+            Ask questions about your lab assets
           </p>
         </div>
         <button

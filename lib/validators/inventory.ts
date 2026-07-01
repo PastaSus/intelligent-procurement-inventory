@@ -1,17 +1,13 @@
 import { z } from 'zod';
-
-const ComponentTypeEnum = z.enum([
-  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD',
-  'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
-]);
+import { ComponentTypeEnum } from './enums';
 
 export const createInventoryItemSchema = z.object({
-  sku: z.string().min(1, 'SKU is required'),
-  name: z.string().min(1, 'Name is required'),
-  description: z.string().optional(),
+  sku: z.string().trim().min(1, 'SKU is required').max(50, 'SKU too long'),
+  name: z.string().trim().min(1, 'Name is required').max(200, 'Name too long'),
+  description: z.string().trim().max(1000, 'Description too long').optional(),
   quantity: z.number().int().min(0, 'Quantity cannot be negative'),
-  reorder_point: z.number().int().min(0, 'Reorder point cannot be negative'),
-  component_type: ComponentTypeEnum.optional().nullable(),
+  reorderPoint: z.number().int().min(0, 'Reorder point cannot be negative'),
+  componentType: ComponentTypeEnum.nullable().optional(),
 });
 
 export const updateInventoryItemSchema = createInventoryItemSchema.partial();
