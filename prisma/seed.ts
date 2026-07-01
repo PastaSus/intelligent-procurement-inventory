@@ -1,89 +1,126 @@
-import "dotenv/config";
-import * as bcrypt from "bcrypt";
-import { randomUUID } from "crypto";
+import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+
+const prisma = new PrismaClient();
 
 async function main() {
-  const { Client } = await import("pg");
-  
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+  console.log('Seeding database...');
+
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@example.com' },
+    update: {},
+    create: {
+      email: 'admin@example.com',
+      password_hash: hashedPassword,
+      role: 'ADMIN',
+    },
   });
 
-  await client.connect();
+  const staffPassword = await bcrypt.hash('staff123', 10);
+  await prisma.user.upsert({
+    where: { email: 'staff@example.com' },
+    update: {},
+    create: {
+      email: 'staff@example.com',
+      password_hash: staffPassword,
+      role: 'STAFF',
+    },
+  });
 
-  const adminEmail = 'admin@example.com';
-  const adminPassword = 'admin123';
-  
-  const adminHash = await bcrypt.hash(adminPassword, 10);
-  
-  try {
-    await client.query(
-      `INSERT INTO "User" (id, email, password_hash, role, created_at, updated_at, created_by, updated_by, deleted)
-       VALUES ($1, $2, $3, $4, NOW(), NOW(), $5, $6, false)
-       ON CONFLICT (email) DO NOTHING`,
-      [
-        `user_${Date.now()}_admin`,
-        adminEmail,
-        adminHash,
-        'ADMIN',
-        'system',
-        'system'
-      ]
-    );
-    console.log(`✓ Created/verified admin user: ${adminEmail}`);
-  } catch (error) {
-    console.log(`✓ Admin user already exists: ${adminEmail}`);
-  }
+  const roomA = await prisma.laboratoryRoom.upsert({
+    where: { name: 'Laboratory 127A' },
+    update: {},
+    create: { name: 'Laboratory 127A', created_by: admin.id, updated_by: admin.id },
+  });
 
-  const staffEmail = 'staff@example.com';
-  const staffPassword = 'staff123';
-  
-  const staffHash = await bcrypt.hash(staffPassword, 10);
-  
-  try {
-    await client.query(
-      `INSERT INTO "User" (id, email, password_hash, role, created_at, updated_at, created_by, updated_by, deleted)
-       VALUES ($1, $2, $3, $4, NOW(), NOW(), $5, $6, false)
-       ON CONFLICT (email) DO NOTHING`,
-      [
-        `user_${Date.now()}_staff`,
-        staffEmail,
-        staffHash,
-        'STAFF',
-        'system',
-        'system'
-      ]
-    );
-    console.log(`✓ Created/verified staff user: ${staffEmail}`);
-  } catch (error) {
-    console.log(`✓ Staff user already exists: ${staffEmail}`);
-  }
+  const roomB = await prisma.laboratoryRoom.upsert({
+    where: { name: 'Laboratory 127B' },
+    update: {},
+    create: { name: 'Laboratory 127B', created_by: admin.id, updated_by: admin.id },
+  });
 
-  const vendors = [
-    { id: `vendor_${randomUUID()}_1`, name: 'Acme Supplies Co.', contact_name: 'John Smith', email: 'john@acmesupplies.com', phone: '555-0101', address: '123 Main St, Anytown, USA' },
-    { id: `vendor_${randomUUID()}_2`, name: 'Global Parts Inc.', contact_name: 'Jane Doe', email: 'jane@globalparts.com', phone: '555-0102', address: '456 Oak Ave, Somewhere, USA' },
-    { id: `vendor_${randomUUID()}_3`, name: 'FastShip Warehouse', contact_name: 'Bob Wilson', email: 'bob@fastship.com', phone: '555-0103', address: '789 Industrial Blvd, Cityville, USA' },
+  const roomC = await prisma.laboratoryRoom.upsert({
+    where: { name: 'Laboratory 128A' },
+    update: {},
+    create: { name: 'Laboratory 128A', created_by: admin.id, updated_by: admin.id },
+  });
+
+  const unitData = [
+    { unitName: 'LR1U01', roomId: roomA.id },
+    { unitName: 'LR1U02', roomId: roomA.id },
+    { unitName: 'LR1U03', roomId: roomA.id },
+    { unitName: 'LR2U01', roomId: roomB.id },
+    { unitName: 'LR2U02', roomId: roomB.id },
+    { unitName: 'LR3U01', roomId: roomC.id },
   ];
 
-  for (const vendor of vendors) {
-    try {
-      await client.query(
-        `INSERT INTO "Vendor" (id, name, contact_name, email, phone, address, created_at, updated_at, created_by, updated_by, deleted)
-         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), $7, $8, false)
-         ON CONFLICT DO NOTHING`,
-        [vendor.id, vendor.name, vendor.contact_name, vendor.email, vendor.phone, vendor.address, 'system', 'system']
-      );
-      console.log(`✓ Created/verified vendor: ${vendor.name}`);
-    } catch (error) {
-      console.log(`✓ Vendor already exists: ${vendor.name}`);
+  for (const u of unitData) {
+    await prisma.computerUnit.upsert({
+      where: { unit_name_laboratory_room_id: { unit_name: u.unitName, laboratory_room_id: u.roomId } },
+      update: {},
+      create: {
+        unit_name: u.unitName,
+        laboratory_room_id: u.roomId,
+        created_by: admin.id,
+        updated_by: admin.id,
+      },
+    });
+  }
+
+  const allUnits = await prisma.computerUnit.findMany();
+
+  type CompSpec = { type: string; spec: string };
+  const componentSpecs: CompSpec[] = [
+    { type: 'MOTHERBOARD', spec: 'Gigabyte GA-H81M-DS2V' },
+    { type: 'PROCESSOR', spec: 'Intel Core i5 4460' },
+    { type: 'MEMORY', spec: '8GB DDR3 1600MHz' },
+    { type: 'HDD', spec: '500GB Seagate Barracuda' },
+    { type: 'MONITOR', spec: 'Samsung 20" LED' },
+    { type: 'KEYBOARD', spec: 'Logitech K120' },
+    { type: 'MOUSE', spec: 'Logitech M90' },
+    { type: 'AVR', spec: 'Servo 500W AVR' },
+    { type: 'OPTICAL_DRIVE', spec: 'LG GH24 DVD Writer' },
+  ];
+
+  let serialCounter = 1;
+  for (const unit of allUnits) {
+    for (const cs of componentSpecs) {
+      const serial = `${unit.unit_name}-${cs.type}-${String(serialCounter).padStart(4, '0')}`;
+      await prisma.computerComponent.create({
+        data: {
+          computer_unit_id: unit.id,
+          type: cs.type as any,
+          serial_number: serial,
+          specifications: cs.spec,
+          status: 'FUNCTIONAL',
+        },
+      });
+      serialCounter++;
     }
   }
 
-  await client.end();
-  console.log('\n✓ Database seeding complete!');
+  await prisma.inventoryItem.createMany({
+    data: [
+      { sku: 'KB-LOGI-K120', name: 'Logitech K120 Keyboard', quantity: 5, reorder_point: 2, component_type: 'KEYBOARD', created_by: admin.id, updated_by: admin.id },
+      { sku: 'MS-LOGI-M90', name: 'Logitech M90 Mouse', quantity: 8, reorder_point: 3, component_type: 'MOUSE', created_by: admin.id, updated_by: admin.id },
+      { sku: 'RAM-DDR3-8GB', name: '8GB DDR3 1600MHz RAM', quantity: 4, reorder_point: 2, component_type: 'MEMORY', created_by: admin.id, updated_by: admin.id },
+      { sku: 'HDD-500GB-SG', name: '500GB Seagate HDD', quantity: 2, reorder_point: 1, component_type: 'HDD', created_by: admin.id, updated_by: admin.id },
+      { sku: 'MON-SAM-20', name: 'Samsung 20" LED Monitor', quantity: 1, reorder_point: 1, component_type: 'MONITOR', created_by: admin.id, updated_by: admin.id },
+      { sku: 'AVR-SERVO-500', name: 'Servo 500W AVR', quantity: 3, reorder_point: 1, component_type: 'AVR', created_by: admin.id, updated_by: admin.id },
+      { sku: 'DVD-LG-GH24', name: 'LG GH24 DVD Writer', quantity: 2, reorder_point: 1, component_type: 'OPTICAL_DRIVE', created_by: admin.id, updated_by: admin.id },
+    ],
+  });
+
+  console.log('Seed complete!');
 }
 
-main().catch((e) => {
-  console.error('Error seeding database:', e);
-  process.exit(1);
-});
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

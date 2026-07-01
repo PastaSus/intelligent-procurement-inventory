@@ -18,76 +18,8 @@ model User {
   updated_by    String?
   deleted       Boolean  @default(false)
   reset_tokens  PasswordResetToken[]
-}
 
-model InventoryItem {
-  id            String   @id @default(cuid())
-  sku           String   @unique
-  name          String
-  description   String?
-  quantity      Int      @default(0)
-  reorder_point Int      @default(0)
-  category      String?
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  created_by    String?
-  updated_by    String?
-  deleted       Boolean  @default(false)
-
-  @@index([sku])
-  @@index([deleted])
-  @@index([created_at])
-}
-
-model Vendor {
-  id              String          @id @default(cuid())
-  name            String
-  contact_name    String?
-  email           String?
-  phone           String?
-  address         String?
-  created_at      DateTime        @default(now())
-  updated_at      DateTime        @updatedAt
-  created_by      String?
-  updated_by      String?
-  deleted         Boolean         @default(false)
-  purchase_orders PurchaseOrder[]
-
-  @@index([deleted])
-  @@index([created_at])
-}
-
-model PurchaseOrder {
-  id         String              @id @default(cuid())
-  po_number  String              @unique
-  vendor_id  String
-  status     PurchaseOrderStatus @default(DRAFT)
-  created_at DateTime            @default(now())
-  updated_at DateTime            @updatedAt
-  created_by String?
-  updated_by String?
-  deleted    Boolean             @default(false)
-  line_items POItem[]
-  vendor     Vendor              @relation(fields: [vendor_id], references: [id])
-
-  @@index([vendor_id])
-  @@index([status])
-  @@index([deleted])
-  @@index([created_at])
-}
-
-model POItem {
-  id                String        @id @default(cuid())
-  purchase_order_id String
-  item_name         String
-  quantity          Int
-  unit_price        Decimal       @db.Decimal(10, 2)
-  total             Decimal       @db.Decimal(10, 2)
-  created_at        DateTime      @default(now())
-  updated_at        DateTime      @updatedAt
-  purchase_order    PurchaseOrder @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade)
-
-  @@index([purchase_order_id])
+  @@index([email])
 }
 
 model PasswordResetToken {
@@ -102,34 +34,103 @@ model PasswordResetToken {
   @@index([token])
 }
 
-model ChatConversation {
-  id        String   @id @default(cuid())
-  user_id   String?
-  title     String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  deleted    Boolean  @default(false)
-  messages  ChatMessage[]
+model LaboratoryRoom {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  created_at DateTime     @default(now())
+  updated_at DateTime     @updatedAt
+  created_by String?
+  updated_by String?
+  deleted    Boolean      @default(false)
+  units      ComputerUnit[]
 
-  @@index([user_id])
+  @@index([name])
+  @@index([deleted])
+}
+
+model ComputerUnit {
+  id               String             @id @default(cuid())
+  unit_name        String
+  laboratory_room_id String
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  created_by       String?
+  updated_by       String?
+  deleted          Boolean            @default(false)
+  laboratory_room  LaboratoryRoom     @relation(fields: [laboratory_room_id], references: [id])
+  components       ComputerComponent[]
+
+  @@unique([unit_name, laboratory_room_id])
+  @@index([laboratory_room_id])
+  @@index([deleted])
+}
+
+model ComputerComponent {
+  id               String           @id @default(cuid())
+  computer_unit_id String
+  type             ComponentType
+  serial_number    String           @unique
+  specifications   String
+  status           ComponentStatus  @default(FUNCTIONAL)
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+  created_by       String?
+  updated_by       String?
+  computer_unit    ComputerUnit     @relation(fields: [computer_unit_id], references: [id], onDelete: Cascade)
+
+  @@index([computer_unit_id])
+  @@index([type])
+  @@index([status])
+}
+
+model InventoryItem {
+  id            String        @id @default(cuid())
+  sku           String        @unique
+  name          String
+  description   String?
+  quantity      Int           @default(0)
+  reorder_point Int           @default(0)
+  component_type ComponentType?
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  created_by    String?
+  updated_by    String?
+  deleted       Boolean       @default(false)
+
+  @@index([sku])
+  @@index([component_type])
+  @@index([deleted])
+}
+
+model PurchaseRequest {
+  id         String               @id @default(cuid())
+  pr_number  String               @unique
+  status     PurchaseRequestStatus @default(DRAFT)
+  notes      String?
+  created_at DateTime             @default(now())
+  updated_at DateTime             @updatedAt
+  created_by String?
+  updated_by String?
+  deleted    Boolean              @default(false)
+  items      RequestItem[]
+
+  @@index([status])
   @@index([deleted])
   @@index([created_at])
 }
 
-model ChatMessage {
-  id             String           @id @default(cuid())
-  conversation_id String
-  role           ChatMessageRole
-  content        String
-  timestamp      DateTime         @default(now())
-  conversation   ChatConversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+model RequestItem {
+  id                  String          @id @default(cuid())
+  purchase_request_id String
+  item_name           String
+  quantity            Int
+  unit_price          Decimal?        @db.Decimal(10, 2)
+  total               Decimal?        @db.Decimal(10, 2)
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+  purchase_request    PurchaseRequest @relation(fields: [purchase_request_id], references: [id], onDelete: Cascade)
 
-  @@index([conversation_id])
-}
-
-enum ChatMessageRole {
-  USER
-  ASSISTANT
+  @@index([purchase_request_id])
 }
 
 enum Role {
@@ -137,8 +138,28 @@ enum Role {
   STAFF
 }
 
-enum PurchaseOrderStatus {
+enum ComponentType {
+  MOTHERBOARD
+  PROCESSOR
+  MEMORY
+  HDD
+  MONITOR
+  KEYBOARD
+  MOUSE
+  AVR
+  OPTICAL_DRIVE
+}
+
+enum ComponentStatus {
+  FUNCTIONAL
+  NEEDS_REPAIR
+  NEEDS_REPLACEMENT
+}
+
+enum PurchaseRequestStatus {
   DRAFT
+  REQUESTED
   APPROVED
-  SENT
+  REJECTED
+  FULFILLED
 }

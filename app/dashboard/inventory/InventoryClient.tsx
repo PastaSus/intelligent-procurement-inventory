@@ -15,7 +15,7 @@ interface InventoryItem {
   description: string | null;
   quantity: number;
   reorder_point: number;
-  category: string | null;
+  component_type: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -23,34 +23,34 @@ interface InventoryItem {
 interface InventoryClientProps {
   initialItems: InventoryItem[];
   totalCount: number;
-  categories: string[];
+  componentTypes: readonly string[];
   currentPage: number;
   pageSize: number;
 }
 
-export function InventoryClient({ initialItems, totalCount, categories, currentPage, pageSize }: InventoryClientProps) {
+export function InventoryClient({ initialItems, totalCount, componentTypes, currentPage, pageSize }: InventoryClientProps) {
   const [items] = useState(initialItems);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<InventoryItem | null>(null);
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedComponentType, setSelectedComponentType] = useState('all');
   const [stockStatus, setStockStatus] = useState<'all' | 'low' | 'critical' | 'normal'>('all');
-  const [sortBy, setSortBy] = useState<'sku' | 'name' | 'quantity' | 'category' | 'updated_at'>('updated_at');
+  const [sortBy, setSortBy] = useState<'sku' | 'name' | 'quantity' | 'component_type' | 'updated_at'>('updated_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const handleSuccess = () => {
     setIsFormOpen(false);
     setEditingItem(null);
     setTimeout(() => {
-      window.location.href = '/dashboard/inventory';
+      window.location.href = '/dashboard/spare-parts';
     }, 300);
   };
 
   const handleDelete = () => {
     if (!deletingItem) return;
-    
+
     const formData = new FormData();
     formData.set('id', deletingItem.id);
 
@@ -59,7 +59,7 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
       if (result.success) {
         setDeletingItem(null);
         setTimeout(() => {
-          window.location.href = '/dashboard/inventory';
+          window.location.href = '/dashboard/spare-parts';
         }, 300);
       } else {
         alert(result.error || 'Failed to delete item');
@@ -73,13 +73,13 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
     if (search) {
       const searchLower = search.toLowerCase();
       result = result.filter(
-        item => item.sku.toLowerCase().includes(searchLower) || 
+        item => item.sku.toLowerCase().includes(searchLower) ||
                 item.name.toLowerCase().includes(searchLower)
       );
     }
 
-    if (selectedCategory !== 'all') {
-      result = result.filter(item => item.category === selectedCategory);
+    if (selectedComponentType !== 'all') {
+      result = result.filter(item => item.component_type === selectedComponentType);
     }
 
     if (stockStatus === 'low') {
@@ -102,20 +102,18 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
         case 'quantity':
           comparison = a.quantity - b.quantity;
           break;
-        case 'category':
-          comparison = (a.category || '').localeCompare(b.category || '');
+        case 'component_type':
+          comparison = (a.component_type || '').localeCompare(b.component_type || '');
           break;
         case 'updated_at':
           comparison = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
           break;
-        default:
-          comparison = new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
     return result;
-  }, [items, search, selectedCategory, stockStatus, sortBy, sortOrder]);
+  }, [items, search, selectedComponentType, stockStatus, sortBy, sortOrder]);
 
   const lowStockCount = items.filter(item => item.quantity < item.reorder_point && item.quantity > 0).length;
   const criticalCount = items.filter(item => item.quantity === 0).length;
@@ -160,12 +158,12 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Inventory</h2>
-          <p className="text-muted-foreground">Manage your inventory items</p>
+          <h2 className="text-3xl font-bold">Spare Parts</h2>
+          <p className="text-muted-foreground">Manage replacement parts inventory</p>
         </div>
         <Button onClick={() => setIsFormOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add Product
+          Add Part
         </Button>
       </div>
 
@@ -190,13 +188,13 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
         </div>
 
         <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          value={selectedComponentType}
+          onChange={(e) => setSelectedComponentType(e.target.value)}
           className="px-3 py-2 rounded-md border border-input bg-background text-sm"
         >
-          <option value="all">All Categories</option>
-          {categories.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
+          <option value="all">All Component Types</option>
+          {componentTypes.map(type => (
+            <option key={type} value={type}>{type}</option>
           ))}
         </select>
 
@@ -217,7 +215,7 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Package className="h-5 w-5 text-muted-foreground" />
-              <span className="font-medium">Total: {totalCount} items</span>
+              <span className="font-medium">Total: {totalCount} parts</span>
             </div>
             <span className="text-muted-foreground">|</span>
             <span className="text-sm text-muted-foreground">Showing {filteredItems.length}</span>
@@ -241,7 +239,7 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
         {filteredItems.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
             <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No inventory items found.</p>
+            <p>No spare parts found.</p>
             <p className="text-sm">Try adjusting your search or filters.</p>
           </div>
         ) : (
@@ -251,7 +249,7 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-3 text-sm font-medium"><SortHeader column="sku" label="SKU" /></th>
                   <th className="text-left p-3 text-sm font-medium"><SortHeader column="name" label="Name" /></th>
-                  <th className="text-left p-3 text-sm font-medium"><SortHeader column="category" label="Category" /></th>
+                  <th className="text-left p-3 text-sm font-medium"><SortHeader column="component_type" label="Component" /></th>
                   <th className="text-center p-3 text-sm font-medium"><SortHeader column="quantity" label="Qty" /></th>
                   <th className="text-center p-3 text-sm font-medium">Reorder</th>
                   <th className="text-center p-3 text-sm font-medium">Status</th>
@@ -263,7 +261,7 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
                 {filteredItems.map((item) => {
                   const isLowStock = item.quantity < item.reorder_point;
                   const isCritical = item.quantity === 0;
-                  
+
                   return (
                     <tr key={item.id} className="border-b hover:bg-muted/30" tabIndex={0}>
                       <td className="p-3 text-sm font-mono">{item.sku}</td>
@@ -277,47 +275,34 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
                           )}
                         </div>
                       </td>
-                      <td className="p-3 text-sm">{item.category || '-'}</td>
+                      <td className="p-3 text-sm">{item.component_type || '-'}</td>
                       <td className="p-3 text-center text-sm font-medium">{item.quantity}</td>
                       <td className="p-3 text-center text-sm text-muted-foreground">{item.reorder_point}</td>
                       <td className="p-3 text-center">
                         {(() => {
-                          const reorderPoint = item.reorder_point || 1;
-                          const percentage = item.reorder_point > 0 
-                            ? Math.min((item.quantity / reorderPoint) * 100, 100)
+                          const percentage = item.reorder_point > 0
+                            ? Math.min((item.quantity / item.reorder_point) * 100, 100)
                             : 100;
-                          
+
                           return isCritical ? (
                             <div className="space-y-1">
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                CRITICAL
-                              </span>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">CRITICAL</span>
                               <div className="w-16 h-1.5 bg-red-200 rounded-full mx-auto">
                                 <div className="h-full bg-red-500 rounded-full" style={{ width: `${percentage}%` }} />
                               </div>
                             </div>
                           ) : isLowStock ? (
                             <div className="space-y-1">
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                LOW
-                              </span>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">LOW</span>
                               <div className="w-16 h-1.5 bg-yellow-200 rounded-full mx-auto">
-                                <div 
-                                  className="h-full bg-yellow-500 rounded-full" 
-                                  style={{ width: `${percentage}%` }} 
-                                />
+                                <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${percentage}%` }} />
                               </div>
                             </div>
                           ) : (
                             <div className="space-y-1">
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                OK
-                              </span>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">OK</span>
                               <div className="w-16 h-1.5 bg-green-200 rounded-full mx-auto">
-                                <div 
-                                  className="h-full bg-green-500 rounded-full" 
-                                  style={{ width: `${percentage}%` }} 
-                                />
+                                <div className="h-full bg-green-500 rounded-full" style={{ width: `${percentage}%` }} />
                               </div>
                             </div>
                           );
@@ -352,27 +337,15 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
 
         {totalPages > 1 && (
           <div className="p-4 border-t flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </span>
+            <span className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</span>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage <= 1}
-                onClick={() => window.location.href = `/dashboard/inventory?page=${currentPage - 1}`}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
+              <Button variant="outline" size="sm" disabled={currentPage <= 1}
+                onClick={() => window.location.href = `/dashboard/spare-parts?page=${currentPage - 1}`}>
+                <ChevronLeft className="h-4 w-4" /> Previous
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage >= totalPages}
-                onClick={() => window.location.href = `/dashboard/inventory?page=${currentPage + 1}`}
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
+              <Button variant="outline" size="sm" disabled={currentPage >= totalPages}
+                onClick={() => window.location.href = `/dashboard/spare-parts?page=${currentPage + 1}`}>
+                Next <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -380,18 +353,11 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
       </div>
 
       {isFormOpen && (
-        <AddProductForm 
-          onClose={() => setIsFormOpen(false)} 
-          onSuccess={handleSuccess}
-        />
+        <AddProductForm onClose={() => setIsFormOpen(false)} onSuccess={handleSuccess} componentTypes={componentTypes} />
       )}
 
       {editingItem && (
-        <EditProductForm
-          item={editingItem}
-          onClose={() => setEditingItem(null)}
-          onSuccess={handleSuccess}
-        />
+        <EditProductForm item={editingItem} onClose={() => setEditingItem(null)} onSuccess={handleSuccess} componentTypes={componentTypes} />
       )}
 
       {deletingItem && (
@@ -401,25 +367,14 @@ export function InventoryClient({ initialItems, totalCount, categories, currentP
               <div className="p-2 bg-red-100 rounded-full">
                 <Trash2 className="h-5 w-5 text-red-600" />
               </div>
-              <h3 className="text-lg font-semibold">Delete Item</h3>
+              <h3 className="text-lg font-semibold">Delete Part</h3>
             </div>
             <p className="text-muted-foreground mb-6">
-              Are you sure you want to delete <strong className="text-foreground">{deletingItem.name}</strong> ({deletingItem.sku})? 
-              This action can be undone by an admin.
+              Are you sure you want to delete <strong className="text-foreground">{deletingItem.name}</strong> ({deletingItem.sku})?
             </p>
             <div className="flex gap-3 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setDeletingItem(null)}
-                disabled={isPending}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={isPending}
-              >
+              <Button variant="outline" onClick={() => setDeletingItem(null)} disabled={isPending}>Cancel</Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
                 {isPending ? 'Deleting...' : 'Delete'}
               </Button>
             </div>

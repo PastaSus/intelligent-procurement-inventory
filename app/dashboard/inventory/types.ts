@@ -1,8 +1,8 @@
 export interface SearchParams {
   page?: string;
   search?: string;
-  category?: string;
+  component_type?: string;
   status?: 'all' | 'low' | 'critical' | 'normal';
-  sort?: 'sku' | 'name' | 'quantity' | 'category' | 'updated_at';
+  sort?: 'sku' | 'name' | 'quantity' | 'component_type' | 'updated_at';
   order?: 'asc' | 'desc';
 }

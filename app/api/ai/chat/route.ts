@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getInventoryContext, callGroq, validateApiKey } from '@/lib/ai/groq';
+import { getLabContext, callGroq, validateApiKey } from '@/lib/ai/groq';
 
 export const maxDuration = 10;
 
@@ -24,14 +24,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const context = await getInventoryContext();
-
+    const context = await getLabContext();
     const response = await callGroq(message.trim(), context, apiKey);
 
     return NextResponse.json({ response });
   } catch (error) {
     console.error('AI Chat API error:', error);
-
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
     if (errorMessage.includes('timeout')) {
@@ -41,7 +39,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('Quota')) {
+    if (errorMessage.includes('429') || errorMessage.includes('quota')) {
       return NextResponse.json(
         { error: 'AI service quota exceeded. Please try again later.' },
         { status: 429 }
@@ -51,13 +49,6 @@ export async function POST(request: NextRequest) {
     if (errorMessage.includes('content_filter') || errorMessage.includes('truncated') || errorMessage.includes('Empty response')) {
       return NextResponse.json(
         { error: 'Unable to process request. Please try a different question.' },
-        { status: 500 }
-      );
-    }
-
-    if (errorMessage.includes('inventory context')) {
-      return NextResponse.json(
-        { error: 'Unable to retrieve data. Please try again.' },
         { status: 500 }
       );
     }
