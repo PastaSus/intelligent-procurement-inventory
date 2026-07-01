@@ -28,7 +28,7 @@ export async function GET() {
         WHERE deleted = false AND quantity < "reorder_point"
       `,
       prisma.purchaseRequest.count({
-        where: { deleted: false, status: { in: ['DRAFT', 'REQUESTED'] } },
+        where: { deleted: false, status: 'REQUESTED' },
       }),
     ]);
 
@@ -38,7 +38,7 @@ export async function GET() {
       totalComponents,
       needsRepair,
       needsReplacement,
-      lowStockCount: Number(lowStockResult[0].count),
+      lowStockCount: Number(lowStockResult[0]?.count || 0),
       pendingRequests,
     });
   } catch (error) {

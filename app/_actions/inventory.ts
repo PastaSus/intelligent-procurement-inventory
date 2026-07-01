@@ -15,10 +15,10 @@ export async function createInventoryItem(formData: FormData) {
     const rawData = {
       sku: formData.get('sku') as string,
       name: formData.get('name') as string,
-      description: formData.get('description') as string || undefined,
+      description: (formData.get('description') as string) || undefined,
       quantity: parseInt(formData.get('quantity') as string, 10),
-      reorder_point: parseInt(formData.get('reorder_point') as string, 10),
-      component_type: (formData.get('component_type') as string) || undefined,
+      reorderPoint: parseInt(formData.get('reorderPoint') as string, 10),
+      componentType: (formData.get('componentType') as string) || undefined,
     };
 
     const result = createInventoryItemSchema.safeParse(rawData);
@@ -35,14 +35,18 @@ export async function createInventoryItem(formData: FormData) {
 
     const item = await prisma.inventoryItem.create({
       data: {
-        ...result.data,
-        component_type: result.data.component_type ?? null,
+        sku: result.data.sku,
+        name: result.data.name,
+        description: result.data.description,
+        quantity: result.data.quantity,
+        reorder_point: result.data.reorderPoint,
+        component_type: result.data.componentType ?? undefined,
         created_by: session.userId,
         updated_by: session.userId,
       },
     });
 
-    revalidatePath('/dashboard/spare-parts');
+    revalidatePath('/dashboard/inventory');
     return { success: true, data: item };
   } catch (error) {
     console.error('Create inventory item error:', error);
@@ -62,12 +66,15 @@ export async function updateInventoryItem(formData: FormData) {
       return { success: false, error: 'Item ID is required' };
     }
 
+    const qtyRaw = formData.get('quantity');
+    const reorderRaw = formData.get('reorderPoint');
+
     const rawData = {
       name: formData.get('name') as string,
-      description: formData.get('description') as string || undefined,
-      quantity: parseInt(formData.get('quantity') as string, 10),
-      reorder_point: parseInt(formData.get('reorder_point') as string, 10),
-      component_type: (formData.get('component_type') as string) || undefined,
+      description: (formData.get('description') as string) || undefined,
+      quantity: qtyRaw ? parseInt(qtyRaw as string, 10) : undefined,
+      reorderPoint: reorderRaw ? parseInt(reorderRaw as string, 10) : undefined,
+      componentType: (formData.get('componentType') as string) || undefined,
     };
 
     const result = updateInventoryItemSchema.safeParse(rawData);
@@ -80,19 +87,19 @@ export async function updateInventoryItem(formData: FormData) {
       return { success: false, error: 'Item not found' };
     }
 
+    const { reorderPoint, componentType, ...rest } = result.data;
     const item = await prisma.inventoryItem.update({
       where: { id },
       data: {
-        name: result.data.name,
-        description: result.data.description,
-        quantity: result.data.quantity,
-        reorder_point: result.data.reorder_point,
-        component_type: result.data.component_type ?? null,
+        ...rest,
+        ...(reorderPoint !== undefined && { reorder_point: reorderPoint }),
+        ...(componentType !== undefined && { component_type: componentType }),
+        ...(componentType === null && { component_type: null }),
         updated_by: session.userId,
       },
     });
 
-    revalidatePath('/dashboard/spare-parts');
+    revalidatePath('/dashboard/inventory');
     return { success: true, data: item };
   } catch (error) {
     console.error('Update inventory item error:', error);
@@ -125,7 +132,7 @@ export async function deleteInventoryItem(formData: FormData) {
       data: { deleted: true, updated_by: session.userId },
     });
 
-    revalidatePath('/dashboard/spare-parts');
+    revalidatePath('/dashboard/inventory');
     return { success: true };
   } catch (error) {
     console.error('Delete inventory item error:', error);

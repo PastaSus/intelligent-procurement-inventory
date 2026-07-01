@@ -15,7 +15,7 @@ export function ChatBubble() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hi! I can help you with inventory insights. What would you like to know?',
+      content: 'Hi! I can help you with lab asset insights. What would you like to know?',
       timestamp: new Date(),
     },
   ]);
@@ -111,7 +111,7 @@ export function ChatBubble() {
           <div className="border-b p-4 flex items-center justify-between">
             <div>
               <h3 className="font-semibold">AI Assistant</h3>
-              <p className="text-xs text-muted-foreground">Ask about your inventory</p>
+              <p className="text-xs text-muted-foreground">Ask about your lab assets</p>
             </div>
             <Link
               href="/dashboard/chat"
@@ -169,7 +169,7 @@ export function ChatBubble() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about inventory..."
+                placeholder="Ask about lab assets..."
                 className="flex-1 px-3 py-2 text-sm border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 aria-label="Chat message input"
                 disabled={isLoading}

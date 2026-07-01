@@ -9,7 +9,7 @@ const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Rooms', href: '/dashboard/rooms', icon: Building2 },
   { label: 'Units', href: '/dashboard/units', icon: Monitor },
-  { label: 'Spare Parts', href: '/dashboard/spare-parts', icon: Package },
+  { label: 'Spare Parts', href: '/dashboard/inventory', icon: Package },
   { label: 'Requests', href: '/dashboard/purchase-requests', icon: ShoppingCart },
   { label: 'Chat', href: '/dashboard/chat', icon: MessageCircle },
 ];

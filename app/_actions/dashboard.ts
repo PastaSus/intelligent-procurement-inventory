@@ -29,7 +29,7 @@ export async function getDashboardStats() {
         WHERE deleted = false AND quantity < "reorder_point"
       `,
       prisma.purchaseRequest.count({
-        where: { deleted: false, status: { in: ['DRAFT', 'REQUESTED'] } },
+        where: { deleted: false, status: 'REQUESTED' },
       }),
     ]);
 

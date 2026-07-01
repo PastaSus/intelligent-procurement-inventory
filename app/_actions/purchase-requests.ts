@@ -66,6 +66,7 @@ export async function createPurchaseRequest(formData: FormData) {
             create: result.data.items.map((item) => ({
               item_name: item.itemName.trim(),
               quantity: item.quantity,
+              ...(item.unitPrice !== undefined && { unit_price: item.unitPrice }),
             })),
           },
         },
@@ -179,7 +180,9 @@ export async function rejectPurchaseRequest(formData: FormData) {
       return { success: false, error: 'Only requested requests can be rejected' };
     }
 
-    const notes = `REJECTED: ${result.data.reason}`;
+    const notes = existing.notes
+      ? `${existing.notes}\nREJECTED: ${result.data.reason}`
+      : `REJECTED: ${result.data.reason}`;
     const updated = await prisma.purchaseRequest.update({
       where: { id: result.data.id },
       data: { status: 'REJECTED', notes, updated_by: session.userId },

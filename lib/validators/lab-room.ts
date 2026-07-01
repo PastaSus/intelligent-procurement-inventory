@@ -6,7 +6,7 @@ export const createLabRoomSchema = z.object({
 
 export const updateLabRoomSchema = z.object({
   id: z.string().min(1, 'Room ID is required'),
-  name: z.string().trim().min(1, 'Room name is required').max(100, 'Room name is too long'),
+  name: z.string().trim().min(1, 'Room name is required').max(100, 'Room name is too long').optional(),
 });
 
 export type CreateLabRoom = z.infer<typeof createLabRoomSchema>;
