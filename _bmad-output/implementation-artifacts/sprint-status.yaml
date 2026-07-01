@@ -68,6 +68,6 @@ development_status:
   6-5-fulfill-purchase-request: done
 
   # Epic 7: Navigation & Layout Migration
-  epic-7: in-progress
+  epic-7: done
   7-1-updated-navigation: done
   7-2-update-dashboard: done
