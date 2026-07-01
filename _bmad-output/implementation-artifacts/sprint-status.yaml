@@ -51,7 +51,7 @@ development_status:
   4-3-edit-component: done
   4-4-remove-component: done
   4-5-bulk-add-components: done
-  4-6-component-status-dashboard: backlog
+  4-6-component-status-dashboard: done
 
   # Epic 5: Spare Parts Inventory
   epic-5: in-progress

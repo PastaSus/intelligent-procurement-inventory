@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Building2, Monitor, ShoppingCart, MessageCircle, ChevronLeft, Package } from 'lucide-react';
+import { LayoutDashboard, Building2, Monitor, ShoppingCart, MessageCircle, ChevronLeft, Package, Activity } from 'lucide-react';
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Rooms', href: '/dashboard/rooms', icon: Building2 },
   { label: 'Units', href: '/dashboard/units', icon: Monitor },
+  { label: 'Component Health', href: '/dashboard/component-status', icon: Activity },
   { label: 'Spare Parts', href: '/dashboard/inventory', icon: Package },
   { label: 'Requests', href: '/dashboard/purchase-requests', icon: ShoppingCart },
   { label: 'Chat', href: '/dashboard/chat', icon: MessageCircle },
