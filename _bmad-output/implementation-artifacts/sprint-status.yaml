@@ -54,10 +54,10 @@ development_status:
   4-6-component-status-dashboard: done
 
   # Epic 5: Spare Parts Inventory
-  epic-5: in-progress
+  epic-5: done
   5-1-spare-parts-crud: done
-  5-2-view-stock-levels: backlog
-  5-3-automated-replenishment-check: backlog
+  5-2-view-stock-levels: done
+  5-3-automated-replenishment-check: done
 
   # Epic 6: Internal Purchase Request Workflow
   epic-6: in-progress

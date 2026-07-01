@@ -5,6 +5,8 @@ import { createComponentSchema, updateComponentSchema } from '@/lib/validators/c
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
+const REPLACEMENT_QTY = 1;
+
 export async function createComponent(formData: FormData) {
   try {
     const session = await getSession();
@@ -96,6 +98,38 @@ export async function updateComponent(formData: FormData) {
       }
     }
 
+    const wasStatusChange = result.data.status && result.data.status !== existing.status;
+    const isNewReplacement = wasStatusChange && result.data.status === 'NEEDS_REPLACEMENT';
+
+    let sparePartsAlert: { message: string; variant: 'in_stock' | 'partial' | 'out_of_stock' } | null = null;
+
+    if (isNewReplacement) {
+      const spare = await prisma.inventoryItem.findFirst({
+        where: {
+          component_type: result.data.type || existing.type,
+          deleted: false,
+        },
+        select: { name: true, quantity: true, sku: true },
+      });
+
+      if (spare && spare.quantity >= REPLACEMENT_QTY) {
+        sparePartsAlert = {
+          message: `"${spare.name}" (${spare.sku}): ${spare.quantity} unit${spare.quantity !== 1 ? 's' : ''} in stock — allocate from spare parts`,
+          variant: 'in_stock',
+        };
+      } else if (spare && spare.quantity > 0) {
+        sparePartsAlert = {
+          message: `"${spare.name}" (${spare.sku}): ${spare.quantity} in stock, need ${REPLACEMENT_QTY - spare.quantity} more — create partial purchase request`,
+          variant: 'partial',
+        };
+      } else {
+        sparePartsAlert = {
+          message: `No stock found for this component type — create a purchase request for ${REPLACEMENT_QTY} unit${REPLACEMENT_QTY !== 1 ? 's' : ''}`,
+          variant: 'out_of_stock',
+        };
+      }
+    }
+
     const component = await prisma.computerComponent.update({
       where: { id },
       data: {
@@ -108,7 +142,7 @@ export async function updateComponent(formData: FormData) {
     });
 
     revalidatePath(`/dashboard/units/${existing.computer_unit_id}`);
-    return { success: true, data: component };
+    return { success: true, data: component, sparePartsAlert };
   } catch (error) {
     console.error('Update component error:', error);
     return { success: false, error: 'Failed to update component' };
