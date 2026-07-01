@@ -3,174 +3,102 @@ import { prisma } from "@/lib/prisma";
 
 const GROQ_TIMEOUT_MS = 5000;
 
-interface InventoryContext {
-  totalItems: number;
-  lowStockItems: Array<{
+interface LabContext {
+  totalRooms: number;
+  totalUnits: number;
+  totalComponents: number;
+  needsRepair: number;
+  needsReplacement: number;
+  lowStockParts: Array<{
     name: string;
     sku: string;
     quantity: number;
     reorderPoint: number;
   }>;
-  recentPOs: Array<{
-    poNumber: string;
-    status: string;
-    vendorName: string;
-    createdAt: string;
-  }>;
-  vendors: Array<{
-    name: string;
-    email: string | null;
-    phone: string | null;
-  }>;
 }
 
-export async function getInventoryContext(): Promise<InventoryContext> {
-  const [totalCountResult, lowStockItems, recentPOs, vendors] =
+export async function getLabContext(): Promise<LabContext> {
+  const [rooms, units, components, repairCount, replaceCount, lowStock] =
     await Promise.all([
+      prisma.laboratoryRoom.count({ where: { deleted: false } }),
+      prisma.computerUnit.count({ where: { deleted: false } }),
+      prisma.computerComponent.count(),
+      prisma.computerComponent.count({ where: { status: "NEEDS_REPAIR" } }),
+      prisma.computerComponent.count({ where: { status: "NEEDS_REPLACEMENT" } }),
       prisma.$queryRaw<
-        [{ count: bigint }]
-      >`SELECT COUNT(*) as count FROM "InventoryItem" WHERE deleted = false`,
-      prisma.$queryRaw<
-        Array<{
-          name: string;
-          sku: string;
-          quantity: number;
-          reorder_point: number;
-        }>
+        Array<{ name: string; sku: string; quantity: number; reorder_point: number }>
       >`
-      SELECT name, sku, quantity, reorder_point 
-      FROM "InventoryItem" 
-      WHERE deleted = false AND quantity < reorder_point AND reorder_point > 0
-      ORDER BY quantity ASC
-      LIMIT 10
-    `,
-      prisma.$queryRaw<
-        Array<{
-          po_number: string;
-          status: string;
-          name: string;
-          created_at: Date;
-        }>
-      >`
-      SELECT po.po_number, po.status, v.name, po.created_at
-      FROM "PurchaseOrder" po
-      JOIN "Vendor" v ON po.vendor_id = v.id
-      WHERE po.deleted = false
-      ORDER BY po.created_at DESC
-      LIMIT 5
-    `,
-      prisma.$queryRaw<
-        Array<{
-          name: string;
-          email: string | null;
-          phone: string | null;
-        }>
-      >`
-      SELECT name, email, phone 
-      FROM "Vendor" 
-      WHERE deleted = false
-      ORDER BY name ASC
-      LIMIT 10
-    `,
+        SELECT name, sku, quantity, reorder_point
+        FROM "InventoryItem"
+        WHERE deleted = false AND quantity < reorder_point AND reorder_point > 0
+        ORDER BY quantity ASC
+        LIMIT 10
+      `,
     ]);
 
   return {
-    totalItems: Number(totalCountResult[0]?.count || 0),
-    lowStockItems: lowStockItems.map((item) => ({
+    totalRooms: rooms,
+    totalUnits: units,
+    totalComponents: components,
+    needsRepair: repairCount,
+    needsReplacement: replaceCount,
+    lowStockParts: lowStock.map((item) => ({
       name: item.name,
       sku: item.sku,
       quantity: Number(item.quantity),
       reorderPoint: Number(item.reorder_point),
     })),
-    recentPOs: recentPOs.map((po) => ({
-      poNumber: po.po_number,
-      status: po.status,
-      vendorName: po.name,
-      createdAt: po.created_at.toISOString(),
-    })),
-    vendors: vendors.map((v) => ({
-      name: v.name,
-      email: v.email,
-      phone: v.phone,
-    })),
   };
 }
 
-export function buildPrompt(
-  userMessage: string,
-  context: InventoryContext,
-): string {
+export function buildPrompt(userMessage: string, context: LabContext): string {
   const lowStockList =
-    context.lowStockItems.length > 0
-      ? context.lowStockItems
+    context.lowStockParts.length > 0
+      ? context.lowStockParts
           .map(
             (item) =>
               `- ${item.name} (SKU: ${item.sku}): ${item.quantity} units (reorder point: ${item.reorderPoint})`,
           )
           .join("\n")
-      : "No items currently at low stock";
+      : "All spare parts are adequately stocked";
 
-  const recentPOList =
-    context.recentPOs.length > 0
-      ? context.recentPOs
-          .map(
-            (po) =>
-              `- ${po.poNumber} (${po.status}) - Vendor: ${po.vendorName} - Created: ${po.createdAt}`,
-          )
-          .join("\n")
-      : "No recent purchase orders";
+  return `You are an AI assistant for a laboratory computer asset management system.
+You help users understand their lab hardware inventory and provide insights.
 
-  const vendorList =
-    context.vendors.length > 0
-      ? context.vendors
-          .map((v) => `- ${v.name}${v.email ? ` (${v.email})` : ""}`)
-          .join("\n")
-      : "No vendors available";
+CURRENT LAB STATUS:
+- Total laboratory rooms: ${context.totalRooms}
+- Total computer units: ${context.totalUnits}
+- Total hardware components tracked: ${context.totalComponents}
+- Components needing repair: ${context.needsRepair}
+- Components needing replacement: ${context.needsReplacement}
 
-  return `You are an AI assistant for an intelligent procurement and inventory management system. 
-You help users understand their inventory data and provide insights.
-
-CURRENT INVENTORY DATA:
-- Total inventory items: ${context.totalItems}
-- Low stock items (below reorder point):
+LOW STOCK SPARE PARTS:
 ${lowStockList}
-
-RECENT PURCHASE ORDERS:
-${recentPOList}
-
-AVAILABLE VENDORS:
-${vendorList}
 
 User question: ${userMessage}
 
-Provide a helpful, accurate response based on the data above. If you don't have enough information to answer the question, say so. Keep responses concise and actionable.`;
+Provide a helpful, accurate response based on the data above. Keep responses concise and actionable.`;
 }
 
 export async function callGroq(
   userMessage: string,
-  context: InventoryContext | null | undefined,
+  context: LabContext | null | undefined,
   apiKey: string,
 ): Promise<string> {
   if (!context) {
-    throw new Error("Failed to retrieve inventory context");
+    throw new Error("Failed to retrieve lab context");
   }
 
   const openai = new OpenAI({
     baseURL: "https://api.groq.com/openai/v1",
-    apiKey: apiKey,
+    apiKey,
   });
 
   const prompt = buildPrompt(userMessage, context);
-
   const result = await Promise.race([
     openai.chat.completions.create({
       model: "llama-3.1-8b-instant",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
+      messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
       max_tokens: 1024,
     }),
@@ -180,28 +108,14 @@ export async function callGroq(
   ]);
 
   const choice = result.choices[0];
-
-  if (!choice) {
-    throw new Error("No response choices returned from AI");
-  }
-
-  if (choice.finish_reason === "content_filter") {
-    throw new Error("Response blocked by content filter");
-  }
-
-  if (choice.finish_reason === "length") {
-    throw new Error("Response truncated due to length limit");
-  }
-
-  if (!choice.message?.content) {
-    throw new Error("Empty response from AI");
-  }
+  if (!choice) throw new Error("No response choices returned from AI");
+  if (choice.finish_reason === "content_filter") throw new Error("Response blocked by content filter");
+  if (choice.finish_reason === "length") throw new Error("Response truncated due to length limit");
+  if (!choice.message?.content) throw new Error("Empty response from AI");
 
   return choice.message.content;
 }
 
-export function validateApiKey(
-  apiKey: string | null | undefined,
-): apiKey is string {
+export function validateApiKey(apiKey: string | null | undefined): apiKey is string {
   return apiKey !== null && apiKey !== undefined && apiKey.length > 0;
 }
