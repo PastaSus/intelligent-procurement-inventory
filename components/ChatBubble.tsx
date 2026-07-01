@@ -89,7 +89,7 @@ export function ChatBubble() {
       {/* Floating Bubble Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center hover:scale-110 transition-transform"
+        className="fixed bottom-20 right-6 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center hover:scale-110 transition-transform"
         aria-label={isOpen ? 'Close chat' : 'Open chat'}
         aria-expanded={isOpen}
         aria-controls="chat-popup"
@@ -105,7 +105,7 @@ export function ChatBubble() {
       {isOpen && (
         <div
           id="chat-popup"
-          className="fixed bottom-24 right-6 z-40 w-96 max-w-[calc(100vw-2rem)] rounded-lg border bg-card shadow-lg flex flex-col h-[500px]"
+          className="fixed bottom-36 right-6 z-40 w-96 max-w-[calc(100vw-2rem)] rounded-lg border bg-card shadow-lg flex flex-col h-[500px]"
         >
           {/* Header */}
           <div className="border-b p-4 flex items-center justify-between">

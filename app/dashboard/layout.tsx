@@ -25,7 +25,9 @@ export default async function DashboardLayout({
         </main>
       </div>
       <BottomNavigation />
-      <ChatBubble />
+      <div className="md:hidden">
+        <ChatBubble />
+      </div>
     </div>
   );
 }

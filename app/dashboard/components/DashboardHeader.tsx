@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import Link from "next/link";
 import { logout } from "@/app/_actions/auth";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Monitor } from "lucide-react";
 import type { SessionPayload } from "@/lib/auth";
 import { useToast } from "@/lib/toast-context";
 
@@ -24,30 +24,17 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
   return (
     <header className="border-b bg-card">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold">Intelligent Procurement</h1>
+        <div className="flex items-center gap-2">
+          <Monitor className="h-6 w-6 text-primary" />
+          <span className="text-xl font-semibold">LabTrack</span>
           <nav className="hidden md:flex gap-4">
-            <Link href="/dashboard" className="text-sm hover:text-primary">
-              Dashboard
-            </Link>
-            <Link
-              href="/dashboard/inventory"
-              className="text-sm hover:text-primary"
-            >
-              Inventory
-            </Link>
-            <Link
-              href="/dashboard/vendors"
-              className="text-sm hover:text-primary"
-            >
-              Vendors
-            </Link>
-            <Link
-              href="/dashboard/purchase-orders"
-              className="text-sm hover:text-primary"
-            >
-              Orders
-            </Link>
+            <Link href="/dashboard" className="text-sm hover:text-primary">Dashboard</Link>
+            <Link href="/dashboard/rooms" className="text-sm hover:text-primary">Rooms</Link>
+            <Link href="/dashboard/units" className="text-sm hover:text-primary">Units</Link>
+            <Link href="/dashboard/component-status" className="text-sm hover:text-primary">Health</Link>
+            <Link href="/dashboard/inventory" className="text-sm hover:text-primary">Spare Parts</Link>
+            <Link href="/dashboard/purchase-requests" className="text-sm hover:text-primary">Requests</Link>
+            <Link href="/dashboard/chat" className="text-sm hover:text-primary">Chat</Link>
           </nav>
         </div>
 
