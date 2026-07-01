@@ -3,9 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, Command, Copy, Trash2, MessageCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { SuggestionCards, type ReorderSuggestion } from '@/components/SuggestionCards';
-import { parseReorderSuggestions, hasReorderSuggestions } from '@/lib/ai/suggestion-parser';
-import { AISuggestionPODialog } from './AISuggestionPODialog';
+import type { ReorderSuggestion } from '@/components/SuggestionCards';
 
 interface DashboardStats {
   totalInventory: number;
@@ -35,8 +33,7 @@ export function FullScreenChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCommandPalette, setShowCommandPalette] = useState(false);
-  const [suggestions, setSuggestions] = useState<ReorderSuggestion[]>([]);
-  const [selectedSuggestion, setSelectedSuggestion] = useState<ReorderSuggestion | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -169,14 +166,6 @@ export function FullScreenChat() {
         timestamp: new Date(),
       };
 
-      // Parse suggestions from AI response
-      if (hasReorderSuggestions(aiMessage.content)) {
-        const parsedSuggestions = parseReorderSuggestions(aiMessage.content);
-        setSuggestions(parsedSuggestions);
-      } else {
-        setSuggestions([]);
-      }
-
       const finalConversation = {
         ...updatedConversation,
         messages: [...updatedConversation.messages, aiMessage],
@@ -246,9 +235,6 @@ export function FullScreenChat() {
     };
     setConversations((prev) => [newConversation, ...prev]);
     setCurrentConversation(newConversation);
-    // Clear suggestions from previous conversation
-    setSuggestions([]);
-    setSelectedSuggestion(null);
   };
 
   const handleDeleteConversation = (id: string) => {
@@ -274,25 +260,6 @@ export function FullScreenChat() {
       e.preventDefault();
       handleSend();
     }
-  };
-
-  const handleCreatePO = (suggestion: ReorderSuggestion) => {
-    // Open dialog with selected suggestion (user selects vendor, reviews, then confirms)
-    setSelectedSuggestion(suggestion);
-  };
-
-  const handleDismissSuggestion = (suggestionId: string) => {
-    setSuggestions(suggestions.filter(s => s.id !== suggestionId));
-  };
-
-  const handlePODialogClose = () => {
-    setSelectedSuggestion(null);
-  };
-
-  const handlePOSuccess = () => {
-    // Remove only the approved suggestion, keep others
-    setSuggestions(prev => prev.filter(s => s.id !== selectedSuggestion?.id));
-    setSelectedSuggestion(null);
   };
 
   if (!currentConversation) {
@@ -359,8 +326,6 @@ export function FullScreenChat() {
               }`}
               onClick={() => {
                 setCurrentConversation(conv);
-                setSuggestions([]);
-                setSelectedSuggestion(null);
               }}
             >
               <div className="flex items-center justify-between gap-2">
@@ -437,17 +402,6 @@ export function FullScreenChat() {
               </div>
             </div>
           ))}
-
-          {/* Render suggestion cards after last message */}
-          {suggestions.length > 0 && (
-            <div className="max-w-4xl">
-              <SuggestionCards
-                suggestions={suggestions}
-                onCreatePO={handleCreatePO}
-                onDismiss={handleDismissSuggestion}
-              />
-            </div>
-          )}
 
           {isLoading && (
             <div className="flex justify-start">
@@ -555,12 +509,6 @@ export function FullScreenChat() {
         </div>
       )}
 
-      {/* PO Creation Dialog */}
-      <AISuggestionPODialog
-        suggestion={selectedSuggestion}
-        onClose={handlePODialogClose}
-        onSuccess={handlePOSuccess}
-      />
     </div>
   );
 }

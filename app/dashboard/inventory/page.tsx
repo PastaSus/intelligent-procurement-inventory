@@ -2,9 +2,14 @@ import { prisma } from '@/lib/prisma';
 import { InventoryClient } from './InventoryClient';
 import { SearchParams } from './types';
 
-export default async function InventoryPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+const COMPONENT_TYPES = [
+  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD',
+  'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
+] as const;
+
+export default async function SparePartsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
-  
+
   const page = parseInt(params.page || '1', 10);
   const pageSize = 50;
   const skip = (page - 1) * pageSize;
@@ -19,7 +24,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
       description: true,
       quantity: true,
       reorder_point: true,
-      category: true,
+      component_type: true,
       created_at: true,
       updated_at: true,
     },
@@ -31,17 +36,11 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
     where: { deleted: false },
   });
 
-  const categories = await prisma.inventoryItem.findMany({
-    where: { deleted: false },
-    select: { category: true },
-    distinct: ['category'],
-  });
-
   return (
-    <InventoryClient 
-      initialItems={items} 
+    <InventoryClient
+      initialItems={items}
       totalCount={totalCount}
-      categories={categories.filter(c => c.category).map(c => c.category as string)}
+      componentTypes={COMPONENT_TYPES}
       currentPage={page}
       pageSize={pageSize}
     />
