@@ -60,12 +60,12 @@ development_status:
   5-3-automated-replenishment-check: done
 
   # Epic 6: Internal Purchase Request Workflow
-  epic-6: in-progress
-  6-1-create-purchase-request: review
-  6-2-view-purchase-requests-list: backlog
-  6-3-submit-for-approval: review
-  6-4-approve-reject-request: review
-  6-5-fulfill-purchase-request: review
+  epic-6: done
+  6-1-create-purchase-request: done
+  6-2-view-purchase-requests-list: done
+  6-3-submit-for-approval: done
+  6-4-approve-reject-request: done
+  6-5-fulfill-purchase-request: done
 
   # Epic 7: Navigation & Layout Migration
   epic-7: in-progress
