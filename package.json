@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "seed": "node prisma/seed.cjs",
+    "seed": "tsx prisma/seed.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"
