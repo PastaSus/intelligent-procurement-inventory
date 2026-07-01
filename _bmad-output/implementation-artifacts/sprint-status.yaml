@@ -38,11 +38,11 @@ development_status:
   2-4-delete-laboratory-room: done
 
   # Epic 3: Computer Unit Management
-  epic-3: backlog
-  3-1-create-computer-unit: backlog
-  3-2-view-computer-units-list: backlog
-  3-3-edit-computer-unit: backlog
-  3-4-delete-computer-unit-cascade: backlog
+  epic-3: done
+  3-1-create-computer-unit: done
+  3-2-view-computer-units-list: done
+  3-3-edit-computer-unit: done
+  3-4-delete-computer-unit-cascade: done
 
   # Epic 4: Computer Component Tracking
   epic-4: backlog
