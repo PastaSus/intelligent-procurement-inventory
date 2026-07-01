@@ -45,12 +45,12 @@ development_status:
   3-4-delete-computer-unit-cascade: done
 
   # Epic 4: Computer Component Tracking
-  epic-4: backlog
-  4-1-add-component-to-computer-unit: backlog
-  4-2-view-components-by-unit: backlog
-  4-3-edit-component: backlog
-  4-4-remove-component: backlog
-  4-5-bulk-add-components: backlog
+  epic-4: in-progress
+  4-1-add-component-to-computer-unit: done
+  4-2-view-components-by-unit: done
+  4-3-edit-component: done
+  4-4-remove-component: done
+  4-5-bulk-add-components: done
   4-6-component-status-dashboard: backlog
 
   # Epic 5: Spare Parts Inventory

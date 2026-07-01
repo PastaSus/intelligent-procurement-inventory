@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
-import { Plus, Monitor, Search, X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Pencil, Trash2, Building2, Cpu } from 'lucide-react';
+import { Plus, Monitor, Search, X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Pencil, Trash2, Building2, Cpu, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 import { AddUnitForm } from './components/AddUnitForm';
 import { EditUnitForm } from './components/EditUnitForm';
 import { Button } from '@/components/ui/button';
@@ -240,8 +241,15 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
                       </div>
                     </td>
                     <td className="p-3 text-center text-sm text-muted-foreground">{formatDate(unit.updated_at)}</td>
-                    <td className="p-3 text-center w-[100px]">
+                    <td className="p-3 text-center w-[130px]">
                       <div className="flex items-center justify-center gap-1">
+                        <Link
+                          href={`/dashboard/units/${unit.id}`}
+                          className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-primary transition-colors"
+                          title="View Components"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Link>
                         <button
                           onClick={() => setEditingUnit(unit)}
                           className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
