@@ -9,7 +9,7 @@ export async function createInventoryItem(formData: FormData) {
   try {
     const session = await getSession();
     if (!session?.userId) {
-      return { success: false, error: 'You must be logged in to create inventory items' };
+      return { success: false, error: 'You must be logged in' };
     }
 
     const rawData = {
@@ -18,11 +18,10 @@ export async function createInventoryItem(formData: FormData) {
       description: formData.get('description') as string || undefined,
       quantity: parseInt(formData.get('quantity') as string, 10),
       reorder_point: parseInt(formData.get('reorder_point') as string, 10),
-      category: formData.get('category') as string || undefined,
+      component_type: (formData.get('component_type') as string) || undefined,
     };
 
     const result = createInventoryItemSchema.safeParse(rawData);
-
     if (!result.success) {
       return { success: false, error: result.error.issues[0].message };
     }
@@ -30,7 +29,6 @@ export async function createInventoryItem(formData: FormData) {
     const existingItem = await prisma.inventoryItem.findUnique({
       where: { sku: result.data.sku },
     });
-
     if (existingItem) {
       return { success: false, error: 'An item with this SKU already exists' };
     }
@@ -38,13 +36,13 @@ export async function createInventoryItem(formData: FormData) {
     const item = await prisma.inventoryItem.create({
       data: {
         ...result.data,
+        component_type: result.data.component_type ?? null,
         created_by: session.userId,
         updated_by: session.userId,
       },
     });
 
-    revalidatePath('/dashboard/inventory');
-
+    revalidatePath('/dashboard/spare-parts');
     return { success: true, data: item };
   } catch (error) {
     console.error('Create inventory item error:', error);
@@ -56,7 +54,7 @@ export async function updateInventoryItem(formData: FormData) {
   try {
     const session = await getSession();
     if (!session?.userId) {
-      return { success: false, error: 'You must be logged in to update inventory items' };
+      return { success: false, error: 'You must be logged in' };
     }
 
     const id = formData.get('id') as string;
@@ -69,31 +67,15 @@ export async function updateInventoryItem(formData: FormData) {
       description: formData.get('description') as string || undefined,
       quantity: parseInt(formData.get('quantity') as string, 10),
       reorder_point: parseInt(formData.get('reorder_point') as string, 10),
-      category: formData.get('category') as string || undefined,
+      component_type: (formData.get('component_type') as string) || undefined,
     };
 
-    if (isNaN(rawData.quantity) || rawData.quantity < 0) {
-      return { success: false, error: 'Quantity must be a non-negative number' };
-    }
-
-    if (isNaN(rawData.reorder_point) || rawData.reorder_point < 0) {
-      return { success: false, error: 'Reorder point must be a non-negative number' };
-    }
-
-    if (!rawData.name || rawData.name.trim() === '') {
-      return { success: false, error: 'Name is required' };
-    }
-
     const result = updateInventoryItemSchema.safeParse(rawData);
-
     if (!result.success) {
       return { success: false, error: result.error.issues[0].message };
     }
 
-    const existingItem = await prisma.inventoryItem.findUnique({
-      where: { id },
-    });
-
+    const existingItem = await prisma.inventoryItem.findUnique({ where: { id } });
     if (!existingItem) {
       return { success: false, error: 'Item not found' };
     }
@@ -105,17 +87,16 @@ export async function updateInventoryItem(formData: FormData) {
         description: result.data.description,
         quantity: result.data.quantity,
         reorder_point: result.data.reorder_point,
-        category: result.data.category,
+        component_type: result.data.component_type ?? null,
         updated_by: session.userId,
       },
     });
 
-    revalidatePath('/dashboard/inventory');
-
+    revalidatePath('/dashboard/spare-parts');
     return { success: true, data: item };
   } catch (error) {
     console.error('Update inventory item error:', error);
-    return { success: false, error: 'Failed to update inventory item. Please try again.' };
+    return { success: false, error: 'Failed to update inventory item' };
   }
 }
 
@@ -123,7 +104,7 @@ export async function deleteInventoryItem(formData: FormData) {
   try {
     const session = await getSession();
     if (!session?.userId) {
-      return { success: false, error: 'You must be logged in to delete inventory items' };
+      return { success: false, error: 'You must be logged in' };
     }
 
     const id = formData.get('id') as string;
@@ -131,31 +112,23 @@ export async function deleteInventoryItem(formData: FormData) {
       return { success: false, error: 'Item ID is required' };
     }
 
-    const existingItem = await prisma.inventoryItem.findUnique({
-      where: { id },
-    });
-
+    const existingItem = await prisma.inventoryItem.findUnique({ where: { id } });
     if (!existingItem) {
       return { success: false, error: 'Item not found' };
     }
-
     if (existingItem.deleted) {
       return { success: false, error: 'Item has already been deleted' };
     }
 
     await prisma.inventoryItem.update({
       where: { id },
-      data: {
-        deleted: true,
-        updated_by: session.userId,
-      },
+      data: { deleted: true, updated_by: session.userId },
     });
 
-    revalidatePath('/dashboard/inventory');
-
+    revalidatePath('/dashboard/spare-parts');
     return { success: true };
   } catch (error) {
     console.error('Delete inventory item error:', error);
-    return { success: false, error: 'Failed to delete inventory item. Please try again.' };
+    return { success: false, error: 'Failed to delete inventory item' };
   }
 }

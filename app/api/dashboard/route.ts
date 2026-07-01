@@ -9,40 +9,37 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const [totalInventory, lowStockResult, pendingPOs, recentPOs] = await Promise.all([
-      prisma.inventoryItem.count({
-        where: { deleted: false },
-      }),
+    const [
+      totalRooms,
+      totalUnits,
+      totalComponents,
+      needsRepair,
+      needsReplacement,
+      lowStockResult,
+      pendingRequests,
+    ] = await Promise.all([
+      prisma.laboratoryRoom.count({ where: { deleted: false } }),
+      prisma.computerUnit.count({ where: { deleted: false } }),
+      prisma.computerComponent.count(),
+      prisma.computerComponent.count({ where: { status: 'NEEDS_REPAIR' } }),
+      prisma.computerComponent.count({ where: { status: 'NEEDS_REPLACEMENT' } }),
       prisma.$queryRaw<[{ count: bigint }]>`
-        SELECT COUNT(*) as count FROM "InventoryItem" 
+        SELECT COUNT(*) as count FROM "InventoryItem"
         WHERE deleted = false AND quantity < "reorder_point"
       `,
-      prisma.purchaseOrder.count({
-        where: { deleted: false, status: { in: ['DRAFT', 'APPROVED'] } },
-      }),
-      prisma.purchaseOrder.findMany({
-        where: { deleted: false },
-        orderBy: { created_at: 'desc' },
-        take: 10,
-        include: {
-          vendor: { select: { name: true } },
-        },
+      prisma.purchaseRequest.count({
+        where: { deleted: false, status: { in: ['DRAFT', 'REQUESTED'] } },
       }),
     ]);
 
-    const lowStockCount = Number(lowStockResult[0].count);
-
     return NextResponse.json({
-      totalInventory,
-      lowStockCount,
-      pendingPOs,
-      recentPOs: recentPOs.map((po) => ({
-        id: po.id,
-        poNumber: po.po_number,
-        vendor: po.vendor?.name,
-        status: po.status,
-        createdAt: po.created_at,
-      })),
+      totalRooms,
+      totalUnits,
+      totalComponents,
+      needsRepair,
+      needsReplacement,
+      lowStockCount: Number(lowStockResult[0].count),
+      pendingRequests,
     });
   } catch (error) {
     console.error('Dashboard stats error:', error);

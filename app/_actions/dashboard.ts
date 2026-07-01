@@ -7,59 +7,46 @@ export async function getDashboardStats() {
   try {
     const session = await getSession();
     if (!session?.userId) {
-      return { success: false as const, error: 'You must be logged in to view dashboard stats' };
+      return { success: false as const, error: 'Unauthorized' };
     }
 
-    const [totalInventory, lowStockResult, pendingPOs] = await Promise.all([
-      prisma.inventoryItem.count({
-        where: { deleted: false },
-      }),
+    const [
+      totalRooms,
+      totalUnits,
+      totalComponents,
+      needsRepair,
+      needsReplacement,
+      lowStockCount,
+      pendingRequests,
+    ] = await Promise.all([
+      prisma.laboratoryRoom.count({ where: { deleted: false } }),
+      prisma.computerUnit.count({ where: { deleted: false } }),
+      prisma.computerComponent.count(),
+      prisma.computerComponent.count({ where: { status: 'NEEDS_REPAIR' } }),
+      prisma.computerComponent.count({ where: { status: 'NEEDS_REPLACEMENT' } }),
       prisma.$queryRaw<[{ count: bigint }]>`
-        SELECT COUNT(*) as count FROM "InventoryItem" 
+        SELECT COUNT(*) as count FROM "InventoryItem"
         WHERE deleted = false AND quantity < "reorder_point"
       `,
-      prisma.purchaseOrder.count({
-        where: { deleted: false, status: { in: ['DRAFT', 'APPROVED'] } },
+      prisma.purchaseRequest.count({
+        where: { deleted: false, status: { in: ['DRAFT', 'REQUESTED'] } },
       }),
     ]);
 
-    const lowStockCount = lowStockResult?.[0]?.count ? Number(lowStockResult[0].count) : 0;
-
     return {
       success: true as const,
-      data: { totalInventory, lowStockCount, pendingPOs },
+      data: {
+        totalRooms,
+        totalUnits,
+        totalComponents,
+        needsRepair,
+        needsReplacement,
+        lowStockCount: Number(lowStockCount[0]?.count || 0),
+        pendingRequests,
+      },
     };
   } catch (error) {
     console.error('getDashboardStats error:', error);
     return { success: false as const, error: 'Failed to fetch dashboard stats' };
-  }
-}
-
-export async function getLowStockItems() {
-  try {
-    const session = await getSession();
-    if (!session?.userId) {
-      return { success: false as const, error: 'Unauthorized' };
-    }
-
-    const items = await prisma.$queryRaw<Array<{
-      id: string;
-      name: string;
-      sku: string;
-      quantity: number;
-      reorder_point: number;
-      category: string | null;
-    }>>`
-      SELECT id, name, sku, quantity, reorder_point, category
-      FROM "InventoryItem"
-      WHERE deleted = false AND quantity < "reorder_point"
-      ORDER BY quantity ASC
-      LIMIT 10
-    `;
-
-    return { success: true as const, data: items };
-  } catch (error) {
-    console.error('getLowStockItems error:', error);
-    return { success: false as const, error: 'Failed to fetch low stock items' };
   }
 }
