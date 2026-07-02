@@ -68,13 +68,14 @@ export async function updateInventoryItem(formData: FormData) {
 
     const qtyRaw = formData.get('quantity');
     const reorderRaw = formData.get('reorderPoint');
+    const componentTypeRaw = formData.get('componentType') as string;
 
     const rawData = {
       name: formData.get('name') as string,
       description: (formData.get('description') as string) || undefined,
       quantity: qtyRaw ? parseInt(qtyRaw as string, 10) : undefined,
       reorderPoint: reorderRaw ? parseInt(reorderRaw as string, 10) : undefined,
-      componentType: (formData.get('componentType') as string) || undefined,
+      componentType: componentTypeRaw === '' ? null : componentTypeRaw || undefined,
     };
 
     const result = updateInventoryItemSchema.safeParse(rawData);
@@ -94,7 +95,6 @@ export async function updateInventoryItem(formData: FormData) {
         ...rest,
         ...(reorderPoint !== undefined && { reorder_point: reorderPoint }),
         ...(componentType !== undefined && { component_type: componentType }),
-        ...(componentType === null && { component_type: null }),
         updated_by: session.userId,
       },
     });

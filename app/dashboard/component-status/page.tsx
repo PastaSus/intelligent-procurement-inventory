@@ -45,6 +45,7 @@ export default async function ComponentStatusPage() {
     componentsByStatus,
     componentsByType,
     roomsWithIssues,
+    componentsWithIssues,
   ] = await Promise.all([
     prisma.computerComponent.count(),
     Promise.all([
@@ -87,6 +88,20 @@ export default async function ComponentStatusPage() {
         },
       },
       orderBy: { name: 'asc' },
+    }),
+    prisma.computerComponent.findMany({
+      orderBy: [{ type: 'asc' }, { status: 'asc' }],
+      include: {
+        computer_unit: {
+          select: {
+            unit_name: true,
+            laboratory_room: { select: { name: true, id: true } },
+          },
+        },
+      },
+      where: {
+        status: { in: ['NEEDS_REPAIR', 'NEEDS_REPLACEMENT'] },
+      },
     }),
   ]);
 
@@ -230,33 +245,14 @@ export default async function ComponentStatusPage() {
               </tr>
             </thead>
             <tbody>
-              {await (async () => {
-                const allComponents = await prisma.computerComponent.findMany({
-                  orderBy: [{ type: 'asc' }, { status: 'asc' }],
-                  include: {
-                    computer_unit: {
-                      select: {
-                        unit_name: true,
-                        laboratory_room: { select: { name: true, id: true } },
-                      },
-                    },
-                  },
-                  where: {
-                    status: { in: ['NEEDS_REPAIR', 'NEEDS_REPLACEMENT'] },
-                  },
-                });
-
-                if (allComponents.length === 0) {
-                  return (
-                    <tr>
-                      <td colSpan={5} className="p-6 text-center text-muted-foreground text-sm">
-                        All components are functional.
-                      </td>
-                    </tr>
-                  );
-                }
-
-                return allComponents.map((comp) => (
+              {componentsWithIssues.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-muted-foreground text-sm">
+                    All components are functional.
+                  </td>
+                </tr>
+              ) : (
+                componentsWithIssues.map((comp) => (
                   <tr key={comp.id} className="border-b hover:bg-muted/30" tabIndex={0}>
                     <td className="p-3 text-sm font-medium">{comp.type}</td>
                     <td className="p-3 text-sm font-mono">{comp.serial_number}</td>
@@ -266,8 +262,8 @@ export default async function ComponentStatusPage() {
                       <StatusBadge status={comp.status} />
                     </td>
                   </tr>
-                ));
-              })()}
+                ))
+              )}
             </tbody>
           </table>
         </div>

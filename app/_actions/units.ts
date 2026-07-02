@@ -141,12 +141,10 @@ export async function deleteComputerUnit(formData: FormData) {
       return { success: false, error: 'Computer unit not found' };
     }
 
-    await prisma.computerUnit.update({
-      where: { id },
-      data: { deleted: true, updated_by: session.userId },
-    });
+    await prisma.computerUnit.delete({ where: { id } });
 
     revalidatePath('/dashboard/units');
+    revalidatePath('/dashboard/component-status');
     return { success: true, componentCount: existing._count.components };
   } catch (error) {
     console.error('Delete computer unit error:', error);
