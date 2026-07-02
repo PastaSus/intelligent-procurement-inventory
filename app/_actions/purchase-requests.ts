@@ -216,12 +216,25 @@ export async function fulfillPurchaseRequest(formData: FormData) {
       return { success: false, error: 'Only approved requests can be fulfilled' };
     }
 
-    const updated = await prisma.purchaseRequest.update({
-      where: { id },
-      data: { status: 'FULFILLED', updated_by: session.userId },
+    const updated = await prisma.$transaction(async (tx) => {
+      const requestItems = await tx.requestItem.findMany({
+        where: { purchase_request_id: id },
+      });
+      for (const ri of requestItems) {
+        await tx.inventoryItem.updateMany({
+          where: { name: { contains: ri.item_name, mode: 'insensitive' } },
+          data: { quantity: { increment: ri.quantity } },
+        });
+      }
+
+      return tx.purchaseRequest.update({
+        where: { id },
+        data: { status: 'FULFILLED', updated_by: session.userId },
+      });
     });
 
     revalidatePath('/dashboard/purchase-requests');
+    revalidatePath('/dashboard/inventory');
     return { success: true, data: updated };
   } catch (error) {
     console.error('Fulfill purchase request error:', error);
