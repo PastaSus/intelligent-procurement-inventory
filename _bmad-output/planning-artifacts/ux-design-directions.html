@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UX Design Directions - intelligent-procurement-inventory</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #ebebeb; color: #121212; }
+
+  /* ── Direction 1: Classic Sidebar ── */
+  .direction { display: none; }
+  .direction.active { display: block; }
+
+  .nav-tabs { display: flex; gap: 2px; background: #121212; padding: 8px 16px 0; }
+  .nav-tab { padding: 10px 20px; background: #a9a9a9; color: #121212; border: none; cursor: pointer; font-weight: 600; font-size: 13px; border-radius: 8px 8px 0 0; opacity: 0.6; }
+  .nav-tab.active { background: #ebebeb; color: #121212; opacity: 1; }
+  .nav-tab:hover { opacity: 0.9; }
+
+  .preview { display: flex; min-height: 600px; }
+
+  /* Sidebar */
+  .sidebar { width: 240px; background: #121212; color: #ebebeb; padding: 20px 0; display: flex; flex-direction: column; }
+  .sidebar-logo { padding: 0 20px 24px; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; color: #a9a9a9; border-bottom: 1px solid #333; margin-bottom: 12px; }
+  .sidebar-item { padding: 10px 20px; font-size: 13px; color: #a9a9a9; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+  .sidebar-item.active { background: #970301; color: #fff; font-weight: 600; }
+  .sidebar-item:hover:not(.active) { background: #1a1a1a; color: #ebebeb; }
+  .sidebar-item .icon { width: 18px; text-align: center; }
+
+  /* Content */
+  .content { flex: 1; padding: 24px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .header h1 { font-size: 22px; font-weight: 700; color: #121212; }
+  .header-actions { display: flex; gap: 8px; }
+  .btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+  .btn-primary { background: #970301; color: #fff; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: #a9a9a9; color: #121212; }
+  .btn-secondary:hover { opacity: 0.8; }
+
+  /* Stat Cards */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .stat-card .label { font-size: 12px; color: #a9a9a9; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+  .stat-card .sub { font-size: 12px; color: #a9a9a9; margin-top: 4px; }
+  .stat-card .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; margin-top: 6px; }
+  .badge-red { background: #970301; color: #fff; }
+  .badge-yellow { background: #ffee29; color: #121212; }
+  .badge-green { background: #16a34a; color: #fff; }
+  .badge-blue { background: #2563eb; color: #fff; }
+
+  /* Table */
+  .table-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+  .table-header { padding: 16px; font-weight: 600; font-size: 14px; border-bottom: 1px solid #ebebeb; display: flex; justify-content: space-between; align-items: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 16px; color: #a9a9a9; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #ebebeb; }
+  td { padding: 10px 16px; border-bottom: 1px solid #ebebeb; }
+  tr:last-child td { border-bottom: none; }
+  .status-pill { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .status-pill.green { background: #dcfce7; color: #166534; }
+  .status-pill.yellow { background: #fef9c3; color: #854d0e; }
+  .status-pill.red { background: #fee2e2; color: #991b1b; }
+  .status-pill.blue { background: #dbeafe; color: #1e40af; }
+  .status-pill.amber { background: #fef3c7; color: #92400e; }
+
+  /* Direction 2: Compact Dark Header */
+  .dir2 .sidebar { background: #fff; color: #121212; border-right: 1px solid #ebebeb; }
+  .dir2 .sidebar-logo { color: #970301; border-bottom-color: #ebebeb; }
+  .dir2 .sidebar-item { color: #666; }
+  .dir2 .sidebar-item.active { background: #970301; color: #fff; }
+  .dir2 .sidebar-item:hover:not(.active) { background: #f5f5f5; }
+  .dir2 .header { background: #121212; margin: -24px -24px 24px; padding: 16px 24px; }
+  .dir2 .header h1 { color: #fff; }
+
+  /* Direction 3: Minimal Light */
+  .dir3 .sidebar { display: none; }
+  .dir3 .topnav { display: flex; background: #fff; border-bottom: 1px solid #ebebeb; padding: 0 24px; gap: 24px; align-items: center; margin: -24px -24px 24px; }
+  .dir3 .topnav-item { padding: 16px 0; font-size: 13px; color: #a9a9a9; cursor: pointer; border-bottom: 2px solid transparent; }
+  .dir3 .topnav-item.active { color: #970301; border-bottom-color: #970301; font-weight: 600; }
+  .dir3 .topnav-logo { font-weight: 700; color: #121212; font-size: 15px; margin-right: 16px; }
+
+  nav-labels { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; padding: 16px 20px 8px; }
+
+  .direction-label { text-align: center; padding: 8px; font-size: 11px; color: #666; letter-spacing: 1px; text-transform: uppercase; background: #f0f0f0; }
+</style>
+</head>
+<body>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="switchDir(1)">Classic Sidebar</button>
+  <button class="nav-tab" onclick="switchDir(2)">Dark Header</button>
+  <button class="nav-tab" onclick="switchDir(3)">Minimal Topnav</button>
+</div>
+
+<!-- ── DIRECTION 1: Classic Sidebar ── -->
+<div class="direction active dir1" id="dir1">
+  <div class="direction-label">Direction 1: Classic Sidebar — Gray sidebar with red active states, light content area</div>
+  <div class="preview">
+    <div class="sidebar">
+      <div class="sidebar-logo">⚡ INVENTORY</div>
+      <div class="sidebar-item active"><span class="icon">◉</span> Dashboard</div>
+      <div class="sidebar-item"><span class="icon">☰</span> Inventory</div>
+      <div class="sidebar-item"><span class="icon">◎</span> Vendors</div>
+      <div class="sidebar-item"><span class="icon">☷</span> Purchase Orders</div>
+      <div class="sidebar-item"><span class="icon">⚙</span> Labs</div>
+      <div style="flex:1"></div>
+      <div class="sidebar-item"><span class="icon">◌</span> Settings</div>
+    </div>
+    <div class="content">
+      <div class="header">
+        <h1>Dashboard</h1>
+        <div class="header-actions">
+          <button class="btn btn-secondary">Export</button>
+          <button class="btn btn-primary">+ New PO</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="label">Total Items</div><div class="value">342</div><div class="sub">Across 8 labs</div></div>
+        <div class="stat-card"><div class="label">Low Stock</div><div class="value" style="color:#970301">12</div><div class="badge badge-yellow">Reorder soon</div></div>
+        <div class="stat-card"><div class="label">Pending POs</div><div class="value" style="color:#970301">5</div><div class="badge badge-red">Needs approval</div></div>
+        <div class="stat-card"><div class="label">This Month</div><div class="value">₱28,450</div><div class="sub">12 requests fulfilled</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">Recent Activity <span style="color:#a9a9a9;font-weight:400">— Low stock alerts</span></div>
+        <table>
+          <tr><th>Item</th><th>SKU</th><th>Stock</th><th>Reorder Point</th><th>Status</th><th></th></tr>
+          <tr><td>Intel Core i5-4460</td><td>CPU-001</td><td>2</td><td>5</td><td><span class="status-pill red">Critical</span></td><td><button class="btn btn-primary" style="padding:4px 10px;font-size:11px">Reorder</button></td></tr>
+          <tr><td>Logitech M90 Mouse</td><td>MOU-003</td><td>4</td><td>10</td><td><span class="status-pill yellow">Low</span></td><td><button class="btn btn-primary" style="padding:4px 10px;font-size:11px">Reorder</button></td></tr>
+          <tr><td>Samsung 24" Monitor</td><td>MON-002</td><td>8</td><td>3</td><td><span class="status-pill green">OK</span></td><td><button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" disabled>Reorder</button></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── DIRECTION 2: Dark Header ── -->
+<div class="direction dir2" id="dir2">
+  <div class="direction-label">Direction 2: Dark Header — White sidebar, dark top bar, red accent for key actions</div>
+  <div class="preview">
+    <div class="sidebar">
+      <div class="sidebar-logo" style="color:#970301">⚡ INVENTORY</div>
+      <div class="sidebar-item active"><span class="icon">◉</span> Dashboard</div>
+      <div class="sidebar-item"><span class="icon">☰</span> Inventory</div>
+      <div class="sidebar-item"><span class="icon">◎</span> Vendors</div>
+      <div class="sidebar-item"><span class="icon">☷</span> Purchase Orders</div>
+      <div class="sidebar-item"><span class="icon">⚙</span> Labs</div>
+      <div style="flex:1"></div>
+      <div class="sidebar-item"><span class="icon">◌</span> Settings</div>
+    </div>
+    <div class="content" style="padding-top:0">
+      <div class="header" style="background:#121212;margin:-24px -24px 24px;padding:16px 24px;border-radius:0">
+        <h1 style="color:#fff">Dashboard</h1>
+        <div class="header-actions">
+          <button class="btn" style="background:#333;color:#ebebeb">Export</button>
+          <button class="btn btn-primary">+ New PO</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="label">Total Items</div><div class="value">342</div><div class="sub">Across 8 labs</div></div>
+        <div class="stat-card"><div class="label">Low Stock</div><div class="value" style="color:#970301">12</div><div class="badge badge-yellow">Reorder soon</div></div>
+        <div class="stat-card"><div class="label">Pending POs</div><div class="value" style="color:#970301">5</div><div class="badge badge-red">Needs approval</div></div>
+        <div class="stat-card"><div class="label">This Month</div><div class="value">₱28,450</div><div class="sub">12 requests fulfilled</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">Recent Activity <span style="color:#a9a9a9;font-weight:400">— Low stock alerts</span></div>
+        <table>
+          <tr><th>Item</th><th>SKU</th><th>Stock</th><th>Reorder Point</th><th>Status</th><th></th></tr>
+          <tr><td>Intel Core i5-4460</td><td>CPU-001</td><td>2</td><td>5</td><td><span class="status-pill red">Critical</span></td><td><button class="btn btn-primary" style="padding:4px 10px;font-size:11px">Reorder</button></td></tr>
+          <tr><td>Logitech M90 Mouse</td><td>MOU-003</td><td>4</td><td>10</td><td><span class="status-pill yellow">Low</span></td><td><button class="btn btn-primary" style="padding:4px 10px;font-size:11px">Reorder</button></td></tr>
+          <tr><td>Samsung 24" Monitor</td><td>MON-002</td><td>8</td><td>3</td><td><span class="status-pill green">OK</span></td><td><button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" disabled>Reorder</button></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── DIRECTION 3: Minimal Topnav ── -->
+<div class="direction dir3" id="dir3">
+  <div class="direction-label">Direction 3: Minimal Topnav — No sidebar, horizontal navigation, maximal content space</div>
+  <div class="preview">
+    <div class="content" style="padding-top:0">
+      <div class="topnav" style="display:flex;background:#fff;border-bottom:1px solid #ebebeb;padding:0 24px;gap:24px;align-items:center;margin:-24px -24px 24px">
+        <span style="font-weight:700;color:#121212;font-size:15px;margin-right:16px">⚡ INVENTORY</span>
+        <span class="topnav-item" style="padding:16px 0;font-size:13px;color:#970301;cursor:pointer;border-bottom:2px solid #970301;font-weight:600">Dashboard</span>
+        <span class="topnav-item" style="padding:16px 0;font-size:13px;color:#a9a9a9;cursor:pointer">Inventory</span>
+        <span class="topnav-item" style="padding:16px 0;font-size:13px;color:#a9a9a9;cursor:pointer">Vendors</span>
+        <span class="topnav-item" style="padding:16px 0;font-size:13px;color:#a9a9a9;cursor:pointer">POs</span>
+        <span class="topnav-item" style="padding:16px 0;font-size:13px;color:#a9a9a9;cursor:pointer">Labs</span>
+        <div style="flex:1"></div>
+        <button class="btn btn-primary" style="height:32px">+ New PO</button>
+      </div>
+      <div class="header"><h1>Dashboard</h1><div class="header-actions"><button class="btn btn-secondary">Export</button></div></div>
+      <div class="stats">
+        <div class="stat-card"><div class="label">Total Items</div><div class="value">342</div><div class="sub">Across 8 labs</div></div>
+        <div class="stat-card"><div class="label">Low Stock</div><div class="value" style="color:#970301">12</div><div class="badge badge-yellow">Reorder soon</div></div>
+        <div class="stat-card"><div class="label">Pending POs</div><div class="value" style="color:#970301">5</div><div class="badge badge-red">Needs approval</div></div>
+        <div class="stat-card"><div class="label">This Month</div><div class="value">₱28,450</div><div class="sub">12 requests fulfilled</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">Recent Activity <span style="color:#a9a9a9;font-weight:400">— Low stock alerts</span></div>
+        <table>
+          <tr><th>Item</th><th>SKU</th><th>Stock</th><th>Reorder Point</th><th>Status</th><th></th></tr>
+          <tr><td>Intel Core i5-4460</td><td>CPU-001</td><td>2</td><td>5</td><td><span class="status-pill red">Critical</span></td><td><button class="btn btn-primary" style="padding:4px 10px;font-size:11px">Reorder</button></td></tr>
+          <tr><td>Logitech M90 Mouse</td><td>MOU-003</td><td>4</td><td>10</td><td><span class="status-pill yellow">Low</span></td><td><button class="btn btn-primary" style="padding:4px 10px;font-size:11px">Reorder</button></td></tr>
+          <tr><td>Samsung 24" Monitor</td><td>MON-002</td><td>8</td><td>3</td><td><span class="status-pill green">OK</span></td><td><button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" disabled>Reorder</button></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchDir(n) {
+  document.querySelectorAll('.direction').forEach(d => d.classList.remove('active'));
+  document.getElementById('dir'+n).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((t,i) => t.classList.toggle('active', i+1 === n));
+}
+</script>
+</body>
+</html>
