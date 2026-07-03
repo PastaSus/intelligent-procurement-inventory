@@ -84,7 +84,9 @@ body {
   font-family: var(--font-sans);
 }
 
-
+button:not(:disabled) {
+  cursor: pointer;
+}
 
 @keyframes slide-in {
   from {
