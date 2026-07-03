@@ -15,8 +15,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Intelligent Procurement",
-  description: "AI-powered inventory management system",
+  title: "Procurvin | Intelligent Lab Tracker",
+  description: "AI-powered inventory and lab asset management system",
 };
 
 export default function RootLayout({

@@ -23,7 +23,7 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Monitor className="h-6 w-6 text-primary" />
-          <span className="text-xl font-semibold">LabTrack</span>
+          <span className="text-xl font-semibold">Procurvin</span>
         </div>
 
         <div className="flex items-center gap-4">
