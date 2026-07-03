@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
-import Link from 'next/link';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -108,18 +107,9 @@ export function ChatBubble() {
           className="fixed bottom-36 right-6 z-40 w-96 max-w-[calc(100vw-2rem)] rounded-lg border bg-card shadow-lg flex flex-col h-[500px]"
         >
           {/* Header */}
-          <div className="border-b p-4 flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold">AI Assistant</h3>
-              <p className="text-xs text-muted-foreground">Ask about your lab assets</p>
-            </div>
-            <Link
-              href="/dashboard/chat"
-              className="text-xs text-primary hover:underline font-medium ml-2 whitespace-nowrap"
-              title="Open full chat interface"
-            >
-              Open full
-            </Link>
+          <div className="border-b p-4">
+            <h3 className="font-semibold">AI Assistant</h3>
+            <p className="text-xs text-muted-foreground">Ask about your lab assets</p>
           </div>
 
           {/* Messages container */}

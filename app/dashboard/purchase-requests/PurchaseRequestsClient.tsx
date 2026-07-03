@@ -6,6 +6,7 @@ import { CreateRequestForm } from './components/CreateRequestForm';
 import { RejectRequestDialog } from './components/RejectRequestDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { submitPurchaseRequest, fulfillPurchaseRequest, approvePurchaseRequest } from '@/app/_actions/purchase-requests';
 
 interface RequestItem {
@@ -196,15 +197,16 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin }: PurchaseReq
           )}
         </div>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-md border border-input bg-background text-sm"
-        >
-          {statuses.map(s => (
-            <option key={s} value={s}>{s === 'all' ? 'All Statuses' : s}</option>
-          ))}
-        </select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            {statuses.map(s => (
+              <SelectItem key={s} value={s}>{s === 'all' ? 'All Statuses' : s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="bg-card rounded-lg border">
@@ -248,7 +250,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin }: PurchaseReq
                   }, 0);
 
                   return (
-                    <tr key={req.id} className="border-b hover:bg-muted/30" tabIndex={0}>
+                    <tr key={req.id} className="border-b last:border-b-0 hover:bg-muted/30" tabIndex={0}>
                       <td className="p-3">
                         <span className="font-mono font-medium text-sm">{req.pr_number}</span>
                         {req.notes && (

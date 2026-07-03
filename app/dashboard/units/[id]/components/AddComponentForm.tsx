@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { createComponent } from '@/app/_actions/components';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/lib/toast-context';
 import { X } from 'lucide-react';
 
@@ -17,6 +18,8 @@ interface AddComponentFormProps {
 export function AddComponentForm({ computerUnitId, onClose, onSuccess, componentTypes }: AddComponentFormProps) {
   const [isPending, startTransition] = useTransition();
   const { addToast } = useToast();
+  const [type, setType] = useState("");
+  const [status, setStatus] = useState("FUNCTIONAL");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -56,14 +59,17 @@ export function AddComponentForm({ computerUnitId, onClose, onSuccess, component
 
           <div>
             <label htmlFor="type" className="block text-sm font-medium mb-1">Component Type <span className="text-destructive">*</span></label>
-            <select id="type" name="type" required
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              disabled={isPending}>
-              <option value="">-- Select Type --</option>
-              {componentTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
+            <input type="hidden" name="type" value={type} />
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="-- Select Type --" />
+              </SelectTrigger>
+              <SelectContent>
+                {componentTypes.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -78,13 +84,17 @@ export function AddComponentForm({ computerUnitId, onClose, onSuccess, component
 
           <div>
             <label htmlFor="status" className="block text-sm font-medium mb-1">Status</label>
-            <select id="status" name="status" defaultValue="FUNCTIONAL"
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              disabled={isPending}>
-              <option value="FUNCTIONAL">Functional</option>
-              <option value="NEEDS_REPAIR">Needs Repair</option>
-              <option value="NEEDS_REPLACEMENT">Needs Replacement</option>
-            </select>
+            <input type="hidden" name="status" value={status} />
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FUNCTIONAL">Functional</SelectItem>
+                <SelectItem value="NEEDS_REPAIR">Needs Repair</SelectItem>
+                <SelectItem value="NEEDS_REPLACEMENT">Needs Replacement</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex gap-3 pt-2">
