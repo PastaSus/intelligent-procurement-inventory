@@ -191,7 +191,7 @@ export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize }:
               </thead>
               <tbody>
                 {filteredItems.map((room) => (
-                  <tr key={room.id} className="border-b hover:bg-muted/30" tabIndex={0}>
+                  <tr key={room.id} className="border-b last:border-b-0 hover:bg-muted/30" tabIndex={0}>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-muted-foreground" />

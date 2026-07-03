@@ -1,29 +1,90 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #ebebeb;
+  --foreground: #121212;
+  --card: #ffffff;
+  --card-foreground: #121212;
+  --popover: #ffffff;
+  --popover-foreground: #121212;
+  --primary: #121212;
+  --primary-foreground: #ffffff;
+  --secondary: #a9a9a9;
+  --secondary-foreground: #121212;
+  --muted: #a9a9a9;
+  --muted-foreground: #666666;
+  --accent: #402020;
+  --accent-foreground: #ffffff;
+  --destructive: #800000;
+  --destructive-foreground: #ffffff;
+  --border: #d0d0d0;
+  --input: #d0d0d0;
+  --ring: #402020;
+  --radius: 0.5rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-dept-gray-50: #ebebeb;
+  --color-dept-gray-400: #a9a9a9;
+  --color-dept-gray-900: #121212;
+  --color-dept-maroon: #402020;
+  --color-dept-gold: #e0c020;
+  --color-dept-crimson: #800000;
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1a1a1a;
+    --foreground: #ebebeb;
+    --card: #2a2a2a;
+    --card-foreground: #ebebeb;
+    --popover: #2a2a2a;
+    --popover-foreground: #ebebeb;
+    --primary: #ebebeb;
+    --primary-foreground: #1a1a1a;
+    --secondary: #404040;
+    --secondary-foreground: #ebebeb;
+    --muted: #404040;
+    --muted-foreground: #a9a9a9;
+    --accent: #5c2e2e;
+    --accent-foreground: #ebebeb;
+    --destructive: #a00000;
+    --destructive-foreground: #ebebeb;
+    --border: #404040;
+    --input: #404040;
+    --ring: #5c2e2e;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
+
+
 
 @keyframes slide-in {
   from {

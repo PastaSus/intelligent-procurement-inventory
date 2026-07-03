@@ -6,6 +6,7 @@ import { AddProductForm } from './components/AddProductForm';
 import { EditProductForm } from './components/EditProductForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { deleteInventoryItem } from '@/app/_actions/inventory';
 
 interface InventoryItem {
@@ -187,27 +188,29 @@ export function InventoryClient({ initialItems, totalCount, componentTypes, curr
           )}
         </div>
 
-        <select
-          value={selectedComponentType}
-          onChange={(e) => setSelectedComponentType(e.target.value)}
-          className="px-3 py-2 rounded-md border border-input bg-background text-sm"
-        >
-          <option value="all">All Component Types</option>
-          {componentTypes.map(type => (
-            <option key={type} value={type}>{type}</option>
-          ))}
-        </select>
+        <Select value={selectedComponentType} onValueChange={setSelectedComponentType}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All Component Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Component Types</SelectItem>
+            {componentTypes.map(type => (
+              <SelectItem key={type} value={type}>{type}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <select
-          value={stockStatus}
-          onChange={(e) => setStockStatus(e.target.value as typeof stockStatus)}
-          className="px-3 py-2 rounded-md border border-input bg-background text-sm"
-        >
-          <option value="all">All Stock Status</option>
-          <option value="low">Low Stock</option>
-          <option value="critical">Critical (0)</option>
-          <option value="normal">Normal</option>
-        </select>
+        <Select value={stockStatus} onValueChange={(v) => setStockStatus(v as typeof stockStatus)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All Stock Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Stock Status</SelectItem>
+            <SelectItem value="low">Low Stock</SelectItem>
+            <SelectItem value="critical">Critical (0)</SelectItem>
+            <SelectItem value="normal">Normal</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="bg-card rounded-lg border">
@@ -263,7 +266,7 @@ export function InventoryClient({ initialItems, totalCount, componentTypes, curr
                   const isCritical = item.quantity === 0;
 
                   return (
-                    <tr key={item.id} className="border-b hover:bg-muted/30" tabIndex={0}>
+                    <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/30" tabIndex={0}>
                       <td className="p-3 text-sm font-mono">{item.sku}</td>
                       <td className="p-3">
                         <div>

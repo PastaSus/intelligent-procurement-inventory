@@ -4,17 +4,17 @@ import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
 import { useToast } from '@/lib/toast-context';
 
 const variantStyles = {
-  success: 'bg-green-50 border-green-200 text-green-800',
-  error: 'bg-red-50 border-red-200 text-red-800',
-  warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-  info: 'bg-blue-50 border-blue-200 text-blue-800',
+  success: 'bg-muted/20 border-[#a9a9a9] text-foreground',
+  error: 'bg-destructive/10 border-destructive text-destructive',
+  warning: 'bg-[#402020]/10 border-[#402020] text-[#402020]',
+  info: 'bg-muted/20 border-muted text-muted-foreground',
 };
 
 const iconStyles = {
-  success: 'text-green-500',
-  error: 'text-red-500',
-  warning: 'text-yellow-500',
-  info: 'text-blue-500',
+  success: 'text-foreground',
+  error: 'text-destructive',
+  warning: 'text-[#402020]',
+  info: 'text-muted-foreground',
 };
 
 const icons = {

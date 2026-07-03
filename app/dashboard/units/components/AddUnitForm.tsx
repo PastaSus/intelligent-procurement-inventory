@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { createComputerUnit } from '@/app/_actions/units';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/lib/toast-context';
 import { X } from 'lucide-react';
 
@@ -21,6 +22,7 @@ interface AddUnitFormProps {
 export function AddUnitForm({ onClose, onSuccess, rooms }: AddUnitFormProps) {
   const [isPending, startTransition] = useTransition();
   const { addToast } = useToast();
+  const [laboratoryRoomId, setLaboratoryRoomId] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -65,14 +67,17 @@ export function AddUnitForm({ onClose, onSuccess, rooms }: AddUnitFormProps) {
 
           <div>
             <label htmlFor="laboratoryRoomId" className="block text-sm font-medium mb-1">Laboratory Room <span className="text-destructive">*</span></label>
-            <select id="laboratoryRoomId" name="laboratoryRoomId" required
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              disabled={isPending}>
-              <option value="">-- Select Room --</option>
-              {rooms.map(room => (
-                <option key={room.id} value={room.id}>{room.name}</option>
-              ))}
-            </select>
+            <input type="hidden" name="laboratoryRoomId" value={laboratoryRoomId} />
+            <Select value={laboratoryRoomId} onValueChange={setLaboratoryRoomId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="-- Select Room --" />
+              </SelectTrigger>
+              <SelectContent>
+                {rooms.map(room => (
+                  <SelectItem key={room.id} value={room.id}>{room.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex gap-3 pt-2">

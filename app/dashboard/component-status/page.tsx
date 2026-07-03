@@ -253,7 +253,7 @@ export default async function ComponentStatusPage() {
                 </tr>
               ) : (
                 componentsWithIssues.map((comp) => (
-                  <tr key={comp.id} className="border-b hover:bg-muted/30" tabIndex={0}>
+                  <tr key={comp.id} className="border-b last:border-b-0 hover:bg-muted/30" tabIndex={0}>
                     <td className="p-3 text-sm font-medium">{comp.type}</td>
                     <td className="p-3 text-sm font-mono">{comp.serial_number}</td>
                     <td className="p-3 text-sm">{comp.computer_unit.unit_name}</td>

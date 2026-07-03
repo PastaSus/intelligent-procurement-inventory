@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { updateInventoryItem } from '@/app/_actions/inventory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/lib/toast-context';
 import { X } from 'lucide-react';
 
@@ -27,6 +28,7 @@ interface EditProductFormProps {
 export function EditProductForm({ item, onClose, onSuccess, componentTypes }: EditProductFormProps) {
   const [isPending, startTransition] = useTransition();
   const { addToast } = useToast();
+  const [componentType, setComponentType] = useState(item.component_type || "");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -84,14 +86,17 @@ export function EditProductForm({ item, onClose, onSuccess, componentTypes }: Ed
 
           <div>
             <label htmlFor="componentType" className="block text-sm font-medium mb-1">Component Type</label>
-            <select id="componentType" name="componentType" defaultValue={item.component_type || ''}
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              disabled={isPending}>
-              <option value="">-- None --</option>
-              {componentTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
+            <input type="hidden" name="componentType" value={componentType} />
+            <Select value={componentType} onValueChange={setComponentType}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="-- None --" />
+              </SelectTrigger>
+              <SelectContent>
+                {componentTypes.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

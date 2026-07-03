@@ -7,6 +7,7 @@ import { AddUnitForm } from './components/AddUnitForm';
 import { EditUnitForm } from './components/EditUnitForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { deleteComputerUnit } from '@/app/_actions/units';
 
 interface ComputerUnit {
@@ -177,16 +178,17 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
           )}
         </div>
 
-        <select
-          value={selectedRoomId}
-          onChange={(e) => setSelectedRoomId(e.target.value)}
-          className="px-3 py-2 rounded-md border border-input bg-background text-sm"
-        >
-          <option value="all">All Rooms</option>
-          {rooms.map(room => (
-            <option key={room.id} value={room.id}>{room.name}</option>
-          ))}
-        </select>
+        <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All Rooms" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Rooms</SelectItem>
+            {rooms.map(room => (
+              <SelectItem key={room.id} value={room.id}>{room.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="bg-card rounded-lg border">
@@ -221,7 +223,7 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
               </thead>
               <tbody>
                 {filteredItems.map((unit) => (
-                  <tr key={unit.id} className="border-b hover:bg-muted/30" tabIndex={0}>
+                  <tr key={unit.id} className="border-b last:border-b-0 hover:bg-muted/30" tabIndex={0}>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Monitor className="h-4 w-4 text-muted-foreground" />

@@ -174,7 +174,7 @@ export function ComponentsClient({ unit, initialComponents, componentTypes }: Co
               </thead>
               <tbody>
                 {componentsByType.map(({ type, component }) => (
-                  <tr key={type} className={`border-b hover:bg-muted/30 ${!component ? 'opacity-40' : ''}`} tabIndex={0}>
+                  <tr key={type} className={`border-b last:border-b-0 hover:bg-muted/30 ${!component ? 'opacity-40' : ''}`} tabIndex={0}>
                     <td className="p-3">
                       <span className="font-medium">{type}</span>
                     </td>
