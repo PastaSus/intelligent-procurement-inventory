@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { Search, Command, Copy, Trash2, MessageCircle, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { useState, useRef, useEffect } from "react";
+import { Search, Copy, Trash2, MessageCircle, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 interface DashboardStats {
   totalRooms: number;
@@ -14,7 +14,7 @@ interface DashboardStats {
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: Date;
 }
@@ -27,63 +27,55 @@ interface Conversation {
   updatedAt: Date;
 }
 
-export function FullScreenChat() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showCommandPalette, setShowCommandPalette] = useState(false);
+function createInitialConversation(): Conversation {
+  return {
+    id: Date.now().toString(),
+    title: "New Conversation",
+    messages: [
+      {
+        id: "1",
+        role: "assistant",
+        content:
+          "Hi! I can help you with lab asset insights. What would you like to know?",
+        timestamp: new Date(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+}
 
+export function FullScreenChat() {
+  const initialConv = createInitialConversation();
+  const [conversations, setConversations] = useState<Conversation[]>([
+    initialConv,
+  ]);
+  const [currentConversation, setCurrentConversation] =
+    useState<Conversation | null>(initialConv);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize with a new conversation
+  // Redirect mobile users to dashboard (chat bubble is the mobile interface)
   useEffect(() => {
-    if (conversations.length === 0) {
-      const newConversation: Conversation = {
-        id: Date.now().toString(),
-        title: 'New Conversation',
-        messages: [
-          {
-            id: '1',
-            role: 'assistant',
-            content: 'Hi! I can help you with lab asset insights. What would you like to know?',
-            timestamp: new Date(),
-          },
-        ],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      setConversations([newConversation]);
-      setCurrentConversation(newConversation);
+    if (window.innerWidth < 768) {
+      window.location.href = "/dashboard";
     }
   }, []);
 
   // Auto-scroll to bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [currentConversation?.messages]);
-
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowCommandPalette(!showCommandPalette);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showCommandPalette]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading || !currentConversation) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      role: 'user',
+      role: "user",
       content: input,
       timestamp: new Date(),
     };
@@ -94,29 +86,29 @@ export function FullScreenChat() {
       updatedAt: new Date(),
     };
     setCurrentConversation(updatedConversation);
-    setInput('');
+    setInput("");
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),
       });
 
       if (!response.ok) {
         let aiUnavailable = false;
-        let errorDetail = '';
+        let errorDetail = "";
 
         if (response.status === 503) {
           aiUnavailable = true;
-          errorDetail = 'AI service is not configured.';
+          errorDetail = "AI service is not configured.";
         } else if (response.status === 504) {
           aiUnavailable = true;
-          errorDetail = 'AI service took too long to respond.';
+          errorDetail = "AI service took too long to respond.";
         } else if (response.status === 429) {
           aiUnavailable = true;
-          errorDetail = 'AI service quota exceeded. Please try again later.';
+          errorDetail = "AI service quota exceeded. Please try again later.";
         }
 
         const errorBody = await response.json().catch(() => null);
@@ -125,9 +117,9 @@ export function FullScreenChat() {
         }
 
         // Fetch fallback dashboard stats
-        let statsBody = '';
+        let statsBody = "";
         try {
-          const statsRes = await fetch('/api/dashboard');
+          const statsRes = await fetch("/api/dashboard");
           if (statsRes.ok) {
             const stats: DashboardStats = await statsRes.json();
             statsBody = `\n\n**Current Lab Status:**\n- Rooms: ${stats.totalRooms}\n- Units: ${stats.totalUnits}\n- Needs repair: ${stats.needsRepair}\n- Pending requests: ${stats.pendingRequests}`;
@@ -146,7 +138,7 @@ export function FullScreenChat() {
             ...updatedConversation.messages,
             {
               id: Date.now().toString(),
-              role: 'assistant' as const,
+              role: "assistant" as const,
               content: fallbackContent,
               timestamp: new Date(),
             },
@@ -154,7 +146,9 @@ export function FullScreenChat() {
         };
         setCurrentConversation(fallbackConversation);
         setConversations((prev) =>
-          prev.map((c) => (c.id === fallbackConversation.id ? fallbackConversation : c))
+          prev.map((c) =>
+            c.id === fallbackConversation.id ? fallbackConversation : c,
+          ),
         );
         return;
       }
@@ -162,8 +156,8 @@ export function FullScreenChat() {
       const data = await response.json();
       const aiMessage: Message = {
         id: Date.now().toString(),
-        role: 'assistant',
-        content: data.response || 'No response received',
+        role: "assistant",
+        content: data.response || "No response received",
         timestamp: new Date(),
       };
 
@@ -176,16 +170,20 @@ export function FullScreenChat() {
 
       // Update conversation in list
       setConversations((prev) =>
-        prev.map((c) => (c.id === finalConversation.id ? finalConversation : c))
+        prev.map((c) =>
+          c.id === finalConversation.id ? finalConversation : c,
+        ),
       );
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'An error occurred. Please try again.';
+        error instanceof Error
+          ? error.message
+          : "An error occurred. Please try again.";
 
       // Fetch fallback dashboard stats on network error too
-      let statsBody = '';
+      let statsBody = "";
       try {
-        const statsRes = await fetch('/api/dashboard');
+        const statsRes = await fetch("/api/dashboard");
         if (statsRes.ok) {
           const stats: DashboardStats = await statsRes.json();
           statsBody = `\n\n**Current Lab Status:**\n- Rooms: ${stats.totalRooms}\n- Units: ${stats.totalUnits}\n- Needs repair: ${stats.needsRepair}\n- Pending requests: ${stats.pendingRequests}`;
@@ -194,7 +192,7 @@ export function FullScreenChat() {
         // Fallback stats unavailable — skip
       }
 
-      const fallbackContent = errorMessage.includes('fetch')
+      const fallbackContent = errorMessage.includes("fetch")
         ? `**AI is unavailable right now.** Network error — could not reach the AI service. Please try again later.${statsBody}`
         : `Sorry, something went wrong: ${errorMessage}${statsBody}`;
 
@@ -204,7 +202,7 @@ export function FullScreenChat() {
           ...updatedConversation.messages,
           {
             id: Date.now().toString(),
-            role: 'assistant',
+            role: "assistant",
             content: fallbackContent,
             timestamp: new Date(),
           },
@@ -212,7 +210,9 @@ export function FullScreenChat() {
       };
       setCurrentConversation(errorConversation);
       setConversations((prev) =>
-        prev.map((c) => (c.id === errorConversation.id ? errorConversation : c))
+        prev.map((c) =>
+          c.id === errorConversation.id ? errorConversation : c,
+        ),
       );
     } finally {
       setIsLoading(false);
@@ -222,12 +222,13 @@ export function FullScreenChat() {
   const handleNewConversation = () => {
     const newConversation: Conversation = {
       id: Date.now().toString(),
-      title: 'New Conversation',
+      title: "New Conversation",
       messages: [
         {
-          id: '1',
-          role: 'assistant',
-          content: 'Hi! I can help you with inventory insights. What would you like to know?',
+          id: "1",
+          role: "assistant",
+          content:
+            "Hi! I can help you with inventory insights. What would you like to know?",
           timestamp: new Date(),
         },
       ],
@@ -252,12 +253,12 @@ export function FullScreenChat() {
 
   const filteredConversations = conversations.filter((c) =>
     c.messages.some((m) =>
-      m.content.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+      m.content.toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -322,8 +323,8 @@ export function FullScreenChat() {
               key={conv.id}
               className={`group p-3 rounded-lg cursor-pointer transition-colors ${
                 currentConversation.id === conv.id
-                  ? 'bg-primary/10 text-primary'
-                  : 'hover:bg-muted'
+                  ? "bg-primary/10 text-primary"
+                  : "hover:bg-muted"
               }`}
               onClick={() => {
                 setCurrentConversation(conv);
@@ -359,12 +360,11 @@ export function FullScreenChat() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">AI Chat Assistant</h1>
-              <p className="text-muted-foreground">Ask questions about your lab assets</p>
+              <p className="text-muted-foreground">
+                Ask questions about your lab assets
+              </p>
             </div>
-            <div className="text-xs text-muted-foreground flex items-center gap-2">
-              <Command className="h-4 w-4" />
-              <span>Press Ctrl+K for commands</span>
-            </div>
+            <div />
           </div>
         </div>
 
@@ -378,19 +378,19 @@ export function FullScreenChat() {
           {currentConversation.messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
                 className={`max-w-2xl px-6 py-4 rounded-lg ${
-                  message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
+                  message.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                 <div className="flex items-center justify-between gap-4 mt-2 text-xs opacity-70">
                   <time>{message.timestamp.toLocaleTimeString()}</time>
-                  {message.role === 'assistant' && (
+                  {message.role === "assistant" && (
                     <button
                       onClick={() => handleCopyMessage(message.content)}
                       className="hover:opacity-100 transition-opacity"
@@ -419,13 +419,15 @@ export function FullScreenChat() {
           {/* Suggested prompts */}
           {currentConversation.messages.length <= 1 && (
             <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Suggested prompts:</p>
+              <p className="text-xs text-muted-foreground">
+                Suggested prompts:
+              </p>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  'What needs repair?',
-                  'Show spare parts stock',
-                  'Total unit count',
-                  'Pending requests',
+                  "What needs repair?",
+                  "Show spare parts stock",
+                  "Total unit count",
+                  "Pending requests",
                 ].map((prompt) => (
                   <button
                     key={prompt}
@@ -472,44 +474,6 @@ export function FullScreenChat() {
           </form>
         </div>
       </div>
-
-      {/* Command Palette */}
-      {showCommandPalette && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center pt-20">
-          <div className="bg-card rounded-lg border shadow-lg w-full max-w-lg p-4">
-            <div className="space-y-4">
-              <h3 className="font-semibold">Commands</h3>
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    handleNewConversation();
-                    setShowCommandPalette(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-muted rounded-lg transition-colors text-sm"
-                >
-                  New conversation
-                </button>
-                <button
-                  onClick={() => {
-                    inputRef.current?.focus();
-                    setShowCommandPalette(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-muted rounded-lg transition-colors text-sm"
-                >
-                  Focus input
-                </button>
-                <button
-                  onClick={() => setShowCommandPalette(false)}
-                  className="w-full text-left px-4 py-2 hover:bg-muted rounded-lg transition-colors text-sm"
-                >
-                  Close (Esc)
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
