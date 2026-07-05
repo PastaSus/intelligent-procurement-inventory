@@ -47,6 +47,36 @@ interface InventoryClientProps {
   pageSize: number;
 }
 
+function SortHeader({
+  column,
+  label,
+  sortBy,
+  sortOrder,
+  onSort,
+}: {
+  column: "sku" | "name" | "quantity" | "component_type" | "updated_at";
+  label: string;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+  onSort: (column: "sku" | "name" | "quantity" | "component_type" | "updated_at") => void;
+}) {
+  const isActive = sortBy === column;
+  return (
+    <button
+      onClick={() => onSort(column)}
+      className="flex items-center gap-1 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+    >
+      <span>{label}</span>
+      {isActive &&
+        (sortOrder === "asc" ? (
+          <ChevronUp className="h-3 w-3" />
+        ) : (
+          <ChevronDown className="h-3 w-3" />
+        ))}
+    </button>
+  );
+}
+
 export function InventoryClient({
   initialItems,
   totalCount,
@@ -165,30 +195,6 @@ export function InventoryClient({
       setSortBy(column);
       setSortOrder("asc");
     }
-  }
-
-  function SortHeader({
-    column,
-    label,
-  }: {
-    column: typeof sortBy;
-    label: string;
-  }) {
-    const isActive = sortBy === column;
-    return (
-      <button
-        onClick={() => handleSort(column)}
-        className="flex items-center gap-1 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-      >
-        <span>{label}</span>
-        {isActive &&
-          (sortOrder === "asc" ? (
-            <ChevronUp className="h-3 w-3" />
-          ) : (
-            <ChevronDown className="h-3 w-3" />
-          ))}
-      </button>
-    );
   }
 
   function formatDate(date: Date) {
@@ -316,16 +322,16 @@ export function InventoryClient({
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-3 text-sm font-medium">
-                    <SortHeader column="sku" label="SKU" />
+                    <SortHeader column="sku" label="SKU" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
                   </th>
                   <th className="text-left p-3 text-sm font-medium">
-                    <SortHeader column="name" label="Name" />
+                    <SortHeader column="name" label="Name" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
                   </th>
                   <th className="text-left p-3 text-sm font-medium">
-                    <SortHeader column="component_type" label="Component" />
+                    <SortHeader column="component_type" label="Component" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
                   </th>
                   <th className="text-center p-3 text-sm font-medium">
-                    <SortHeader column="quantity" label="Qty" />
+                    <SortHeader column="quantity" label="Qty" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
                   </th>
                   <th className="text-center p-3 text-sm font-medium">
                     Reorder
@@ -334,7 +340,7 @@ export function InventoryClient({
                     Status
                   </th>
                   <th className="text-center p-3 text-sm font-medium">
-                    <SortHeader column="updated_at" label="Updated" />
+                    <SortHeader column="updated_at" label="Updated" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
                   </th>
                   <th className="text-center w-[100px] p-3 text-sm font-medium">
                     Actions
