@@ -14,7 +14,11 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
 
   const handleLogout = () => {
     startTransition(async () => {
-      await logout();
+      try {
+        await logout();
+      } catch {
+        // redirect() throws NEXT_REDIRECT internally — handled by Next.js
+      }
     });
   };
 
