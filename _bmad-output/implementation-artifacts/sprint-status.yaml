@@ -45,7 +45,7 @@ development_status:
   3-4-delete-computer-unit-cascade: done
 
   # Epic 4: Computer Component Tracking
-  epic-4: in-progress
+  epic-4: done
   4-1-add-component-to-computer-unit: done
   4-2-view-components-by-unit: done
   4-3-edit-component: done
