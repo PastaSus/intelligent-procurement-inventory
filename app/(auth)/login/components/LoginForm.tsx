@@ -5,6 +5,7 @@ import { login } from '@/app/_actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/lib/toast-context';
+import { Mail, Lock, Loader2 } from 'lucide-react';
 
 export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
@@ -24,56 +25,66 @@ export function LoginForm() {
         addToast(result.error || 'Login failed', 'error');
       } else {
         addToast('Login successful!', 'success');
+        window.location.href = '/dashboard';
       }
     });
   };
 
   return (
-    <form className="space-y-6" onSubmit={handleSubmit}>
+    <form className="space-y-5" onSubmit={handleSubmit}>
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
-          <p className="text-sm font-medium text-red-800">{error}</p>
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3">
+          <p className="text-sm font-medium text-destructive">{error}</p>
         </div>
       )}
 
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          Email address
+      <div className="space-y-1.5">
+        <label htmlFor="email" className="text-sm font-medium text-foreground">
+          Email
         </label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          className="mt-1"
-          placeholder="Enter your email"
-          disabled={isPending}
-        />
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            className="pl-10"
+            placeholder="you@example.com"
+            disabled={isPending}
+          />
+        </div>
       </div>
 
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+      <div className="space-y-1.5">
+        <label htmlFor="password" className="text-sm font-medium text-foreground">
           Password
         </label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          className="mt-1"
-          placeholder="Enter your password"
-          disabled={isPending}
-        />
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            className="pl-10"
+            placeholder="Enter your password"
+            disabled={isPending}
+          />
+        </div>
       </div>
 
-      <Button
-        type="submit"
-        disabled={isPending}
-        className="w-full"
-      >
-        {isPending ? 'Signing in...' : 'Sign in'}
+      <Button type="submit" disabled={isPending} className="w-full" size="lg">
+        {isPending ? (
+          <>
+            <Loader2 className="size-4 animate-spin" />
+            Signing in...
+          </>
+        ) : (
+          'Sign in'
+        )}
       </Button>
     </form>
   );
