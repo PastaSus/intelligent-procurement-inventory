@@ -6,13 +6,22 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding database...');
 
+  // Clean existing data in reverse dependency order
+  await prisma.computerComponent.deleteMany();
+  await prisma.computerUnit.deleteMany();
+  await prisma.laboratoryRoom.deleteMany();
+  await prisma.inventoryItem.deleteMany();
+  await prisma.requestItem.deleteMany();
+  await prisma.purchaseRequest.deleteMany();
+  await prisma.passwordResetToken.deleteMany();
+
   const hashedPassword = await bcrypt.hash('admin123', 10);
 
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@example.com' },
+    where: { email: 'aarongtxd@gmail.com' },
     update: {},
     create: {
-      email: 'admin@example.com',
+      email: 'aarongtxd@gmail.com',
       password_hash: hashedPassword,
       role: 'ADMIN',
     },
