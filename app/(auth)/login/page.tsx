@@ -4,26 +4,39 @@ import { redirect } from 'next/navigation';
 import { LoginForm } from './components/LoginForm';
 
 export default async function LoginPage() {
-  // Check if user already logged in → redirect to dashboard
   const session = await getSession();
   if (session) {
     redirect('/dashboard');
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Sign in to your account
-          </h2>
+    <div className="flex min-h-screen items-center justify-center bg-dept-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md">
+        <div className="rounded-xl border border-dept-maroon/30 bg-card p-8 shadow-2xl shadow-dept-maroon/10">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-dept-maroon to-dept-crimson shadow-lg">
+              <span className="text-2xl font-bold text-dept-gold">P</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Procurvin
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Intelligent Lab Asset Tracker
+            </p>
+          </div>
+          <LoginForm />
+          <div className="mt-6 text-center">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-muted-foreground hover:text-accent transition-colors"
+            >
+              Forgot your password?
+            </Link>
+          </div>
         </div>
-        <LoginForm />
-        <div className="text-center">
-          <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-            Forgot your password?
-          </Link>
-        </div>
+        <p className="mt-4 text-center text-xs text-dept-gray-400">
+          &copy; {new Date().getFullYear()} Procurvin. All rights reserved.
+        </p>
       </div>
     </div>
   );
