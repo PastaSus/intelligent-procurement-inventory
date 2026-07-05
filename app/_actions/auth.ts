@@ -6,21 +6,17 @@ import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { sendPasswordResetEmail } from '@/lib/email';
 import crypto from 'crypto';
 
 const SESSION_COOKIE_NAME = 'session';
 
 export async function logout() {
-  try {
-    const cookieStore = await cookies();
-    cookieStore.delete(SESSION_COOKIE_NAME);
-    revalidatePath('/login');
-    revalidatePath('/dashboard');
-    redirect('/login');
-  } catch (error) {
-    console.error('Logout error:', error);
-    redirect('/login');
-  }
+  const cookieStore = await cookies();
+  cookieStore.delete(SESSION_COOKIE_NAME);
+  revalidatePath('/login');
+  revalidatePath('/dashboard');
+  redirect('/login');
 }
 
 export async function login(formData: FormData) {
@@ -106,12 +102,18 @@ export async function requestPasswordReset(email: string) {
       },
     });
 
-    // TODO: Send email with reset link
-    console.log(`Password reset link: /reset-password?token=${token}`);
+    try {
+      await sendPasswordResetEmail(user.email, token);
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError);
+    }
+
+    const resetUrl = `${process.env.APP_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
 
     return {
       success: true,
       message: 'If an account exists with this email, you will receive a reset link',
+      resetUrl: process.env.NODE_ENV === 'development' ? resetUrl : undefined,
     };
   } catch (error) {
     console.error('Password reset request error:', error);
