@@ -7,7 +7,7 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 
 const SESSION_COOKIE_NAME = "session";
-const PUBLIC_ROUTES = ["/", "/login", "/forgot-password"];
+const PUBLIC_ROUTES = ["/", "/login", "/forgot-password", "/reset-password"];
 
 const ADMIN_ROUTES = ["/dashboard/admin", "/dashboard/users", "/dashboard/settings"];
 const PROTECTED_PREFIXES = ["/dashboard"];
