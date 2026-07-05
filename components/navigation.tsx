@@ -46,10 +46,13 @@ const navItems: NavItem[] = [
 ];
 
 function isActiveLink(pathname: string, href: string): boolean {
+  const normalized = pathname.endsWith("/") && pathname.length > 1
+    ? pathname.slice(0, -1)
+    : pathname;
   if (href === "/dashboard") {
-    return pathname === "/dashboard";
+    return normalized === "/dashboard";
   }
-  return pathname === href || pathname.startsWith(href + "/");
+  return normalized === href || normalized.startsWith(href + "/");
 }
 
 export function BottomNavigation() {

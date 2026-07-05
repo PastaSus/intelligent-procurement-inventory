@@ -1,4 +1,4 @@
-import { Building2, Monitor, AlertTriangle, ShoppingCart, Wrench } from 'lucide-react';
+import { Building2, Monitor, AlertTriangle, ShoppingCart, Wrench, Cpu, Package } from 'lucide-react';
 import { getDashboardStats } from '@/app/_actions/dashboard';
 
 function StatCard({ icon: Icon, label, value, variant }: { icon: React.ElementType; label: string; value: number; variant: 'primary' | 'warning' | 'secondary' | 'info' }) {
@@ -26,7 +26,24 @@ function StatCard({ icon: Icon, label, value, variant }: { icon: React.ElementTy
 
 export default async function DashboardPage() {
   const statsResult = await getDashboardStats();
-  const stats = statsResult.success ? statsResult.data : null;
+
+  if (!statsResult.success) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h2 className="text-3xl font-bold">Dashboard</h2>
+          <p className="text-muted-foreground">Lab asset management overview</p>
+        </div>
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3">
+          <p className="text-sm font-medium text-destructive">
+            Failed to load dashboard statistics. Please try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const stats = statsResult.data;
 
   return (
     <div className="space-y-8">
@@ -35,12 +52,17 @@ export default async function DashboardPage() {
         <p className="text-muted-foreground">Lab asset management overview</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6" role="list" aria-label="Lab asset statistics">
-        <StatCard icon={Building2} label="Laboratory Rooms" value={stats?.totalRooms ?? 0} variant="primary" />
-        <StatCard icon={Monitor} label="Computer Units" value={stats?.totalUnits ?? 0} variant="primary" />
-        <StatCard icon={Wrench} label="Needs Repair" value={stats?.needsRepair ?? 0} variant="info" />
-        <StatCard icon={AlertTriangle} label="Needs Replacement" value={stats?.needsReplacement ?? 0} variant="warning" />
-        <StatCard icon={ShoppingCart} label="Pending Requests" value={stats?.pendingRequests ?? 0} variant="secondary" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard icon={Building2} label="Laboratory Rooms" value={stats.totalRooms} variant="primary" />
+        <StatCard icon={Monitor} label="Computer Units" value={stats.totalUnits} variant="primary" />
+        <StatCard icon={Cpu} label="Total Components" value={stats.totalComponents} variant="info" />
+        <StatCard icon={Package} label="Parts to Order" value={stats.lowStockCount} variant="warning" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatCard icon={Wrench} label="Needs Repair" value={stats.needsRepair} variant="info" />
+        <StatCard icon={AlertTriangle} label="Needs Replacement" value={stats.needsReplacement} variant="warning" />
+        <StatCard icon={ShoppingCart} label="Pending Requests" value={stats.pendingRequests} variant="secondary" />
       </div>
     </div>
   );
