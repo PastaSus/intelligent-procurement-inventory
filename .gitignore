@@ -46,6 +46,10 @@ next-env.d.ts
 /.agents
 /generated/prisma
 
+# playwright
+/playwright-report/
+/test-results/
+
 *.docx
 *.py
 *.pdf
