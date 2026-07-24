@@ -1,8 +1,9 @@
 "use client";
 
 import { useTransition } from "react";
+import Image from "next/image";
 import { logout } from "@/app/_actions/auth";
-import { LogOut, User, Monitor } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import type { SessionPayload } from "@/lib/auth";
 
 interface DashboardHeaderProps {
@@ -25,8 +26,14 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
   return (
     <header className="border-b bg-card">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Monitor className="h-6 w-6 text-primary" />
+        <div className="flex items-center gap-3">
+          <Image
+            src="/ccs-logo-upscaled.png"
+            alt="Procurvin"
+            width={32}
+            height={32}
+            className="h-8 w-8"
+          />
           <span className="text-xl font-semibold">Procurvin</span>
         </div>
 

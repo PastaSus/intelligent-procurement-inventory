@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -14,8 +15,14 @@ export default async function LoginPage() {
       <div className="w-full max-w-md">
         <div className="rounded-xl border border-dept-maroon/30 bg-card p-8 shadow-2xl shadow-dept-maroon/10">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-dept-maroon to-dept-crimson shadow-lg">
-              <span className="text-2xl font-bold text-dept-gold">P</span>
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
+              <Image
+                src="/ccs-logo-upscaled.png"
+                alt="Procurvin"
+                width={64}
+                height={64}
+                className="h-16 w-16"
+              />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Procurvin
