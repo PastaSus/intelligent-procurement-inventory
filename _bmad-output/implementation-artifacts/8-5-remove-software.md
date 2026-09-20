@@ -1,6 +1,6 @@
 # Story 8.5: Remove Installed Application
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -26,16 +26,36 @@ so that I can account for uninstalled software.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add remove handler to server action (AC: 2)
-  - [ ] Add `removeInstalledApplication(formData: FormData)` to `app/_actions/software.ts`
-  - [ ] Validate application exists
-  - [ ] Hard delete the record (no soft delete for child records)
-  - [ ] Call `revalidatePath()` for the unit detail page
+- [x] Task 1: Add remove handler to server action (AC: 2)
+  - [x] `removeInstalledApplication(formData: FormData)` already exists in `app/_actions/software.ts` (shipped in 8-2) — no new code needed, verified present
+  - [x] Validates application exists, hard deletes record (child-record pattern, no soft delete)
+  - [x] Calls `revalidatePath()` for the unit detail page
 
-- [ ] Task 2: Wire up remove button in SoftwareList (AC: 1, 3)
-  - [ ] Add confirmation dialog using existing `ConfirmDialog` pattern
-  - [ ] Use `useTransition` for pending state
-  - [ ] Call `removeInstalledApplication` on confirm
+- [x] Task 2: Wire up remove button in SoftwareList (AC: 1, 3)
+  - [x] `onRemove` callback prop already wired in SoftwareList (8-3)
+  - [x] Render confirmation dialog when `removingSoftware` state set: "Remove [app name] from this unit?"
+  - [x] Call `removeInstalledApplication` on confirm, success toast + reload
+  - [x] Cancel closes dialog with no changes
+  - [x] Use `useTransition` for pending state
+
+## Dev Agent Record
+
+### Completion Notes
+
+**Implementation Complete:** Story 8.5 - Remove Installed Application
+
+**All Acceptance Criteria Satisfied:**
+- AC1: Remove button shows confirmation dialog with app name
+- AC2: Confirm hard-deletes record, success toast, list refreshes
+- AC3: Cancel closes dialog, nothing changes
+
+**Files Modified:**
+- `app/dashboard/units/[id]/ComponentsClient.tsx` - handleRemoveSoftware + confirm dialog (follows existing deletingComponent modal pattern), useToast import
+
+**Verification:**
+- TypeScript: no errors
+- ESLint: 0 errors, only pre-existing setComponents warning (both transient software warnings resolved)
+- Production build: succeeds
 
 ## Dev Notes
 
