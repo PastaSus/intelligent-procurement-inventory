@@ -44,6 +44,11 @@ so that I can see the complete software profile.
   - [x] Local `formatDate()` in SoftwareList.tsx following codebase convention (no shared util exists — each client defines its own)
   - [x] Handle null install_date gracefully (shows "N/A")
 
+### Review Findings (Group 2 review, 2026-09-20) — all resolved
+
+- [x] [Review][Patch] Use UTC getters for date display to avoid timezone day-shift [app/dashboard/units/[id]/components/SoftwareList.tsx]
+- [x] [Review][Patch] Align empty-state copy with AC2 string [app/dashboard/units/[id]/components/SoftwareList.tsx]
+
 ## Dev Agent Record
 
 ### Completion Notes

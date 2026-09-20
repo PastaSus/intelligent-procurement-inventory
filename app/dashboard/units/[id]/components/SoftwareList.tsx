@@ -27,8 +27,10 @@ const licenseStyles: Record<string, string> = {
 
 function formatDate(date: Date) {
   const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return 'N/A';
   const now = new Date();
   const diff = now.getTime() - d.getTime();
+  if (diff < 0) return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
@@ -43,7 +45,7 @@ export function SoftwareList({ software, onEdit, onRemove }: SoftwareListProps) 
     return (
       <div className="p-8 text-center text-muted-foreground">
         <MonitorSmartphone className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <p>No software recorded for this unit.</p>
+        <p>No software recorded.</p>
         <p className="text-sm">Click &quot;Add Software&quot; to get started.</p>
       </div>
     );

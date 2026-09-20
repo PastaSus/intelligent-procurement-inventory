@@ -63,13 +63,22 @@ export async function updateInstalledApplication(formData: FormData) {
       return { success: false, error: 'Application ID is required' };
     }
 
+    const get = (k: string) => {
+      const v = formData.get(k);
+      return typeof v === 'string' ? v : undefined;
+    };
+    const rawName = get('name');
+    if (rawName !== undefined && rawName.trim() === '') {
+      return { success: false, error: 'Application name is required' };
+    }
+
     const rawData = {
       id,
-      name: (formData.get('name') as string) || undefined,
-      version: (formData.get('version') as string) || undefined,
-      licenseKey: (formData.get('licenseKey') as string) || undefined,
-      licenseType: (formData.get('licenseType') as string) || undefined,
-      installDate: (formData.get('installDate') as string) || undefined,
+      name: rawName,
+      version: get('version'),
+      licenseKey: get('licenseKey'),
+      licenseType: get('licenseType'),
+      installDate: get('installDate'),
     };
     const result = updateSoftwareSchema.safeParse(rawData);
     if (!result.success) {
@@ -79,6 +88,13 @@ export async function updateInstalledApplication(formData: FormData) {
     const existing = await prisma.installedApplication.findUnique({ where: { id } });
     if (!existing) {
       return { success: false, error: 'Application not found' };
+    }
+
+    const parentUnit = await prisma.computerUnit.findUnique({
+      where: { id: existing.computer_unit_id },
+    });
+    if (!parentUnit || parentUnit.deleted) {
+      return { success: false, error: 'Parent unit not found' };
     }
 
     const application = await prisma.installedApplication.update({
@@ -117,6 +133,13 @@ export async function removeInstalledApplication(formData: FormData) {
     const existing = await prisma.installedApplication.findUnique({ where: { id } });
     if (!existing) {
       return { success: false, error: 'Application not found' };
+    }
+
+    const parentUnit = await prisma.computerUnit.findUnique({
+      where: { id: existing.computer_unit_id },
+    });
+    if (!parentUnit || parentUnit.deleted) {
+      return { success: false, error: 'Parent unit not found' };
     }
 
     await prisma.installedApplication.delete({ where: { id } });

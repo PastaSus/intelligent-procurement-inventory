@@ -43,6 +43,11 @@ so that I can update version numbers or license information.
   - [x] Render `EditSoftwareForm` when `editingSoftware` state set
   - [x] Clear state on success/close via shared `handleSuccess`
 
+### Review Findings (Group 2 review, 2026-09-20) — all resolved
+
+- [x] [Review][Patch] Use UTC getters in toDateInputValue to avoid timezone day-shift [app/dashboard/units/[id]/components/EditSoftwareForm.tsx]
+- [x] [Review][Patch] Empty-name edit silently succeeds (AC3) — fixed via update empty-field semantics in software.ts (see 8-2 findings)
+
 ## Dev Agent Record
 
 ### Completion Notes

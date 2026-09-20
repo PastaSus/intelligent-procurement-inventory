@@ -7,7 +7,10 @@ export const createSoftwareSchema = z.object({
   version: z.string().trim().max(50, 'Version too long').optional(),
   licenseKey: z.string().trim().max(200, 'License key too long').optional(),
   licenseType: LicenseTypeEnum.default('NONE'),
-  installDate: z.string().trim().max(30, 'Install date too long').optional(),
+  installDate: z.string().trim().max(30, 'Install date too long').optional().refine(
+    (v) => !v || !Number.isNaN(Date.parse(v)),
+    { message: 'Install date must be a valid date' }
+  ),
 });
 
 export const updateSoftwareSchema = z.object({
@@ -16,7 +19,10 @@ export const updateSoftwareSchema = z.object({
   version: z.string().trim().max(50, 'Version too long').optional(),
   licenseKey: z.string().trim().max(200, 'License key too long').optional(),
   licenseType: LicenseTypeEnum.optional(),
-  installDate: z.string().trim().max(30, 'Install date too long').optional(),
+  installDate: z.string().trim().max(30, 'Install date too long').optional().refine(
+    (v) => !v || !Number.isNaN(Date.parse(v)),
+    { message: 'Install date must be a valid date' }
+  ),
 });
 
 export type CreateSoftware = z.infer<typeof createSoftwareSchema>;

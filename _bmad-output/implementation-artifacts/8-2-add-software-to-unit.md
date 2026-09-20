@@ -52,6 +52,17 @@ so that I can track the complete asset profile of each machine.
   - [x] Pass to client component
   - [x] Display in a table: name, version, license type badge, install date
 
+### Review Findings (Group 2 review, 2026-09-20) — all resolved
+
+- [x] [Review][Patch] Validate installDate as real date in Zod schema [lib/validators/software.ts]
+- [x] [Review][Patch] Fix update empty-field semantics: empty name → error, empty optionals → null [app/_actions/software.ts]
+- [x] [Review][Patch] Guard update/remove against soft-deleted parent unit [app/_actions/software.ts]
+- [x] [Review][Patch] Type seed licenseType as Prisma LicenseType instead of any [prisma/seed.ts]
+- [x] [Review][Defer] No per-action RBAC — deferred, pre-existing (app-wide pattern)
+- [x] [Review][Defer] Toast destroyed by reload — deferred, pre-existing (app-wide no-optimistic-updates pattern)
+- [x] [Review][Defer] Modal/row a11y gaps — deferred, pre-existing (matches existing component-table patterns)
+- [x] [Review][Defer] Check-then-act races — deferred, pre-existing (theoretical windows)
+
 ## Dev Agent Record
 
 ### Completion Notes

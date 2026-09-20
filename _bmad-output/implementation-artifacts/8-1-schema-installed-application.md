@@ -17,7 +17,7 @@ so that we can inventory software alongside hardware.
    - `name` (String, required)
    - `version` (String, optional)
    - `license_key` (String, optional)
-   - `license_type` (LicenseType enum, default NONE)
+   - `license_type` (LicenseType enum, required with DEFAULT NONE — avoids null handling)
    - `install_date` (DateTime, optional)
    - `created_at` (DateTime, default now())
    - `updated_at` (DateTime, updatedAt)
@@ -51,6 +51,11 @@ so that we can inventory software alongside hardware.
   - [x] Run existing tests to ensure nothing breaks
   - [x] Verify new table exists in database
   - [x] Verify cascade delete works
+
+### Review Findings (Group 2 review, 2026-09-20)
+
+- [x] [Review][Decision] Duplicate software names per unit — RESOLVED: allow repeats (free-text names + versions legitimately coexist; no UI invariant unlike component-type slots). No constraint added.
+- [x] [Review][Patch] Align spec nullability text: story says `LicenseType?`, schema implements required + DEFAULT NONE (intentional — update story text to match)
 
 ## Dev Agent Record
 
@@ -112,7 +117,7 @@ model InstalledApplication {
   name             String
   version          String?
   license_key      String?
-  license_type     LicenseType?  @default(NONE)
+  license_type     LicenseType   @default(NONE)
   install_date     DateTime?
   created_at       DateTime      @default(now())
   updated_at       DateTime      @updatedAt
