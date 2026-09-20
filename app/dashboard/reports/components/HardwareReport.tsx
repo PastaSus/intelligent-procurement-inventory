@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { getHardwareReport } from '@/app/_actions/reports';
+import { ReportSummary } from './ReportSummary';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Printer, Cpu } from 'lucide-react';
@@ -81,6 +82,16 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
     0
   );
 
+  function handleDrillStatus(nextStatus: string) {
+    setStatus(nextStatus);
+    applyFilters({ status: nextStatus });
+  }
+
+  function handleDrillType(nextType: string) {
+    setComponentType(nextType);
+    applyFilters({ componentType: nextType });
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between report-no-print">
@@ -104,6 +115,14 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
           {' '}· {rooms.length} rooms · {totalUnits} units · {totalComponents} components
         </p>
       </div>
+
+      <ReportSummary
+        rooms={rooms}
+        activeStatus={status}
+        activeType={componentType}
+        onSelectStatus={handleDrillStatus}
+        onSelectType={handleDrillType}
+      />
 
       <div className="flex flex-wrap gap-3 report-no-print">
         <div className="w-48">
