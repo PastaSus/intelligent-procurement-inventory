@@ -19,8 +19,8 @@ export const updateComponentSchema = z.object({
 });
 
 export const relocateComponentSchema = z.object({
-  componentId: z.string().min(1, 'Component ID is required'),
-  targetUnitId: z.string().min(1, 'Target unit is required'),
+  componentId: z.string().trim().min(1, 'Component ID is required').max(50, 'Component ID too long'),
+  targetUnitId: z.string().trim().min(1, 'Target unit is required').max(50, 'Target unit ID too long'),
 });
 
 export type CreateComponent = z.infer<typeof createComponentSchema>;

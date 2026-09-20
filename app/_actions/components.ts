@@ -257,6 +257,13 @@ export async function relocateComponent(formData: FormData) {
       return { success: false, error: 'Component not found' };
     }
 
+    const sourceUnit = await prisma.computerUnit.findUnique({
+      where: { id: component.computer_unit_id },
+    });
+    if (!sourceUnit || sourceUnit.deleted) {
+      return { success: false, error: 'Source unit not found' };
+    }
+
     const targetUnit = await prisma.computerUnit.findUnique({
       where: { id: result.data.targetUnitId },
     });
@@ -275,10 +282,8 @@ export async function relocateComponent(formData: FormData) {
         id: { not: component.id },
       },
     });
-
-    let warning: string | null = null;
     if (duplicateType) {
-      warning = `Target unit already has a ${component.type}. Relocated component will replace it.`;
+      return { success: false, error: `Target unit already has a ${component.type} component` };
     }
 
     await prisma.computerComponent.update({
@@ -291,7 +296,7 @@ export async function relocateComponent(formData: FormData) {
 
     revalidatePath(`/dashboard/units/${component.computer_unit_id}`);
     revalidatePath(`/dashboard/units/${result.data.targetUnitId}`);
-    return { success: true, warning };
+    return { success: true };
   } catch (error) {
     console.error('Relocate component error:', error);
     return { success: false, error: 'Failed to relocate component' };

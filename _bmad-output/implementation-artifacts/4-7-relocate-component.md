@@ -1,6 +1,6 @@
 # Story 4.7: Relocate Component to Another Unit
 
-Status: review
+Status: done
 
 ## Story
 
@@ -144,3 +144,16 @@ await prisma.computerComponent.update({
 - [Source: architecture.md#Data Architecture] ComputerComponent model with computer_unit_id FK
 - [Source: prd.md#Functional Requirements] FR34: Users can relocate a component
 - [Source: sprint-change-proposal-2026-09-20.md] Feature 2: Component Relocation
+
+### Review Findings
+
+- [x] [Review][Decision] Duplicate-type policy is ambiguous — RESOLVED: block relocation with error when target already has the type (preserves one-row-per-type UI invariant; fastest spec-compliant fix).
+- [x] [Review][Patch] Add .trim() to relocate schema ID fields [lib/validators/computer-component.ts]
+- [x] [Review][Patch] Empty-dropdown UX when no other units exist [app/dashboard/units/[id]/components/RelocateComponentModal.tsx]
+- [x] [Review][Patch] Verify source unit not deleted before relocating its component [app/_actions/components.ts]
+- [x] [Review][Patch] Disable modal close while relocation request is pending [app/dashboard/units/[id]/components/RelocateComponentModal.tsx]
+- [x] [Review][Defer] Check-then-act races without transaction — deferred, pre-existing (systemic pattern, single-user tool)
+- [x] [Review][Defer] No per-action RBAC on relocate — deferred, pre-existing (app-wide pattern)
+- [x] [Review][Defer] Unbounded all-units fetch — deferred, pre-existing (lab-scale data)
+- [x] [Review][Defer] Units list page not revalidated after relocate — deferred, pre-existing (minor staleness)
+- [x] [Review][Defer] Framework-level race error paths (FK/P2025/revalidate throw) — deferred, pre-existing (theoretical)

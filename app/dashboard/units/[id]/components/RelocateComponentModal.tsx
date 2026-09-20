@@ -54,11 +54,7 @@ export function RelocateComponentModal({ component, currentUnitId, allUnits, onC
         addToast(result.error || 'Failed to relocate component', 'error');
         setErrors({ general: result.error || 'Failed to relocate component' });
       } else {
-        if (result.warning) {
-          addToast(`Component relocated. ${result.warning}`, 'warning');
-        } else {
-          addToast('Component relocated successfully!', 'success');
-        }
+        addToast('Component relocated successfully!', 'success');
         if (onSuccess) onSuccess();
         onClose();
       }
@@ -73,7 +69,7 @@ export function RelocateComponentModal({ component, currentUnitId, allUnits, onC
             <MoveRight className="h-5 w-5 text-muted-foreground" />
             <h2 className="text-xl font-semibold">Relocate Component</h2>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-muted rounded-md">
+          <button onClick={onClose} disabled={isPending} className="p-1 hover:bg-muted rounded-md disabled:opacity-50">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -92,18 +88,22 @@ export function RelocateComponentModal({ component, currentUnitId, allUnits, onC
             <label htmlFor="targetUnit" className="block text-sm font-medium mb-1">
               Move to Unit <span className="text-destructive">*</span>
             </label>
-            <Select value={targetUnitId} onValueChange={setTargetUnitId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select target unit" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableUnits.map(unit => (
-                  <SelectItem key={unit.id} value={unit.id}>
-                    {unit.unit_name} — {unit.roomName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {availableUnits.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No other units available for relocation.</p>
+            ) : (
+              <Select value={targetUnitId} onValueChange={setTargetUnitId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select target unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableUnits.map(unit => (
+                    <SelectItem key={unit.id} value={unit.id}>
+                      {unit.unit_name} — {unit.roomName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             {errors.targetUnitId && (
               <p className="text-sm text-destructive mt-1">{errors.targetUnitId}</p>
             )}
@@ -113,7 +113,7 @@ export function RelocateComponentModal({ component, currentUnitId, allUnits, onC
             <Button type="button" variant="outline" onClick={onClose} disabled={isPending} className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending || !targetUnitId} className="flex-1">
+            <Button type="submit" disabled={isPending || !targetUnitId || availableUnits.length === 0} className="flex-1">
               {isPending ? 'Moving...' : 'Relocate'}
             </Button>
           </div>
