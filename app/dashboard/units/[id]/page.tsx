@@ -19,6 +19,7 @@ export default async function UnitDetailPage({ params }: PageProps) {
     include: {
       laboratory_room: { select: { name: true } },
       components: { orderBy: { type: 'asc' } },
+      installedApplications: { orderBy: { name: 'asc' } },
     },
   });
 
@@ -48,6 +49,7 @@ export default async function UnitDetailPage({ params }: PageProps) {
         roomName: unit.laboratory_room.name,
       }}
       initialComponents={unit.components}
+      initialSoftware={unit.installedApplications}
       componentTypes={COMPONENT_TYPES}
       allUnits={allUnitsMapped}
     />

@@ -8,3 +8,7 @@ export const ComponentTypeEnum = z.enum([
 export const ComponentStatusEnum = z.enum([
   'FUNCTIONAL', 'NEEDS_REPAIR', 'NEEDS_REPLACEMENT',
 ]);
+
+export const LicenseTypeEnum = z.enum([
+  'NONE', 'FREE', 'COMMERCIAL', 'OPEN_SOURCE', 'EDUCATIONAL',
+]);

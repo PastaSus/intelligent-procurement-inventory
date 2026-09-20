@@ -76,7 +76,7 @@ development_status:
   epic-8: in-progress
   4-7-relocate-component: review
   8-1-schema-installed-application: review
-  8-2-add-software-to-unit: ready-for-dev
+  8-2-add-software-to-unit: review
   8-3-view-software-by-unit: ready-for-dev
   8-4-edit-software: ready-for-dev
   8-5-remove-software: ready-for-dev
