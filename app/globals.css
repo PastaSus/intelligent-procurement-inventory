@@ -126,12 +126,24 @@ button:not(:disabled) {
   }
 
   .report-section {
-    break-inside: avoid;
     border: 1px solid #ccc !important;
     box-shadow: none !important;
   }
 
-  table {
+  .hardware-report table {
     font-size: 11px;
+  }
+
+  .hardware-report thead {
+    display: table-header-group;
+  }
+
+  .hardware-report tr {
+    break-inside: avoid;
+  }
+
+  .hardware-report [class*="bg-"] {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 }

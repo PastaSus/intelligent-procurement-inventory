@@ -17,7 +17,20 @@ export async function getHardwareReport(filters: ReportFilters = {}) {
       return { success: false, error: 'You must be logged in' };
     }
 
-    const rooms = await prisma.laboratoryRoom.findMany({
+    const VALID_STATUSES: ComponentStatus[] = ['FUNCTIONAL', 'NEEDS_REPAIR', 'NEEDS_REPLACEMENT'];
+    const VALID_TYPES: ComponentType[] = [
+      'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD',
+      'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
+    ];
+    if (filters.status && !VALID_STATUSES.includes(filters.status as ComponentStatus)) {
+      return { success: false, error: 'Invalid status filter' };
+    }
+    if (filters.componentType && !VALID_TYPES.includes(filters.componentType as ComponentType)) {
+      return { success: false, error: 'Invalid component type filter' };
+    }
+
+    const [rooms, roomOptions] = await Promise.all([
+      prisma.laboratoryRoom.findMany({
       where: {
         deleted: false,
         ...(filters.roomId && { id: filters.roomId }),
@@ -49,13 +62,13 @@ export async function getHardwareReport(filters: ReportFilters = {}) {
           },
         },
       },
-    });
-
-    const roomOptions = await prisma.laboratoryRoom.findMany({
-      where: { deleted: false },
-      orderBy: { name: 'asc' },
-      select: { id: true, name: true },
-    });
+      }),
+      prisma.laboratoryRoom.findMany({
+        where: { deleted: false },
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true },
+      }),
+    ]);
 
     return { success: true, data: { rooms, roomOptions } };
   } catch (error) {

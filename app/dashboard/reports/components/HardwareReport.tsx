@@ -52,11 +52,13 @@ const statusStyles: Record<string, string> = {
 
 export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProps) {
   const [rooms, setRooms] = useState(initialRooms);
+  const [roomOpts, setRoomOpts] = useState(roomOptions);
   const [roomId, setRoomId] = useState('all');
   const [status, setStatus] = useState('all');
   const [componentType, setComponentType] = useState('all');
   const [isPending, startTransition] = useTransition();
-  const [generatedAt] = useState(() => new Date());
+  const [generatedAt, setGeneratedAt] = useState(() => new Date());
+  const [filterError, setFilterError] = useState<string | null>(null);
 
   function applyFilters(next?: { roomId?: string; status?: string; componentType?: string }) {
     const f = {
@@ -64,6 +66,7 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
       status: next?.status ?? status,
       componentType: next?.componentType ?? componentType,
     };
+    setFilterError(null);
     startTransition(async () => {
       const result = await getHardwareReport({
         ...(f.roomId !== 'all' && { roomId: f.roomId }),
@@ -72,12 +75,20 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
       });
       if (result.success && result.data) {
         setRooms(result.data.rooms);
+        setRoomOpts(result.data.roomOptions);
+        setGeneratedAt(new Date());
+      } else {
+        setFilterError(result.error || 'Failed to apply filters');
       }
     });
   }
 
-  const totalUnits = rooms.reduce((sum, r) => sum + r.units.length, 0);
-  const totalComponents = rooms.reduce(
+  const visibleRooms = rooms
+    .map(r => ({ ...r, units: r.units.filter(u => u.components.length > 0) }))
+    .filter(r => r.units.length > 0);
+
+  const totalUnits = visibleRooms.reduce((sum, r) => sum + r.units.length, 0);
+  const totalComponents = visibleRooms.reduce(
     (sum, r) => sum + r.units.reduce((uSum, u) => uSum + u.components.length, 0),
     0
   );
@@ -92,14 +103,21 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
     applyFilters({ componentType: nextType });
   }
 
+  function handleResetFilters() {
+    setRoomId('all');
+    setStatus('all');
+    setComponentType('all');
+    applyFilters({ roomId: 'all', status: 'all', componentType: 'all' });
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 hardware-report">
       <div className="flex items-center justify-between report-no-print">
         <div>
           <h2 className="text-3xl font-bold">Hardware Inventory Report</h2>
           <p className="text-muted-foreground">
             Generated {generatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            {' '}· {rooms.length} rooms · {totalUnits} units · {totalComponents} components
+            {' '}· {visibleRooms.length} rooms · {totalUnits} units · {totalComponents} components
           </p>
         </div>
         <Button onClick={() => window.print()} className="gap-2">
@@ -112,16 +130,17 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
         <h1 className="text-2xl font-bold">Hardware Inventory Report</h1>
         <p>
           Generated {generatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-          {' '}· {rooms.length} rooms · {totalUnits} units · {totalComponents} components
+          {' '}· {visibleRooms.length} rooms · {totalUnits} units · {totalComponents} components
         </p>
       </div>
 
       <ReportSummary
-        rooms={rooms}
+        rooms={visibleRooms}
         activeStatus={status}
         activeType={componentType}
         onSelectStatus={handleDrillStatus}
         onSelectType={handleDrillType}
+        onReset={handleResetFilters}
       />
 
       <div className="flex flex-wrap gap-3 report-no-print">
@@ -132,7 +151,7 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All rooms</SelectItem>
-              {roomOptions.map(r => (
+              {roomOpts.map(r => (
                 <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
               ))}
             </SelectContent>
@@ -166,17 +185,21 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
         </div>
       </div>
 
+      {filterError && (
+        <p className="text-sm text-destructive report-no-print">{filterError}</p>
+      )}
+
       {isPending && (
         <p className="text-sm text-muted-foreground report-no-print">Loading report...</p>
       )}
 
-      {rooms.length === 0 ? (
+      {visibleRooms.length === 0 ? (
         <div className="bg-card rounded-lg border p-8 text-center text-muted-foreground">
           <Cpu className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p>No records match the selected filters.</p>
         </div>
       ) : (
-        rooms.map(room => (
+        visibleRooms.map(room => (
           <div key={room.id} className="bg-card rounded-lg border report-section">
             <div className="p-4 border-b bg-muted/30">
               <h3 className="font-semibold text-lg">{room.name}</h3>

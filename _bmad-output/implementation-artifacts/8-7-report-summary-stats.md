@@ -1,6 +1,6 @@
 # Story 8.7: Report Summary Statistics
 
-Status: review
+Status: done
 
 ## Story
 
@@ -42,8 +42,16 @@ so that I can see at-a-glance totals.
   - [x] Report table updates to show filtered results
 
 - [x] Task 4: Integrate summary into report page (AC: 1)
-  - [x] Add ReportSummary above HardwareReport in `app/dashboard/reports/page.tsx`
+  - [x] Add ReportSummary above the report tables inside `HardwareReport.tsx` (client owns filter state; page.tsx stays a thin server wrapper)
   - [x] Pass aggregated data as props
+
+### Review Findings (Group 3 review, 2026-09-20) — all resolved
+
+- [x] [Review][Patch] Always render all 3 statuses + all 9 types with zero-count fallback [ReportSummary.tsx]
+- [x] [Review][Patch] Make total cards clickable to reset filters (AC3) [ReportSummary.tsx]
+- [x] [Review][Patch] Include summary in printed output [ReportSummary.tsx + globals.css]
+- [x] [Review][Patch] Add aria-pressed to drill-down badges [ReportSummary.tsx]
+- [x] [Review][Patch] Align Task 4 integration text with actual placement (inside HardwareReport client) [8-7 story file]
 
 ## Dev Agent Record
 

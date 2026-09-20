@@ -1,6 +1,6 @@
 # Story 8.6: Hardware Inventory Report Page
 
-Status: review
+Status: done
 
 ## Story
 
@@ -66,6 +66,18 @@ so that I can generate physical documentation for audits or planning.
   - [x] Add `getHardwareReport(filters)` to `app/_actions/reports.ts`
   - [x] Support optional filters: roomId, status, componentType
   - [x] Return grouped data structure + room options for filter dropdown
+
+### Review Findings (Group 3 review, 2026-09-20) — all resolved
+
+- [x] [Review][Patch] Allow-list validate status/type filters in getHardwareReport [app/_actions/reports.ts]
+- [x] [Review][Patch] Promise.all dual queries + refresh room options on refilter [app/_actions/reports.ts + HardwareReport.tsx]
+- [x] [Review][Patch] Filter-failure error feedback + refresh generation timestamp on refilter [HardwareReport.tsx]
+- [x] [Review][Patch] Prune empty units/rooms from filtered view so counts stay truthful [HardwareReport.tsx]
+- [x] [Review][Patch] Scope print CSS to report, repeat thead, preserve badge colors [app/globals.css]
+- [x] [Review][Defer] No role gate on report action — deferred, pre-existing (app-wide pattern)
+- [x] [Review][Defer] Rapid-filter response race — deferred, pre-existing (theoretical)
+- [x] [Review][Defer] Report pagination — deferred (report needs full data; lab-scale)
+- [x] [Review][Defer] Deep-linkable filters via searchParams — deferred (not in ACs)
 
 ## Dev Agent Record
 

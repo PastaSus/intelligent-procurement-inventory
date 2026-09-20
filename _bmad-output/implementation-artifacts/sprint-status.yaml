@@ -73,12 +73,12 @@ development_status:
   7-2-update-dashboard: done
 
   # Epic 8: Capstone Advisor Features (Sprint Change Proposal 2026-09-20)
-  epic-8: in-progress
+  epic-8: done
   4-7-relocate-component: done
-  8-1-schema-installed-application: review
-  8-2-add-software-to-unit: review
-  8-3-view-software-by-unit: review
-  8-4-edit-software: review
-  8-5-remove-software: review
-  8-6-hardware-report-page: review
-  8-7-report-summary-stats: review
+  8-1-schema-installed-application: done
+  8-2-add-software-to-unit: done
+  8-3-view-software-by-unit: done
+  8-4-edit-software: done
+  8-5-remove-software: done
+  8-6-hardware-report-page: done
+  8-7-report-summary-stats: done

@@ -15,3 +15,10 @@
 - Modal/row a11y gaps (tabIndex rows, title-only buttons, no dialog roles/focus trap) — matches existing component-table patterns throughout.
 - Check-then-act races (unit deleted between check and write, concurrent deletes) — theoretical windows, consistent with all existing actions.
 - Seed N+1 sequential writes — seed-scale (18 rows, runs once), negligible.
+
+## Deferred from: code review of reports group 8-6..8-7 (2026-09-20)
+
+- No role gate on report action — matches app-wide pattern (login check only).
+- Rapid-filter response race (earlier response overwrites later) — theoretical; React transitions serialize at lab interaction rates.
+- Report pagination — report inherently needs full dataset; lab-scale data.
+- Deep-linkable filters via searchParams — not in ACs; nice-to-have.
