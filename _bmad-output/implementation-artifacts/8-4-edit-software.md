@@ -1,6 +1,6 @@
 # Story 8.4: Edit Installed Application
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -27,22 +27,43 @@ so that I can update version numbers or license information.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create EditSoftwareForm client component (AC: 1, 2, 3)
-  - [ ] Create `app/dashboard/units/[id]/components/EditSoftwareForm.tsx`
-  - [ ] Modal with pre-filled fields: name, version, licenseKey, licenseType, installDate
-  - [ ] Use shadcn/ui components
-  - [ ] `useTransition` for pending state
+- [x] Task 1: Create EditSoftwareForm client component (AC: 1, 2, 3)
+  - [x] Create `app/dashboard/units/[id]/components/EditSoftwareForm.tsx`
+  - [x] Modal with pre-filled fields: name, version, licenseKey, licenseType, installDate
+  - [x] Use shadcn/ui components
+  - [x] `useTransition` for pending state
 
-- [ ] Task 2: Add edit handler to server action (AC: 2)
-  - [ ] Add `updateInstalledApplication(formData: FormData)` to `app/_actions/software.ts`
-  - [ ] Validate input with Zod schema
-  - [ ] Update record by id
-  - [ ] Call `revalidatePath()` for the unit detail page
+- [x] Task 2: Add edit handler to server action (AC: 2)
+  - [x] `updateInstalledApplication(formData: FormData)` already exists in `app/_actions/software.ts` (shipped in 8-2) — no new code needed, verified present
+  - [x] Validates input with Zod schema, updates record by id
+  - [x] Calls `revalidatePath()` for the unit detail page
 
-- [ ] Task 3: Wire up edit button in SoftwareList (AC: 1)
-  - [ ] Add `onEdit` callback prop to SoftwareList
-  - [ ] Pass selected application data to EditSoftwareForm
-  - [ ] Manage modal open/close state
+- [x] Task 3: Wire up edit button in SoftwareList (AC: 1)
+  - [x] `onEdit` callback prop already wired in SoftwareList (8-3)
+  - [x] Render `EditSoftwareForm` when `editingSoftware` state set
+  - [x] Clear state on success/close via shared `handleSuccess`
+
+## Dev Agent Record
+
+### Completion Notes
+
+**Implementation Complete:** Story 8.4 - Edit Installed Application
+
+**All Acceptance Criteria Satisfied:**
+- AC1: Edit button opens pre-filled modal (all fields populated, date converted to YYYY-MM-DD input format)
+- AC2: Save updates record, `updated_at` auto-set by Prisma, success toast, list refreshes
+- AC3: Cleared name blocked by HTML required + Zod min(1), error toast on failure
+
+**Files Created:**
+- `app/dashboard/units/[id]/components/EditSoftwareForm.tsx` - Pre-filled edit modal
+
+**Files Modified:**
+- `app/dashboard/units/[id]/ComponentsClient.tsx` - Render EditSoftwareForm on editingSoftware state, clear state in handleSuccess
+
+**Verification:**
+- TypeScript: no errors
+- ESLint: 0 errors (1 transient warning for removingSoftware, lands in 8-5)
+- Production build: succeeds
 
 ## Dev Notes
 

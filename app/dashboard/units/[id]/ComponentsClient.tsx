@@ -7,6 +7,7 @@ import { AddComponentForm } from './components/AddComponentForm';
 import { EditComponentForm } from './components/EditComponentForm';
 import { RelocateComponentModal } from './components/RelocateComponentModal';
 import { AddSoftwareForm } from './components/AddSoftwareForm';
+import { EditSoftwareForm } from './components/EditSoftwareForm';
 import { SoftwareList, SoftwareItem } from './components/SoftwareList';
 import { Button } from '@/components/ui/button';
 import { deleteComponent, bulkAddComponents } from '@/app/_actions/components';
@@ -72,6 +73,7 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
     setIsFormOpen(false);
     setIsSoftwareFormOpen(false);
     setEditingComponent(null);
+    setEditingSoftware(null);
     window.location.reload();
   };
 
@@ -284,6 +286,14 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
         <AddSoftwareForm
           computerUnitId={unit.id}
           onClose={() => setIsSoftwareFormOpen(false)}
+          onSuccess={handleSuccess}
+        />
+      )}
+
+      {editingSoftware && (
+        <EditSoftwareForm
+          application={editingSoftware}
+          onClose={() => setEditingSoftware(null)}
           onSuccess={handleSuccess}
         />
       )}
