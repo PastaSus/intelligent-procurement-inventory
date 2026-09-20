@@ -102,3 +102,48 @@ button:not(:disabled) {
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  aside,
+  nav,
+  header,
+  .report-no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .report-section {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+  }
+
+  .hardware-report table {
+    font-size: 11px;
+  }
+
+  .hardware-report thead {
+    display: table-header-group;
+  }
+
+  .hardware-report tr {
+    break-inside: avoid;
+  }
+
+  .hardware-report [class*="bg-"] {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

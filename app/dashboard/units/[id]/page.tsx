@@ -19,12 +19,27 @@ export default async function UnitDetailPage({ params }: PageProps) {
     include: {
       laboratory_room: { select: { name: true } },
       components: { orderBy: { type: 'asc' } },
+      installedApplications: { orderBy: { name: 'asc' } },
     },
   });
 
   if (!unit || unit.deleted) {
     notFound();
   }
+
+  const allUnits = await prisma.computerUnit.findMany({
+    where: { deleted: false },
+    include: {
+      laboratory_room: { select: { name: true } },
+    },
+    orderBy: { unit_name: 'asc' },
+  });
+
+  const allUnitsMapped = allUnits.map(u => ({
+    id: u.id,
+    unit_name: u.unit_name,
+    roomName: u.laboratory_room.name,
+  }));
 
   return (
     <ComponentsClient
@@ -34,7 +49,9 @@ export default async function UnitDetailPage({ params }: PageProps) {
         roomName: unit.laboratory_room.name,
       }}
       initialComponents={unit.components}
+      initialSoftware={unit.installedApplications}
       componentTypes={COMPONENT_TYPES}
+      allUnits={allUnitsMapped}
     />
   );
 }

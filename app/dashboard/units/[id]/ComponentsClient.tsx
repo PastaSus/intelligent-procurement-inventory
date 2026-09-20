@@ -1,12 +1,18 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Plus, ArrowLeft, Cpu, Wrench, AlertTriangle, Pencil, Trash2, Sparkles } from 'lucide-react';
+import { Plus, ArrowLeft, Cpu, Wrench, AlertTriangle, Pencil, Trash2, Sparkles, MoveRight } from 'lucide-react';
 import Link from 'next/link';
 import { AddComponentForm } from './components/AddComponentForm';
 import { EditComponentForm } from './components/EditComponentForm';
+import { RelocateComponentModal } from './components/RelocateComponentModal';
+import { AddSoftwareForm } from './components/AddSoftwareForm';
+import { EditSoftwareForm } from './components/EditSoftwareForm';
+import { SoftwareList, SoftwareItem } from './components/SoftwareList';
 import { Button } from '@/components/ui/button';
 import { deleteComponent, bulkAddComponents } from '@/app/_actions/components';
+import { removeInstalledApplication } from '@/app/_actions/software';
+import { useToast } from '@/lib/toast-context';
 
 interface UnitInfo {
   id: string;
@@ -25,10 +31,21 @@ interface Component {
   updated_at: Date;
 }
 
+interface Software {
+  id: string;
+  name: string;
+  version: string | null;
+  license_key: string | null;
+  license_type: string;
+  install_date: Date | null;
+}
+
 interface ComponentsClientProps {
   unit: UnitInfo;
   initialComponents: Component[];
+  initialSoftware: Software[];
   componentTypes: readonly string[];
+  allUnits: UnitInfo[];
 }
 
 const statusStyles: Record<string, string> = {
@@ -43,16 +60,23 @@ const statusIcons: Record<string, React.ElementType> = {
   NEEDS_REPLACEMENT: AlertTriangle,
 };
 
-export function ComponentsClient({ unit, initialComponents, componentTypes }: ComponentsClientProps) {
+export function ComponentsClient({ unit, initialComponents, initialSoftware, componentTypes, allUnits }: ComponentsClientProps) {
   const [components, setComponents] = useState(initialComponents);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSoftwareFormOpen, setIsSoftwareFormOpen] = useState(false);
   const [editingComponent, setEditingComponent] = useState<Component | null>(null);
   const [deletingComponent, setDeletingComponent] = useState<Component | null>(null);
+  const [relocatingComponent, setRelocatingComponent] = useState<Component | null>(null);
+  const [editingSoftware, setEditingSoftware] = useState<SoftwareItem | null>(null);
+  const [removingSoftware, setRemovingSoftware] = useState<SoftwareItem | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { addToast } = useToast();
 
   const handleSuccess = () => {
     setIsFormOpen(false);
+    setIsSoftwareFormOpen(false);
     setEditingComponent(null);
+    setEditingSoftware(null);
     window.location.reload();
   };
 
@@ -69,6 +93,24 @@ export function ComponentsClient({ unit, initialComponents, componentTypes }: Co
         window.location.reload();
       } else {
         alert(result.error || 'Failed to delete component');
+      }
+    });
+  };
+
+  const handleRemoveSoftware = () => {
+    if (!removingSoftware) return;
+
+    const formData = new FormData();
+    formData.set('id', removingSoftware.id);
+
+    startTransition(async () => {
+      const result = await removeInstalledApplication(formData);
+      if (result.success) {
+        addToast('Application removed successfully!', 'success');
+        setRemovingSoftware(null);
+        window.location.reload();
+      } else {
+        addToast(result.error || 'Failed to remove application', 'error');
       }
     });
   };
@@ -203,6 +245,13 @@ export function ComponentsClient({ unit, initialComponents, componentTypes }: Co
                       {component && (
                         <div className="flex items-center justify-center gap-1">
                           <button
+                            onClick={() => setRelocatingComponent(component)}
+                            className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                            title="Relocate"
+                          >
+                            <MoveRight className="h-4 w-4" />
+                          </button>
+                          <button
                             onClick={() => setEditingComponent(component)}
                             className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
                             title="Edit"
@@ -237,6 +286,60 @@ export function ComponentsClient({ unit, initialComponents, componentTypes }: Co
           </div>
         )}
       </div>
+
+      <div className="bg-card rounded-lg border">
+        <div className="p-4 border-b flex items-center justify-between">
+          <h3 className="font-semibold">Installed Software</h3>
+          <Button variant="outline" size="sm" onClick={() => setIsSoftwareFormOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Software
+          </Button>
+        </div>
+
+        <SoftwareList
+          software={initialSoftware}
+          onEdit={setEditingSoftware}
+          onRemove={setRemovingSoftware}
+        />
+      </div>
+
+      {isSoftwareFormOpen && (
+        <AddSoftwareForm
+          computerUnitId={unit.id}
+          onClose={() => setIsSoftwareFormOpen(false)}
+          onSuccess={handleSuccess}
+        />
+      )}
+
+      {editingSoftware && (
+        <EditSoftwareForm
+          application={editingSoftware}
+          onClose={() => setEditingSoftware(null)}
+          onSuccess={handleSuccess}
+        />
+      )}
+
+      {removingSoftware && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg border p-6 max-w-md w-full mx-4 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-full">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold">Remove Software</h3>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              Remove <strong className="text-foreground">{removingSoftware.name}</strong> from this unit?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setRemovingSoftware(null)} disabled={isPending}>Cancel</Button>
+              <Button variant="destructive" onClick={handleRemoveSoftware} disabled={isPending}>
+                {isPending ? 'Removing...' : 'Remove'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isFormOpen && (
         <AddComponentForm
@@ -276,6 +379,16 @@ export function ComponentsClient({ unit, initialComponents, componentTypes }: Co
             </div>
           </div>
         </div>
+      )}
+
+      {relocatingComponent && (
+        <RelocateComponentModal
+          component={relocatingComponent}
+          currentUnitId={unit.id}
+          allUnits={allUnits}
+          onClose={() => setRelocatingComponent(null)}
+          onSuccess={handleSuccess}
+        />
       )}
     </div>
   );

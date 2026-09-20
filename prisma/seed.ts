@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ComponentType, LicenseType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -7,6 +7,7 @@ async function main() {
   console.log('Seeding database...');
 
   // Clean existing data in reverse dependency order
+  await prisma.installedApplication.deleteMany();
   await prisma.computerComponent.deleteMany();
   await prisma.computerUnit.deleteMany();
   await prisma.laboratoryRoom.deleteMany();
@@ -80,7 +81,7 @@ async function main() {
 
   const allUnits = await prisma.computerUnit.findMany();
 
-  type CompSpec = { type: string; spec: string };
+  type CompSpec = { type: ComponentType; spec: string };
   const componentSpecs: CompSpec[] = [
     { type: 'MOTHERBOARD', spec: 'Gigabyte GA-H81M-DS2V' },
     { type: 'PROCESSOR', spec: 'Intel Core i5 4460' },
@@ -100,13 +101,33 @@ async function main() {
       await prisma.computerComponent.create({
         data: {
           computer_unit_id: unit.id,
-          type: cs.type as any,
+          type: cs.type,
           serial_number: serial,
           specifications: cs.spec,
           status: 'FUNCTIONAL',
         },
       });
       serialCounter++;
+    }
+  }
+
+  type AppSpec = { name: string; version: string; licenseType: LicenseType };
+  const appSpecs: AppSpec[] = [
+    { name: 'Windows 11 Pro', version: '23H2', licenseType: 'COMMERCIAL' },
+    { name: 'Microsoft Office 2021', version: '16.0', licenseType: 'COMMERCIAL' },
+    { name: 'Google Chrome', version: '131.0', licenseType: 'FREE' },
+  ];
+
+  for (const unit of allUnits) {
+    for (const app of appSpecs) {
+      await prisma.installedApplication.create({
+        data: {
+          computer_unit_id: unit.id,
+          name: app.name,
+          version: app.version,
+          license_type: app.licenseType,
+        },
+      });
     }
   }
 
