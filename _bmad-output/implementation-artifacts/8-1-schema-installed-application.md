@@ -1,6 +1,6 @@
 # Story 8.1: Schema Migration — InstalledApplication Model
 
-Status: review
+Status: done
 
 ## Story
 

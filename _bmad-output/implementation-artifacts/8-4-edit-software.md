@@ -1,6 +1,6 @@
 # Story 8.4: Edit Installed Application
 
-Status: review
+Status: done
 
 ## Story
 

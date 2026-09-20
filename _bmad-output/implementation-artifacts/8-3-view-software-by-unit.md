@@ -1,6 +1,6 @@
 # Story 8.3: View Installed Applications by Unit
 
-Status: review
+Status: done
 
 ## Story
 

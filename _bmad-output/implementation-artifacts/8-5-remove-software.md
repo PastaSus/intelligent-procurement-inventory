@@ -1,6 +1,8 @@
 # Story 8.5: Remove Installed Application
 
-Status: review
+Status: done
+
+### Review Findings (Group 2 review, 2026-09-20) — no findings specific to remove flow; covered by group fixes (deleted-unit guard in removeInstalledApplication applied).
 
 ## Story
 

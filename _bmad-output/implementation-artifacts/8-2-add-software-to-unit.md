@@ -1,6 +1,6 @@
 # Story 8.2: Add Installed Application to Unit
 
-Status: review
+Status: done
 
 ## Story
 
