@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Plus, ArrowLeft, Cpu, Wrench, AlertTriangle, Pencil, Trash2, Sparkles, MoveRight, MonitorSmartphone } from 'lucide-react';
+import { Plus, ArrowLeft, Cpu, Wrench, AlertTriangle, Pencil, Trash2, Sparkles, MoveRight } from 'lucide-react';
 import Link from 'next/link';
 import { AddComponentForm } from './components/AddComponentForm';
 import { EditComponentForm } from './components/EditComponentForm';
 import { RelocateComponentModal } from './components/RelocateComponentModal';
 import { AddSoftwareForm } from './components/AddSoftwareForm';
+import { SoftwareList, SoftwareItem } from './components/SoftwareList';
 import { Button } from '@/components/ui/button';
 import { deleteComponent, bulkAddComponents } from '@/app/_actions/components';
 
@@ -63,6 +64,8 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
   const [editingComponent, setEditingComponent] = useState<Component | null>(null);
   const [deletingComponent, setDeletingComponent] = useState<Component | null>(null);
   const [relocatingComponent, setRelocatingComponent] = useState<Component | null>(null);
+  const [editingSoftware, setEditingSoftware] = useState<SoftwareItem | null>(null);
+  const [removingSoftware, setRemovingSoftware] = useState<SoftwareItem | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleSuccess = () => {
@@ -270,39 +273,11 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
           </Button>
         </div>
 
-        {initialSoftware.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            <MonitorSmartphone className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No software recorded for this unit.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 text-sm font-medium">Name</th>
-                  <th className="text-left p-3 text-sm font-medium">Version</th>
-                  <th className="text-left p-3 text-sm font-medium">License Type</th>
-                </tr>
-              </thead>
-              <tbody>
-                {initialSoftware.map(app => (
-                  <tr key={app.id} className="border-b last:border-b-0 hover:bg-muted/30">
-                    <td className="p-3">
-                      <span className="font-medium">{app.name}</span>
-                    </td>
-                    <td className="p-3 text-sm">
-                      {app.version || '-'}
-                    </td>
-                    <td className="p-3 text-sm">
-                      {app.license_type.replace(/_/g, ' ')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <SoftwareList
+          software={initialSoftware}
+          onEdit={setEditingSoftware}
+          onRemove={setRemovingSoftware}
+        />
       </div>
 
       {isSoftwareFormOpen && (

@@ -1,6 +1,6 @@
 # Story 8.3: View Installed Applications by Unit
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -25,24 +25,48 @@ so that I can see the complete software profile.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create SoftwareList client component (AC: 1, 2, 3)
-  - [ ] Create `app/dashboard/units/[id]/components/SoftwareList.tsx`
-  - [ ] Table with columns: Name, Version, License Type, Install Date, Actions
-  - [ ] License type badge with color coding (FREE=green, COMMERCIAL=blue, OPEN_SOURCE=purple, EDUCATIONAL=yellow, NONE=gray)
-  - [ ] Empty state when no records
-  - [ ] Edit and Remove buttons on each row
+- [x] Task 1: Create SoftwareList client component (AC: 1, 2, 3)
+  - [x] Create `app/dashboard/units/[id]/components/SoftwareList.tsx`
+  - [x] Table with columns: Name, Version, License Type, Install Date, Actions
+  - [x] License type badge with color coding (FREE=green, COMMERCIAL=blue, OPEN_SOURCE=purple, EDUCATIONAL=yellow, NONE=gray)
+  - [x] Empty state when no records
+  - [x] Edit and Remove buttons on each row
 
-- [ ] Task 2: Fetch software data in unit detail page (AC: 1)
-  - [ ] Update `app/dashboard/units/[id]/page.tsx` to include `installedApplications` in Prisma query
-  - [ ] Pass `initialSoftware` prop to client component
+- [x] Task 2: Fetch software data in unit detail page (AC: 1)
+  - [x] Update `app/dashboard/units/[id]/page.tsx` to include `installedApplications` in Prisma query
+  - [x] Pass `initialSoftware` prop to client component
 
-- [ ] Task 3: Integrate SoftwareList into unit detail page (AC: 1, 2)
-  - [ ] Add SoftwareList section below ComponentsClient in unit detail page
-  - [ ] Pass software data and handlers
+- [x] Task 3: Integrate SoftwareList into unit detail page (AC: 1, 2)
+  - [x] Add SoftwareList section below ComponentsClient in unit detail page
+  - [x] Pass software data and handlers
 
-- [ ] Task 4: Format dates for display (AC: 1)
-  - [ ] Use `formatDate()` utility from `lib/utils.ts` for install_date display
-  - [ ] Handle null install_date gracefully
+- [x] Task 4: Format dates for display (AC: 1)
+  - [x] Local `formatDate()` in SoftwareList.tsx following codebase convention (no shared util exists — each client defines its own)
+  - [x] Handle null install_date gracefully (shows "N/A")
+
+## Dev Agent Record
+
+### Completion Notes
+
+**Implementation Complete:** Story 8.3 - View Installed Applications by Unit
+
+**All Acceptance Criteria Satisfied:**
+- AC1: Software table on unit detail page shows name, version, license badge, install date (relative format, N/A fallback)
+- AC2: Empty state with icon + "Add Software to get started" CTA
+- AC3: Edit/Remove icon buttons on each row, wired to state handlers (modals land in 8-4/8-5)
+
+**Scope note:** Edit/Remove buttons set `editingSoftware`/`removingSoftware` state in ComponentsClient; the Edit modal (8-4) and Remove confirm (8-5) render from that state. 2 transient lint warnings for unread state values resolve when those stories land.
+
+**Files Created:**
+- `app/dashboard/units/[id]/components/SoftwareList.tsx` - Software table with badges, dates, empty state, action buttons
+
+**Files Modified:**
+- `app/dashboard/units/[id]/ComponentsClient.tsx` - Replaced inline table with SoftwareList, added edit/remove state + handlers
+
+**Verification:**
+- TypeScript: no errors
+- ESLint: 0 errors (2 transient warnings for forward-looking state)
+- Production build: succeeds
 
 ## Dev Notes
 
