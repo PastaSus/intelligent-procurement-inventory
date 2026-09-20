@@ -18,5 +18,11 @@ export const updateComponentSchema = z.object({
   status: ComponentStatusEnum.optional(),
 });
 
+export const relocateComponentSchema = z.object({
+  componentId: z.string().min(1, 'Component ID is required'),
+  targetUnitId: z.string().min(1, 'Target unit is required'),
+});
+
 export type CreateComponent = z.infer<typeof createComponentSchema>;
 export type UpdateComponent = z.infer<typeof updateComponentSchema>;
+export type RelocateComponent = z.infer<typeof relocateComponentSchema>;

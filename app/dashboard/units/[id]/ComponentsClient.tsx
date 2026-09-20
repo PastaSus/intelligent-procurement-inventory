@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Plus, ArrowLeft, Cpu, Wrench, AlertTriangle, Pencil, Trash2, Sparkles } from 'lucide-react';
+import { Plus, ArrowLeft, Cpu, Wrench, AlertTriangle, Pencil, Trash2, Sparkles, MoveRight } from 'lucide-react';
 import Link from 'next/link';
 import { AddComponentForm } from './components/AddComponentForm';
 import { EditComponentForm } from './components/EditComponentForm';
+import { RelocateComponentModal } from './components/RelocateComponentModal';
 import { Button } from '@/components/ui/button';
 import { deleteComponent, bulkAddComponents } from '@/app/_actions/components';
 
@@ -29,6 +30,7 @@ interface ComponentsClientProps {
   unit: UnitInfo;
   initialComponents: Component[];
   componentTypes: readonly string[];
+  allUnits: UnitInfo[];
 }
 
 const statusStyles: Record<string, string> = {
@@ -43,11 +45,12 @@ const statusIcons: Record<string, React.ElementType> = {
   NEEDS_REPLACEMENT: AlertTriangle,
 };
 
-export function ComponentsClient({ unit, initialComponents, componentTypes }: ComponentsClientProps) {
+export function ComponentsClient({ unit, initialComponents, componentTypes, allUnits }: ComponentsClientProps) {
   const [components, setComponents] = useState(initialComponents);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingComponent, setEditingComponent] = useState<Component | null>(null);
   const [deletingComponent, setDeletingComponent] = useState<Component | null>(null);
+  const [relocatingComponent, setRelocatingComponent] = useState<Component | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleSuccess = () => {
@@ -203,6 +206,13 @@ export function ComponentsClient({ unit, initialComponents, componentTypes }: Co
                       {component && (
                         <div className="flex items-center justify-center gap-1">
                           <button
+                            onClick={() => setRelocatingComponent(component)}
+                            className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                            title="Relocate"
+                          >
+                            <MoveRight className="h-4 w-4" />
+                          </button>
+                          <button
                             onClick={() => setEditingComponent(component)}
                             className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
                             title="Edit"
@@ -276,6 +286,16 @@ export function ComponentsClient({ unit, initialComponents, componentTypes }: Co
             </div>
           </div>
         </div>
+      )}
+
+      {relocatingComponent && (
+        <RelocateComponentModal
+          component={relocatingComponent}
+          currentUnitId={unit.id}
+          allUnits={allUnits}
+          onClose={() => setRelocatingComponent(null)}
+          onSuccess={handleSuccess}
+        />
       )}
     </div>
   );

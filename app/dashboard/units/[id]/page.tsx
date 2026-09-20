@@ -26,6 +26,20 @@ export default async function UnitDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  const allUnits = await prisma.computerUnit.findMany({
+    where: { deleted: false },
+    include: {
+      laboratory_room: { select: { name: true } },
+    },
+    orderBy: { unit_name: 'asc' },
+  });
+
+  const allUnitsMapped = allUnits.map(u => ({
+    id: u.id,
+    unit_name: u.unit_name,
+    roomName: u.laboratory_room.name,
+  }));
+
   return (
     <ComponentsClient
       unit={{
@@ -35,6 +49,7 @@ export default async function UnitDetailPage({ params }: PageProps) {
       }}
       initialComponents={unit.components}
       componentTypes={COMPONENT_TYPES}
+      allUnits={allUnitsMapped}
     />
   );
 }

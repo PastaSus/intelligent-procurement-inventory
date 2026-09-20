@@ -1,6 +1,6 @@
 # Story 4.7: Relocate Component to Another Unit
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -28,36 +28,61 @@ so that I can track hardware swaps between machines.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add "Relocate" button to component list UI (AC: 1)
-  - [ ] Add a "Relocate" icon button (using `MoveRight` from lucide-react) next to Edit/Remove buttons in `ComponentsClient.tsx`
-  - [ ] Pass `onRelocate` callback to each component row
+- [x] Task 1: Add "Relocate" button to component list UI (AC: 1)
+  - [x] Add a "Relocate" icon button (using `MoveRight` from lucide-react) next to Edit/Remove buttons in `ComponentsClient.tsx`
+  - [x] Pass `onRelocate` callback to each component row
 
-- [ ] Task 2: Create RelocateComponentModal client component (AC: 1, 2, 3)
-  - [ ] Create `app/dashboard/units/[id]/components/RelocateComponentModal.tsx`
-  - [ ] Modal with target unit dropdown (fetch all units via props or server action)
-  - [ ] Show target unit name + room in dropdown
-  - [ ] Duplicate type warning check (AC: 3)
-  - [ ] `useTransition` for pending state
+- [x] Task 2: Create RelocateComponentModal client component (AC: 1, 2, 3)
+  - [x] Create `app/dashboard/units/[id]/components/RelocateComponentModal.tsx`
+  - [x] Modal with target unit dropdown (fetch all units via props or server action)
+  - [x] Show target unit name + room in dropdown
+  - [x] Duplicate type warning check (AC: 3)
+  - [x] `useTransition` for pending state
 
-- [ ] Task 3: Create server action for component relocation (AC: 2)
-  - [ ] Add `relocateComponent(formData: FormData)` to `app/_actions/components.ts`
-  - [ ] Validate: component exists, target unit exists, target unit not deleted
-  - [ ] Check for duplicate type on target unit → return warning flag
-  - [ ] Update `computer_unit_id` on the component
-  - [ ] Call `revalidatePath()` for both source and target unit pages
+- [x] Task 3: Create server action for component relocation (AC: 2)
+  - [x] Add `relocateComponent(formData: FormData)` to `app/_actions/components.ts`
+  - [x] Validate: component exists, target unit exists, target unit not deleted
+  - [x] Check for duplicate type on target unit → return warning flag
+  - [x] Update `computer_unit_id` on the component
+  - [x] Call `revalidatePath()` for both source and target unit pages
 
-- [ ] Task 4: Add Zod schema for relocation (AC: 2)
-  - [ ] Add `RelocateComponentSchema` to `lib/validators/components.ts`
-  - [ ] Fields: `componentId` (string, required), `targetUnitId` (string, required)
+- [x] Task 4: Add Zod schema for relocation (AC: 2)
+  - [x] Add `RelocateComponentSchema` to `lib/validators/components.ts`
+  - [x] Fields: `componentId` (string, required), `targetUnitId` (string, required)
 
-- [ ] Task 5: Wire up modal in ComponentsClient (AC: 1)
-  - [ ] Add `showRelocateModal` state and `selectedComponent` state
-  - [ ] Render `RelocateComponentModal` when open
-  - [ ] Pass all units list as prop (fetch in parent page)
+- [x] Task 5: Wire up modal in ComponentsClient (AC: 1)
+  - [x] Add `showRelocateModal` state and `selectedComponent` state
+  - [x] Render `RelocateComponentModal` when open
+  - [x] Pass all units list as prop (fetch in parent page)
 
-- [ ] Task 6: Update unit detail page to fetch all units (AC: 1)
-  - [ ] In `app/dashboard/units/[id]/page.tsx`, fetch all active units for the relocate dropdown
-  - [ ] Pass `allUnits` prop to `ComponentsClient`
+- [x] Task 6: Update unit detail page to fetch all units (AC: 1)
+  - [x] In `app/dashboard/units/[id]/page.tsx`, fetch all active units for the relocate dropdown
+  - [x] Pass `allUnits` prop to `ComponentsClient`
+
+## Dev Agent Record
+
+### Completion Notes
+
+**Implementation Complete:** Story 4.7 - Relocate Component to Another Unit
+
+**All Acceptance Criteria Satisfied:**
+- AC1: Relocate button on each component row opens modal with unit dropdown (unit name + room)
+- AC2: Selecting target unit and confirming updates `computer_unit_id`, shows toast, refreshes list
+- AC3: Duplicate type on target unit returns warning flag, shown as warning toast
+
+**Files Created:**
+- `app/dashboard/units/[id]/components/RelocateComponentModal.tsx` - Relocate modal client component
+
+**Files Modified:**
+- `lib/validators/computer-component.ts` - Added relocateComponentSchema
+- `app/_actions/components.ts` - Added relocateComponent server action
+- `app/dashboard/units/[id]/ComponentsClient.tsx` - Added relocate button, modal state, allUnits prop
+- `app/dashboard/units/[id]/page.tsx` - Fetch all units, pass to ComponentsClient
+
+**Verification:**
+- TypeScript: no errors in modified files
+- ESLint: no errors (1 pre-existing warning)
+- Production build: succeeds, all routes compile
 
 ## Dev Notes
 

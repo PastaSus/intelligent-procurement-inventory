@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { createComponentSchema, updateComponentSchema } from '@/lib/validators/computer-component';
+import { createComponentSchema, updateComponentSchema, relocateComponentSchema } from '@/lib/validators/computer-component';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -231,5 +231,69 @@ export async function bulkAddComponents(formData: FormData) {
   } catch (error) {
     console.error('Bulk add components error:', error);
     return { success: false, error: 'Failed to bulk add components' };
+  }
+}
+
+export async function relocateComponent(formData: FormData) {
+  try {
+    const session = await getSession();
+    if (!session?.userId) {
+      return { success: false, error: 'You must be logged in' };
+    }
+
+    const rawData = {
+      componentId: formData.get('componentId') as string,
+      targetUnitId: formData.get('targetUnitId') as string,
+    };
+    const result = relocateComponentSchema.safeParse(rawData);
+    if (!result.success) {
+      return { success: false, error: result.error.issues[0].message };
+    }
+
+    const component = await prisma.computerComponent.findUnique({
+      where: { id: result.data.componentId },
+    });
+    if (!component) {
+      return { success: false, error: 'Component not found' };
+    }
+
+    const targetUnit = await prisma.computerUnit.findUnique({
+      where: { id: result.data.targetUnitId },
+    });
+    if (!targetUnit || targetUnit.deleted) {
+      return { success: false, error: 'Target unit not found' };
+    }
+
+    if (component.computer_unit_id === result.data.targetUnitId) {
+      return { success: false, error: 'Component is already on this unit' };
+    }
+
+    const duplicateType = await prisma.computerComponent.findFirst({
+      where: {
+        computer_unit_id: result.data.targetUnitId,
+        type: component.type,
+        id: { not: component.id },
+      },
+    });
+
+    let warning: string | null = null;
+    if (duplicateType) {
+      warning = `Target unit already has a ${component.type}. Relocated component will replace it.`;
+    }
+
+    await prisma.computerComponent.update({
+      where: { id: result.data.componentId },
+      data: {
+        computer_unit_id: result.data.targetUnitId,
+        updated_by: session.userId,
+      },
+    });
+
+    revalidatePath(`/dashboard/units/${component.computer_unit_id}`);
+    revalidatePath(`/dashboard/units/${result.data.targetUnitId}`);
+    return { success: true, warning };
+  } catch (error) {
+    console.error('Relocate component error:', error);
+    return { success: false, error: 'Failed to relocate component' };
   }
 }

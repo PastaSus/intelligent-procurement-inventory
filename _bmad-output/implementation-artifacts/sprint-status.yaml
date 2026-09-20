@@ -74,7 +74,7 @@ development_status:
 
   # Epic 8: Capstone Advisor Features (Sprint Change Proposal 2026-09-20)
   epic-8: in-progress
-  4-7-relocate-component: ready-for-dev
+  4-7-relocate-component: review
   8-1-schema-installed-application: ready-for-dev
   8-2-add-software-to-unit: ready-for-dev
   8-3-view-software-by-unit: ready-for-dev
