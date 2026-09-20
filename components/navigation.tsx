@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   Package,
   Activity,
+  FileText,
 } from "lucide-react";
 
 interface NavItem {
@@ -43,6 +44,7 @@ const navItems: NavItem[] = [
     icon: ShoppingCart,
   },
   { label: "Chat", href: "/dashboard/chat", icon: MessageCircle },
+  { label: "Reports", href: "/dashboard/reports", icon: FileText },
 ];
 
 function isActiveLink(pathname: string, href: string): boolean {
