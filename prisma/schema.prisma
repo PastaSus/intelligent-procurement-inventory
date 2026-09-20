@@ -59,6 +59,7 @@ model ComputerUnit {
   deleted          Boolean            @default(false)
   laboratory_room  LaboratoryRoom     @relation(fields: [laboratory_room_id], references: [id])
   components       ComputerComponent[]
+  installedApplications InstalledApplication[]
 
   @@unique([unit_name, laboratory_room_id])
   @@index([laboratory_room_id])
@@ -81,6 +82,22 @@ model ComputerComponent {
   @@index([computer_unit_id])
   @@index([type])
   @@index([status])
+}
+
+model InstalledApplication {
+  id               String        @id @default(cuid())
+  computer_unit_id String
+  name             String
+  version          String?
+  license_key      String?
+  license_type     LicenseType   @default(NONE)
+  install_date     DateTime?
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @updatedAt
+  computer_unit    ComputerUnit  @relation(fields: [computer_unit_id], references: [id], onDelete: Cascade)
+
+  @@index([computer_unit_id])
+  @@index([name])
 }
 
 model InventoryItem {
@@ -154,6 +171,14 @@ enum ComponentStatus {
   FUNCTIONAL
   NEEDS_REPAIR
   NEEDS_REPLACEMENT
+}
+
+enum LicenseType {
+  NONE
+  FREE
+  COMMERCIAL
+  OPEN_SOURCE
+  EDUCATIONAL
 }
 
 enum PurchaseRequestStatus {

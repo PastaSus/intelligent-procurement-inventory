@@ -1,6 +1,6 @@
 # Story 8.1: Schema Migration — InstalledApplication Model
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -31,26 +31,55 @@ so that we can inventory software alongside hardware.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add InstalledApplication model to Prisma schema (AC: 1, 2, 3)
-  - [ ] Add `InstalledApplication` model to `prisma/schema.prisma`
-  - [ ] Add `LicenseType` enum to `prisma/schema.prisma`
-  - [ ] Add `installedApplications InstalledApplication[]` relation to `ComputerUnit` model
-  - [ ] Configure cascade delete on relation
-  - [ ] Add indexes on `computer_unit_id` and `name`
+- [x] Task 1: Add InstalledApplication model to Prisma schema (AC: 1, 2, 3)
+  - [x] Add `InstalledApplication` model to `prisma/schema.prisma`
+  - [x] Add `LicenseType` enum to `prisma/schema.prisma`
+  - [x] Add `installedApplications InstalledApplication[]` relation to `ComputerUnit` model
+  - [x] Configure cascade delete on relation
+  - [x] Add indexes on `computer_unit_id` and `name`
 
-- [ ] Task 2: Generate and apply migration (AC: 1)
-  - [ ] Run `prisma migrate dev --name add-installed-applications`
-  - [ ] Verify migration SQL is correct
-  - [ ] Run `prisma generate` to regenerate client
+- [x] Task 2: Generate and apply migration (AC: 1)
+  - [x] Run `prisma migrate dev --name add-installed-applications`
+  - [x] Verify migration SQL is correct
+  - [x] Run `prisma generate` to regenerate client
 
-- [ ] Task 3: Update seed data (AC: 1)
-  - [ ] Add sample InstalledApplication records to seed script
-  - [ ] Add 2-3 apps per computer unit (e.g., "Windows 11", "Microsoft Office", "Google Chrome")
+- [x] Task 3: Update seed data (AC: 1)
+  - [x] Add sample InstalledApplication records to seed script
+  - [x] Add 2-3 apps per computer unit (e.g., "Windows 11", "Microsoft Office", "Google Chrome")
 
-- [ ] Task 4: Verify migration (AC: 1, 2, 3)
-  - [ ] Run existing tests to ensure nothing breaks
-  - [ ] Verify new table exists in database
-  - [ ] Verify cascade delete works
+- [x] Task 4: Verify migration (AC: 1, 2, 3)
+  - [x] Run existing tests to ensure nothing breaks
+  - [x] Verify new table exists in database
+  - [x] Verify cascade delete works
+
+## Dev Agent Record
+
+### Completion Notes
+
+**Implementation Complete:** Story 8.1 - Schema Migration (InstalledApplication)
+
+**All Acceptance Criteria Satisfied:**
+- AC1: `InstalledApplication` table created with all columns (id, computer_unit_id, name, version?, license_key?, license_type, install_date?, created_at, updated_at)
+- AC2: `LicenseType` enum created (NONE, FREE, COMMERCIAL, OPEN_SOURCE, EDUCATIONAL)
+- AC3: Cascade delete configured, indexes on computer_unit_id and name
+
+**Design decision:** `license_type` is non-nullable with DEFAULT 'NONE' (instead of optional) to avoid null handling — NONE is the sensible default.
+
+**Files Modified:**
+- `prisma/schema.prisma` - Added InstalledApplication model, LicenseType enum, ComputerUnit relation
+
+**Files Created (auto-generated):**
+- `prisma/migrations/20260920091900_add_installed_applications/migration.sql`
+
+**Files Modified (seed):**
+- `prisma/seed.ts` - Added installedApplication cleanup + 3 sample apps per unit (Windows 11 Pro, Office 2021, Chrome)
+
+**Verification:**
+- Migration applied cleanly to Neon PostgreSQL
+- Seed: 6 units × 3 apps = 18 InstalledApplication rows
+- Cascade delete verified: deleting unit removes its 3 apps (tested, then re-seeded)
+- TypeScript: no errors in schema/seed files
+- Production build: succeeds
 
 ## Dev Notes
 

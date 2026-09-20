@@ -7,6 +7,7 @@ async function main() {
   console.log('Seeding database...');
 
   // Clean existing data in reverse dependency order
+  await prisma.installedApplication.deleteMany();
   await prisma.computerComponent.deleteMany();
   await prisma.computerUnit.deleteMany();
   await prisma.laboratoryRoom.deleteMany();
@@ -107,6 +108,26 @@ async function main() {
         },
       });
       serialCounter++;
+    }
+  }
+
+  type AppSpec = { name: string; version: string; licenseType: any };
+  const appSpecs: AppSpec[] = [
+    { name: 'Windows 11 Pro', version: '23H2', licenseType: 'COMMERCIAL' },
+    { name: 'Microsoft Office 2021', version: '16.0', licenseType: 'COMMERCIAL' },
+    { name: 'Google Chrome', version: '131.0', licenseType: 'FREE' },
+  ];
+
+  for (const unit of allUnits) {
+    for (const app of appSpecs) {
+      await prisma.installedApplication.create({
+        data: {
+          computer_unit_id: unit.id,
+          name: app.name,
+          version: app.version,
+          license_type: app.licenseType,
+        },
+      });
     }
   }
 
