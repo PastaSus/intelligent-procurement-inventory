@@ -24,6 +24,11 @@ async function noSession() {
   vi.mocked(getSession).mockResolvedValue(null);
 }
 
+async function techSession() {
+  const { getSession } = await import('@/lib/auth');
+  vi.mocked(getSession).mockResolvedValue({ userId: 'tech-001', email: 'tech@example.com', role: 'TECHNICIAN' });
+}
+
 function makePRForm(items: Array<{ itemName: string; quantity: number }>, notes?: string): FormData {
   const fd = new FormData();
   fd.set('items', JSON.stringify(items));
@@ -102,6 +107,21 @@ describe('createPurchaseRequest', () => {
     expect(result.success).toBe(false);
     expect(result.error).toContain('unique');
   });
+
+  it('denies TECHNICIAN create with zero DB change', async () => {
+    await techSession();
+
+    const fd = makePRForm([{ itemName: 'Mouse', quantity: 10 }]);
+    const result = await createPurchaseRequest(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('administrators');
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+
+    vi.mocked(prisma.purchaseRequest.findUnique).mockResolvedValue(null);
+    const recheck = await prisma.purchaseRequest.findUnique({ where: { id: 'pr-tech' } });
+    expect(recheck).toBeNull();
+  });
 });
 
 describe('submitPurchaseRequest', () => {
@@ -156,6 +176,23 @@ describe('submitPurchaseRequest', () => {
 
     expect(result.success).toBe(true);
     expect(result.data).toEqual(submitted);
+  });
+
+  it('denies TECHNICIAN submit with zero DB change', async () => {
+    await techSession();
+    const draft = factoryPR({ id: 'pr-1', status: 'DRAFT' });
+    vi.mocked(prisma.purchaseRequest.findUnique).mockResolvedValue(draft as any);
+
+    const fd = new FormData();
+    fd.set('id', 'pr-1');
+    const result = await submitPurchaseRequest(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('administrators');
+    expect(prisma.purchaseRequest.update).not.toHaveBeenCalled();
+
+    const recheck = await prisma.purchaseRequest.findUnique({ where: { id: 'pr-1' } });
+    expect(recheck?.status).toBe('DRAFT');
   });
 });
 
@@ -355,5 +392,22 @@ describe('fulfillPurchaseRequest', () => {
     expect(result.data).toEqual(fulfilled);
     expect(prisma.$transaction).toHaveBeenCalled();
     expect(prisma.inventoryItem.updateMany).toHaveBeenCalled();
+  });
+
+  it('denies TECHNICIAN fulfill with zero DB change', async () => {
+    await techSession();
+    const approved = factoryPR({ id: 'pr-1', status: 'APPROVED' });
+    vi.mocked(prisma.purchaseRequest.findUnique).mockResolvedValue(approved as any);
+
+    const fd = new FormData();
+    fd.set('id', 'pr-1');
+    const result = await fulfillPurchaseRequest(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('administrators');
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+
+    const recheck = await prisma.purchaseRequest.findUnique({ where: { id: 'pr-1' } });
+    expect(recheck?.status).toBe('APPROVED');
   });
 });
