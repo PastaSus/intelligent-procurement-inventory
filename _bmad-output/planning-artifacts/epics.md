@@ -432,4 +432,86 @@ So that I can get a quick overview of the system.
 **Then** stats cards show: total rooms, total units, total components, components needing repair/replacement, low stock spare parts
 **And** existing dashboard layout components are reused where applicable
 
+### Epic 9: Role Model Refactor (Technician)
+
+Rename the Staff role to Technician and enforce the Admin-vs-Technician permission boundary across the app (Sprint Change Proposal 2026-10-04).
+
+**Stories:**
+
+#### Story 9.1: Rename STAFF role to TECHNICIAN
+
+As a lab administrator,
+I want the Staff role renamed to Technician across database, seed, sessions, and UI,
+So that role names match real lab responsibilities.
+
+**Acceptance Criteria:**
+
+**Given** a database containing STAFF users
+**When** the migration runs
+**Then** all STAFF values become TECHNICIAN with no data loss
+
+**Given** a fresh setup
+**When** the seed runs
+**Then** tech@example.com (TECHNICIAN) exists and staff@example.com does not
+
+**Given** any code, test, seed, or doc search
+**When** grepping for STAFF
+**Then** zero matches remain
+
+#### Story 9.2: Enforce Admin-vs-Technician permission matrix
+
+As a lab administrator,
+I want mutations restricted by role,
+So that technicians cannot alter inventory or purchase requests.
+
+**Acceptance Criteria:**
+
+**Given** a logged-in Technician
+**When** attempting spare-parts inventory mutations or any purchase-request mutation
+**Then** the action fails without mutating data
+
+**Given** a logged-in Admin
+**When** performing the same actions
+**Then** they succeed
+
+**Given** a logged-in Technician
+**When** using rooms, units, components, or software
+**Then** full CRUD works including NEEDS_REPAIR flags
+
+**Given** a Technician session
+**When** pages render
+**Then** forbidden buttons are hidden or disabled
+
+#### Story 9.3: Repair proxy.ts admin route guard
+
+As a lab administrator,
+I want the route middleware to guard real admin boundaries,
+So that role enforcement isn't pointing at phantom pages.
+
+**Acceptance Criteria:**
+
+**Given** the middleware config
+**When** reviewed
+**Then** ADMIN_ROUTES contains no non-existent paths
+
+**Given** an authenticated Technician
+**When** visiting shared pages
+**Then** access is granted, and unauthenticated users still redirect to login
+
+#### Story 9.4: Update tests and docs for Technician role
+
+As a developer,
+I want tests and docs aligned with the Technician model,
+So that CI and onboarding reflect reality.
+
+**Acceptance Criteria:**
+
+**Given** the full Vitest suite
+**When** run
+**Then** it passes (except the pre-existing AIChat failure)
+
+**Given** the planning docs
+**When** reviewed
+**Then** PRD, Architecture, UX, project-context, epics, traceability, and deferred-work reflect the Technician model
+
 <!-- End stories -->

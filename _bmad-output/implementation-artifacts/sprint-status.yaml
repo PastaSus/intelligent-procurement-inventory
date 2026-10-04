@@ -1,5 +1,5 @@
 # generated: 2026-07-01T00:00:00Z
-# last_updated: 2026-09-20T00:00:00Z
+# last_updated: 2026-10-04T00:00:00Z
 # project: intelligent-procurement-inventory
 # project_key: NOKEY
 # tracking_system: file-system
@@ -82,3 +82,10 @@ development_status:
   8-5-remove-software: done
   8-6-hardware-report-page: done
   8-7-report-summary-stats: done
+
+  # Epic 9: Role Model Refactor (Technician) (Sprint Change Proposal 2026-10-04)
+  epic-9: in-progress
+  9-1-rename-staff-to-technician: review
+  9-2-enforce-permission-matrix: backlog
+  9-3-repair-proxy-admin-routes: backlog
+  9-4-update-tests-and-docs: backlog

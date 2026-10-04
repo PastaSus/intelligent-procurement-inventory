@@ -8,7 +8,7 @@
 | id | String (cuid) | Primary key |
 | email | String | Unique user email |
 | password_hash | String | Bcrypt hashed password |
-| role | Enum (ADMIN, STAFF) | User role |
+| role | Enum (ADMIN, TECHNICIAN) | User role |
 | created_at | DateTime | Creation timestamp |
 | updated_at | DateTime | Last update timestamp |
 | created_by | String? | User who created this record |
@@ -132,7 +132,7 @@
 ## Enums
 
 ### Role
-ADMIN, STAFF
+ADMIN, TECHNICIAN
 
 ### ComponentType
 MOTHERBOARD, PROCESSOR, MEMORY, HDD, MONITOR, KEYBOARD, MOUSE, AVR, OPTICAL_DRIVE
@@ -157,4 +157,4 @@ PurchaseRequest 1──many RequestItem
 
 ### Users
 - admin@example.com / admin123 (ADMIN)
-- staff@example.com / staff123 (STAFF)
+- tech@example.com / tech123 (TECHNICIAN)
