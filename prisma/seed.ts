@@ -28,14 +28,15 @@ async function main() {
     },
   });
 
-  const staffPassword = await bcrypt.hash('staff123', 10);
+  const techPassword = await bcrypt.hash('tech123', 10);
+  await prisma.user.deleteMany({ where: { email: 'staff@example.com' } });
   await prisma.user.upsert({
-    where: { email: 'staff@example.com' },
-    update: {},
+    where: { email: 'tech@example.com' },
+    update: { password_hash: techPassword, role: 'TECHNICIAN' },
     create: {
-      email: 'staff@example.com',
-      password_hash: staffPassword,
-      role: 'STAFF',
+      email: 'tech@example.com',
+      password_hash: techPassword,
+      role: 'TECHNICIAN',
     },
   });
 

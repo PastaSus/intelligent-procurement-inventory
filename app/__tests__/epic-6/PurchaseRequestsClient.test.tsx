@@ -103,6 +103,26 @@ describe('PurchaseRequestsClient', () => {
     expect(screen.getByTitle('Mark Fulfilled')).toBeInTheDocument();
   });
 
+  it('hides New Request button when not admin', () => {
+    render(<PurchaseRequestsClient initialRequests={[]} isAdmin={false} />);
+
+    expect(screen.queryByRole('button', { name: /new request/i })).not.toBeInTheDocument();
+  });
+
+  it('hides submit button for DRAFT requests when not admin', () => {
+    const requests = [makePR({ status: 'DRAFT' })];
+    render(<PurchaseRequestsClient initialRequests={requests} isAdmin={false} />);
+
+    expect(screen.queryByTitle('Submit for Approval')).not.toBeInTheDocument();
+  });
+
+  it('hides fulfill button for APPROVED requests when not admin', () => {
+    const requests = [makePR({ status: 'APPROVED' })];
+    render(<PurchaseRequestsClient initialRequests={requests} isAdmin={false} />);
+
+    expect(screen.queryByTitle('Mark Fulfilled')).not.toBeInTheDocument();
+  });
+
   it('shows dash for REJECTED and FULFILLED actions', () => {
     const requests = [
       makePR({ status: 'REJECTED' }),

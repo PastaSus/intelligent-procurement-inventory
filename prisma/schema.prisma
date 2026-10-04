@@ -11,7 +11,7 @@ model User {
   id            String   @id @default(cuid())
   email         String   @unique
   password_hash String
-  role          Role     @default(STAFF)
+  role          Role     @default(TECHNICIAN)
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
   created_by    String?
@@ -152,7 +152,7 @@ model RequestItem {
 
 enum Role {
   ADMIN
-  STAFF
+  TECHNICIAN
 }
 
 enum ComponentType {

@@ -171,10 +171,12 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin }: PurchaseReq
           <h2 className="text-3xl font-bold">Purchase Requests</h2>
           <p className="text-muted-foreground">Track and manage internal procurement</p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Request
-        </Button>
+        {isAdmin && (
+          <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            New Request
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-4 items-center">
@@ -275,7 +277,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin }: PurchaseReq
                       <td className="p-3 text-center text-sm text-muted-foreground">{formatDate(req.updated_at)}</td>
                       <td className="p-3 text-center w-[180px]">
                         <div className="flex items-center justify-center gap-1 flex-wrap">
-                          {req.status === 'DRAFT' && (
+                          {req.status === 'DRAFT' && isAdmin && (
                             <button
                               onClick={() => handleAction('submit', req)}
                               disabled={isPending}
@@ -305,7 +307,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin }: PurchaseReq
                               </button>
                             </>
                           )}
-                          {req.status === 'APPROVED' && (
+                          {req.status === 'APPROVED' && isAdmin && (
                             <button
                               onClick={() => handleAction('fulfill', req)}
                               disabled={isPending}

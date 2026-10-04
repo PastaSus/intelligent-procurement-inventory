@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import type { SessionPayload } from "@/lib/auth";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.SESSION_SECRET || "your-session-secret-here",
@@ -9,7 +8,6 @@ const JWT_SECRET = new TextEncoder().encode(
 const SESSION_COOKIE_NAME = "session";
 const PUBLIC_ROUTES = ["/", "/login", "/forgot-password", "/reset-password"];
 
-const ADMIN_ROUTES = ["/dashboard/admin", "/dashboard/users", "/dashboard/settings"];
 const PROTECTED_PREFIXES = ["/dashboard"];
 
 export async function proxy(request: NextRequest) {
@@ -27,15 +25,9 @@ export async function proxy(request: NextRequest) {
     }
 
     try {
-      const verified = await jwtVerify(token, JWT_SECRET);
-      const session = verified.payload as SessionPayload;
+      await jwtVerify(token, JWT_SECRET);
 
-      if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
-        if (session.role !== "ADMIN") {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-      }
-
+      // Role enforcement lives in per-page session checks and server-action gates.
       return NextResponse.next();
     } catch {
       return NextResponse.redirect(new URL("/login", request.url));

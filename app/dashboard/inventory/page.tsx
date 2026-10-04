@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 import { InventoryClient } from './InventoryClient';
 import { SearchParams } from './types';
 
@@ -8,6 +10,11 @@ const COMPONENT_TYPES = [
 ] as const;
 
 export default async function SparePartsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const session = await getSession();
+  if (!session?.userId) {
+    redirect('/login');
+  }
+
   const params = await searchParams;
 
   const page = parseInt(params.page || '1', 10);
@@ -43,6 +50,7 @@ export default async function SparePartsPage({ searchParams }: { searchParams: P
       componentTypes={COMPONENT_TYPES}
       currentPage={page}
       pageSize={pageSize}
+      isAdmin={session.role === 'ADMIN'}
     />
   );
 }

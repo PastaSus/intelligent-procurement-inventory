@@ -21,6 +21,11 @@ async function noSession() {
   vi.mocked(getSession).mockResolvedValue(null);
 }
 
+async function techSession() {
+  const { getSession } = await import('@/lib/auth');
+  vi.mocked(getSession).mockResolvedValue({ userId: 'tech-001', email: 'tech@example.com', role: 'TECHNICIAN' });
+}
+
 describe('createInventoryItem', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -100,6 +105,26 @@ describe('createInventoryItem', () => {
     expect(result.success).toBe(true);
     expect(result.data).toEqual(newItem);
   });
+
+  it('denies TECHNICIAN create with zero DB change', async () => {
+    await techSession();
+    vi.mocked(prisma.inventoryItem.findUnique).mockResolvedValue(null);
+
+    const fd = new FormData();
+    fd.set('sku', 'SKU-TECH');
+    fd.set('name', 'Tech Item');
+    fd.set('quantity', '10');
+    fd.set('reorderPoint', '5');
+    const result = await createInventoryItem(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('administrators');
+    expect(prisma.inventoryItem.create).not.toHaveBeenCalled();
+
+    vi.mocked(prisma.inventoryItem.findUnique).mockResolvedValue(null);
+    const recheck = await prisma.inventoryItem.findUnique({ where: { sku: 'SKU-TECH' } });
+    expect(recheck).toBeNull();
+  });
 });
 
 describe('updateInventoryItem', () => {
@@ -162,6 +187,26 @@ describe('updateInventoryItem', () => {
 
     expect(result.success).toBe(true);
   });
+
+  it('denies TECHNICIAN update with zero DB change', async () => {
+    await techSession();
+    const original = factoryItem({ id: 'inv-1', name: 'Original', quantity: 10 });
+    vi.mocked(prisma.inventoryItem.findUnique).mockResolvedValue(original);
+
+    const fd = new FormData();
+    fd.set('id', 'inv-1');
+    fd.set('name', 'Hacked');
+    fd.set('quantity', '999');
+    const result = await updateInventoryItem(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('administrators');
+    expect(prisma.inventoryItem.update).not.toHaveBeenCalled();
+
+    const recheck = await prisma.inventoryItem.findUnique({ where: { id: 'inv-1' } });
+    expect(recheck?.name).toBe('Original');
+    expect(recheck?.quantity).toBe(10);
+  });
 });
 
 describe('deleteInventoryItem', () => {
@@ -218,5 +263,22 @@ describe('deleteInventoryItem', () => {
         data: expect.objectContaining({ deleted: true }),
       })
     );
+  });
+
+  it('denies TECHNICIAN delete with zero DB change', async () => {
+    await techSession();
+    const original = factoryItem({ id: 'inv-1', deleted: false });
+    vi.mocked(prisma.inventoryItem.findUnique).mockResolvedValue(original);
+
+    const fd = new FormData();
+    fd.set('id', 'inv-1');
+    const result = await deleteInventoryItem(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('administrators');
+    expect(prisma.inventoryItem.update).not.toHaveBeenCalled();
+
+    const recheck = await prisma.inventoryItem.findUnique({ where: { id: 'inv-1' } });
+    expect(recheck?.deleted).toBe(false);
   });
 });

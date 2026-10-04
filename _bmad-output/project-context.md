@@ -56,7 +56,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Auth actions**: Login, logout, forgot-password, and reset-password are in `app/_actions/auth.ts`. `logout()` calls `redirect()` internally (caught by Next.js — wrap in try/catch in client handlers).
 - **Soft-delete semantic**: `LaboratoryRoom`, `ComputerUnit` (combined), `InventoryItem`, `PurchaseRequest` use soft-delete (`deleted` flag). `ComputerComponent` and `RequestItem` use hard cascade-delete through parent — they omit `deleted`/`created_by`/`updated_by` fields.
 - **No `created_by`/`updated_by` on children**: `ComputerComponent` and `RequestItem` omit these fields. Only top-level entities have them.
-- **Session in actions**: Use `getSession()` from `lib/auth.ts`. Admin-gated actions must check `session.role === 'ADMIN'`.
+- **Session in actions**: Use `getSession()` from `lib/auth.ts`. Admin-gated actions must check `session.role === 'ADMIN'`. Roles: ADMIN (full access) and TECHNICIAN (rooms/units/components/software CRUD incl. NEEDS_REPAIR flags; inventory + purchase requests read-only; reports view).
 - **PR auto-numbering**: `pr_number` format is `PR-YYYYMMDD-RRRRRR` (date + 6 random uppercase alphanumeric).
 
 ### Component Patterns
@@ -66,7 +66,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Page architecture**: Server `page.tsx` → `*Client.tsx` (client component) → `components/<Form>.tsx` for modals. Types go in `types.ts`.
 - **Search/filter/sort**: Client-side via `useMemo` with helper `<SortHeader>` component. Filter state managed with `useState`.
 - **Status badges**: Color-coded badges use `bg-{color}-100 text-{color}-800` pattern.
-- **Session auth on pages**: Server pages call `getSession()` and redirect on fail. Admin pages additionally check `session.role`.
+- **Session auth on pages**: Server pages call `getSession()` and redirect on fail, passing `isAdmin={session.role === 'ADMIN'}` where the UI gates admin-only controls.
 - **Stock indicators**: Visual badges (OK=green, LOW=yellow, CRITICAL=red) with progress bars. Reusable `<StockIndicator>` component. **Low stock threshold**: `quantity <= reorder_point` (not `<`).
 - **Navigation**: `isActiveLink(pathname, href)` — exact match for `/dashboard`, prefix match (`startsWith(href + "/")`) for sub-routes. Mobile bottom nav renders first 5 items with `shortLabel` on small screens. Sidebar uses `bg-[#121212]`, active state `bg-[#402020]`, collapsed via `useState<boolean>` + `rotate-180` on chevron.
 - **Timestamps**: `formatDate()` utility — relative ("Just now", "Xh ago", "Xd ago") for recent, absolute ("Mon DD, YYYY") for older. Used on list views.
@@ -88,7 +88,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - `lib/validators/` has all Zod schemas organized by domain.
 - `lib/email.ts` — nodemailer-based email service for password resets.
 - `app/_actions/` has all server actions organized by domain.
-- `app/proxy.ts` is the RBAC middleware (not traditional `middleware.ts`), uses `config.matcher`. PUBLIC_ROUTES = `["/", "/login", "/forgot-password", "/reset-password"]`. ADMIN_ROUTES = `["/dashboard/admin", "/dashboard/users", "/dashboard/settings"]`.
+- `app/proxy.ts` is the auth middleware (not traditional `middleware.ts`), uses `config.matcher`. PUBLIC_ROUTES = `["/", "/login", "/forgot-password", "/reset-password"]`. No route-level role gates remain (Story 9-3 removed phantom ADMIN_ROUTES); role enforcement lives in per-page `isAdmin` props and fail-closed server-action checks.
 - `app/(auth)/` route group for login, forgot-password, and reset-password pages.
 - `app/dashboard/` has all protected pages with `layout.tsx` auth guard.
 
@@ -117,6 +117,6 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Fulfill increments inventory**: When PR goes APPROVED→FULFILLED, inventory quantities increase in a Prisma transaction.
 - **Email service**: `lib/email.ts` uses nodemailer with SMTP env vars (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_NAME`, `SMTP_FROM`, `APP_URL`). Branded HTML emails with maroon/gold Procurvin styling.
 - **Password reset flow**: `/forgot-password` sends email with token link. `/reset-password?token=X` validates token (JOSE/jwt), shows error page if missing/invalid. `PasswordResetToken` model with `expires_at`.
-- **Seed data**: Admin `admin@example.com / admin123`, Staff `staff@example.com / staff123`. Seed script drops existing data before inserting (`deleteMany` on all tables).
+- **Seed data**: Admin `admin@example.com / admin123`, Technician `tech@example.com / tech123`. Seed script drops existing data before inserting (`deleteMany` on all tables).
 - **button:not(:disabled) cursor pointer**: Set in `globals.css` globally — all non-disabled buttons get pointer cursor.
 - **slide-in animation**: `@keyframes slide-in` (opacity 0→1 + translateX 100px→0) with `.animate-slide-in` utility class.

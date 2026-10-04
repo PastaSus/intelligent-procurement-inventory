@@ -240,9 +240,9 @@ pnpm add -D @types/bcrypt
 
 **Authorization Patterns:**
 
-- **Roles:** Admin (full access), Staff (CRUD operations), Viewer (future, read-only)
-- **Implementation:** Middleware + server-side checks using `session.user.role`
-- **RBAC enforcement:** Server Actions validate permissions before mutations
+- **Roles:** Admin (full access — rooms, units, components, software, inventory, purchase requests, reports), Technician (rooms/units/components/software CRUD incl. NEEDS_REPAIR flags; inventory + purchase requests read-only; reports view)
+- **Implementation:** `app/proxy.ts` authentication (login redirect; no role gates) + server-side checks using `session.role` from `lib/auth.ts`
+- **RBAC enforcement:** Server Actions call `getSession()` and return `{ success: false }` on failed role check before any mutation. Admin-only: inventory mutations, all purchase-request mutations. Shared: rooms/units/components/software, reports, AI chat.
 
 **Security Middleware:**
 

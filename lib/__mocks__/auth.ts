@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 
-export type MockSessionRole = 'ADMIN' | 'STAFF';
+export type MockSessionRole = 'ADMIN' | 'TECHNICIAN';
 
 const mockUser: Record<MockSessionRole, {
   id: string;
@@ -9,7 +9,7 @@ const mockUser: Record<MockSessionRole, {
   name: string;
 }> = {
   ADMIN: { id: 'admin-001', email: 'admin@example.com', role: 'ADMIN', name: 'Admin User' },
-  STAFF: { id: 'staff-001', email: 'staff@example.com', role: 'STAFF', name: 'Staff User' },
+  TECHNICIAN: { id: 'tech-001', email: 'tech@example.com', role: 'TECHNICIAN', name: 'Tech User' },
 };
 
 let currentRole: MockSessionRole = 'ADMIN';

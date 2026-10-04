@@ -20,6 +20,9 @@ export async function createPurchaseRequest(formData: FormData) {
     if (!session?.userId) {
       return { success: false, error: 'You must be logged in to create purchase requests' };
     }
+    if (session.role !== 'ADMIN') {
+      return { success: false, error: 'Only administrators can create purchase requests' };
+    }
 
     const rawItems = formData.get('items');
     let items: Array<{ itemName: string; quantity: number }> = [];
@@ -88,6 +91,10 @@ export async function submitPurchaseRequest(formData: FormData) {
     const session = await getSession();
     if (!session?.userId) {
       return { success: false, error: 'You must be logged in' };
+    }
+
+    if (session.role !== 'ADMIN') {
+      return { success: false, error: 'Only administrators can submit purchase requests' };
     }
 
     const id = formData.get('id') as string;
@@ -201,6 +208,10 @@ export async function fulfillPurchaseRequest(formData: FormData) {
     const session = await getSession();
     if (!session?.userId) {
       return { success: false, error: 'You must be logged in' };
+    }
+
+    if (session.role !== 'ADMIN') {
+      return { success: false, error: 'Only administrators can fulfill purchase requests' };
     }
 
     const id = formData.get('id') as string;
