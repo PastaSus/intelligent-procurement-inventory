@@ -11,6 +11,9 @@ export async function createInventoryItem(formData: FormData) {
     if (!session?.userId) {
       return { success: false, error: 'You must be logged in' };
     }
+    if (session.role !== 'ADMIN') {
+      return { success: false, error: 'Only administrators can add inventory items' };
+    }
 
     const rawData = {
       sku: formData.get('sku') as string,
@@ -59,6 +62,9 @@ export async function updateInventoryItem(formData: FormData) {
     const session = await getSession();
     if (!session?.userId) {
       return { success: false, error: 'You must be logged in' };
+    }
+    if (session.role !== 'ADMIN') {
+      return { success: false, error: 'Only administrators can edit inventory items' };
     }
 
     const id = formData.get('id') as string;
@@ -112,6 +118,9 @@ export async function deleteInventoryItem(formData: FormData) {
     const session = await getSession();
     if (!session?.userId) {
       return { success: false, error: 'You must be logged in' };
+    }
+    if (session.role !== 'ADMIN') {
+      return { success: false, error: 'Only administrators can delete inventory items' };
     }
 
     const id = formData.get('id') as string;
