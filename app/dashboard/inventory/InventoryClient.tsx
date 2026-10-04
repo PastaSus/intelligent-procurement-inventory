@@ -45,6 +45,7 @@ interface InventoryClientProps {
   componentTypes: readonly string[];
   currentPage: number;
   pageSize: number;
+  isAdmin: boolean;
 }
 
 function SortHeader({
@@ -83,6 +84,7 @@ export function InventoryClient({
   componentTypes,
   currentPage,
   pageSize,
+  isAdmin,
 }: InventoryClientProps) {
   const [items] = useState(initialItems);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -223,10 +225,12 @@ export function InventoryClient({
             Manage replacement parts inventory
           </p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Part
-        </Button>
+        {isAdmin && (
+          <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Part
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-4 items-center">
@@ -342,9 +346,11 @@ export function InventoryClient({
                   <th className="text-center p-3 text-sm font-medium">
                     <SortHeader column="updated_at" label="Updated" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
                   </th>
-                  <th className="text-center w-[100px] p-3 text-sm font-medium">
-                    Actions
-                  </th>
+                  {isAdmin && (
+                    <th className="text-center w-[100px] p-3 text-sm font-medium">
+                      Actions
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -430,24 +436,26 @@ export function InventoryClient({
                       <td className="p-3 text-center text-sm text-muted-foreground">
                         {formatDate(item.updated_at)}
                       </td>
-                      <td className="p-3 text-center w-[100px]">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={() => setEditingItem(item)}
-                            className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                            title="Edit"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => setDeletingItem(item)}
-                            className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-red-600 transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
+                      {isAdmin && (
+                        <td className="p-3 text-center w-[100px]">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => setEditingItem(item)}
+                              className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                              title="Edit"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => setDeletingItem(item)}
+                              className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-red-600 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -504,7 +512,7 @@ export function InventoryClient({
         />
       )}
 
-      {deletingItem && (
+      {deletingItem && isAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg border p-6 max-w-md w-full mx-4 shadow-lg">
             <div className="flex items-center gap-3 mb-4">
