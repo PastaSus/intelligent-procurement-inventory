@@ -87,5 +87,5 @@ development_status:
   epic-9: in-progress
   9-1-rename-staff-to-technician: review
   9-2-enforce-permission-matrix: backlog
-  9-3-repair-proxy-admin-routes: backlog
+  9-3-repair-proxy-admin-routes: review
   9-4-update-tests-and-docs: backlog
