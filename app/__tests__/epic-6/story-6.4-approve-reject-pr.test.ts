@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-type Role = 'ADMIN' | 'STAFF';
+type Role = 'ADMIN' | 'TECHNICIAN';
 type PRStatus = 'DRAFT' | 'REQUESTED' | 'APPROVED' | 'REJECTED' | 'FULFILLED';
 
 interface ApprovalResult {
@@ -27,8 +27,8 @@ describe('Story 6.4: Approve / Reject Purchase Request', () => {
       expect(result.status).toBe('APPROVED');
     });
 
-    it('STAFF cannot approve', () => {
-      const result = approveRequest('REQUESTED', 'STAFF');
+    it('TECHNICIAN cannot approve', () => {
+      const result = approveRequest('REQUESTED', 'TECHNICIAN');
       expect(result.error).toContain('Only administrators');
     });
 
@@ -54,8 +54,8 @@ describe('Story 6.4: Approve / Reject Purchase Request', () => {
       expect(result.reason).toBe('Budget constraints');
     });
 
-    it('STAFF cannot reject', () => {
-      const result = rejectRequest('REQUESTED', 'STAFF');
+    it('TECHNICIAN cannot reject', () => {
+      const result = rejectRequest('REQUESTED', 'TECHNICIAN');
       expect(result.error).toContain('Only administrators');
     });
 

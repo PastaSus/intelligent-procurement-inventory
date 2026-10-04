@@ -179,7 +179,7 @@ describe('approvePurchaseRequest', () => {
 
   it('returns error when user is not ADMIN', async () => {
     const { getSession } = await import('@/lib/auth');
-    vi.mocked(getSession).mockResolvedValue({ userId: 'staff-001', email: 'staff@example.com', role: 'STAFF' });
+    vi.mocked(getSession).mockResolvedValue({ userId: 'tech-001', email: 'tech@example.com', role: 'TECHNICIAN' });
 
     const fd = new FormData();
     fd.set('id', 'pr-1');
@@ -247,7 +247,7 @@ describe('rejectPurchaseRequest', () => {
 
   it('returns error when user is not ADMIN', async () => {
     const { getSession } = await import('@/lib/auth');
-    vi.mocked(getSession).mockResolvedValue({ userId: 'staff-001', email: 'staff@example.com', role: 'STAFF' });
+    vi.mocked(getSession).mockResolvedValue({ userId: 'tech-001', email: 'tech@example.com', role: 'TECHNICIAN' });
 
     const fd = new FormData();
     fd.set('id', 'pr-1');

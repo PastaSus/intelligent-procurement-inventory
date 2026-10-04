@@ -28,7 +28,7 @@ const PurchaseRequestStatus = {
 
 const Role = {
   ADMIN: 'ADMIN',
-  STAFF: 'STAFF',
+  TECHNICIAN: 'TECHNICIAN',
 } as const;
 
 describe('Enums', () => {
@@ -86,9 +86,9 @@ describe('Enums', () => {
       expect(values).toHaveLength(2);
     });
 
-    it('contains ADMIN and STAFF', () => {
+    it('contains ADMIN and TECHNICIAN', () => {
       expect(Role.ADMIN).toBe('ADMIN');
-      expect(Role.STAFF).toBe('STAFF');
+      expect(Role.TECHNICIAN).toBe('TECHNICIAN');
     });
   });
 });
