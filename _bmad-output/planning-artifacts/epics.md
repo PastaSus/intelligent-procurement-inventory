@@ -51,7 +51,7 @@ So that the system has realistic starting data.
 
 **Given** the database is empty after migration
 **When** `prisma db seed` runs
-**Then** seed creates: 2 users (admin@example.com, staff@example.com)
+**Then** seed creates: 2 users (admin@example.com, tech@example.com)
 **And** 2-3 laboratory rooms (e.g., "Laboratory 127A", "Laboratory 127B")
 **And** 3-5 computer units per room with unit names (e.g., "LR1U01", "LR1U02")
 **And** each computer unit has components for all 9 ComponentTypes with serial numbers

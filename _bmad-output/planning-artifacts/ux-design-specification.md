@@ -244,8 +244,8 @@ Three mockup directions generated in `_bmad-output/planning-artifacts/ux-design-
 
 ## User Journey Flows
 
-### Journey 1: Low-Stock → Reorder (Staff)
-Staff discovers a low-stock item and creates a purchase request.
+### Journey 1: Low-Stock → Reorder (Admin)
+Admin discovers a low-stock item and creates a purchase request.
 
 ```mermaid
 flowchart TD
@@ -276,13 +276,13 @@ flowchart TD
     G -->|Approve| H[Confirm approval dialog]
     G -->|Reject| I[Enter rejection reason]
     H --> J[Status: APPROVED<br/>Stock auto-updates on fulfill]
-    I --> K[Status: REJECTED<br/>Staff notified with reason]
+    I --> K[Status: REJECTED<br/>Requester notified with reason]
     J --> L[Dashboard stats refresh]
     K --> L
 ```
 
-### Journey 3: Lab Asset Tracking (Staff)
-Staff logs a computer component status change during lab rounds.
+### Journey 3: Lab Asset Tracking (Technician)
+Technician logs a computer component status change during lab rounds.
 
 ```mermaid
 flowchart TD

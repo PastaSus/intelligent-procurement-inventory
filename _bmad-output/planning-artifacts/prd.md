@@ -111,7 +111,7 @@ Postgres stores the data, the AI layer makes it accessible. The value isn't proa
 | Level      | Features                                                                                                            |
 | ---------- | ------------------------------------------------------------------------------------------------------------------- |
 | **MVP**    | Inventory CRUD, Vendor CRUD, PO creation, AI chat (ask questions, get predictions), Low stock dashboard, Basic auth |
-| **Growth** | Reports & analytics, CSV import/export, Multi-location support, Advanced filtering/sorting, Role-based permissions  |
+| **Growth** | Reports & analytics, CSV import/export, Multi-location support, Advanced filtering/sorting |
 | **Vision** | Barcode scanning, Auto-reorder rules, Multi-warehouse, Full e-commerce integrations, Subscription billing (SaaS)    |
 
 ---
@@ -120,13 +120,12 @@ Postgres stores the data, the AI layer makes it accessible. The value isn't proa
 
 ### User Types (Based on Industry Standards)
 
-| Role                | Description                      | Permissions                           |
-| ------------------- | -------------------------------- | ------------------------------------- |
-| **Admin/Owner**     | Full access - manages everything | All CRUD, AI features, can create POs |
-| **Staff/Member**    | Day-to-day operations            | CRUD on inventory, vendors, view AI   |
-| **Viewer** (future) | Read-only access                 | View only - no edits                  |
+| Role                  | Description                                       | Permissions                                                                              |
+| --------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **Admin/Lab Manager** | Full access - manages everything incl. inventory | All CRUD, approve/reject/fulfill PRs, AI features                                        |
+| **Technician**        | Lab tech work - components, repairs, reports      | Rooms/units/components/software CRUD, inventory view-only, PR view-only, reports view   |
 
-For MVP: 2 roles (Admin + Staff) with basic auth.
+For MVP: 2 roles (Admin + Technician) with role-based access enforced by server actions (authentication in middleware).
 
 ---
 
@@ -250,7 +249,7 @@ Simple audit trail: timestamps + user ID on every record.
 
 - Password hashing (bcrypt)
 - Session management
-- Basic role-based access (Admin vs Staff)
+- Role-based access (Admin vs Technician), enforced by server actions
 
 ---
 
@@ -431,7 +430,11 @@ Simple audit trail: timestamps + user ID on every record.
 - FR25: Users can log in
 - FR26: Users can log out
 - FR27: Users can reset forgotten passwords
-- FR28: System enforces role-based access (Admin vs Staff)
+- FR28: System enforces role-based access (Admin vs Technician)
+- FR42: Technician role replaces Staff across database, seed data, sessions, and UI
+- FR43: Technicians have full CRUD on rooms, units, components, and software, including NEEDS_REPAIR / NEEDS_REPLACEMENT status flags
+- FR44: Spare-parts inventory mutations are restricted to Admin; Technicians have read-only access
+- FR45: Purchase request creation, submission, approval, rejection, and fulfillment are restricted to Admin; Technicians have read-only access
 
 ### Navigation & Layout
 
@@ -468,7 +471,7 @@ Simple audit trail: timestamps + user ID on every record.
 
 - NFR4: All passwords hashed using bcrypt with salt rounds ≥ 10
 - NFR5: User sessions managed securely with HTTP-only cookies
-- NFR6: Inventory and PO data accessible only to authenticated users with proper role
+- NFR6: Inventory and PO data accessible only to authenticated users with proper role (Technician: read-only; Admin: full access)
 - NFR7: All data encrypted in transit (TLS 1.2+)
 
 ### Accessibility

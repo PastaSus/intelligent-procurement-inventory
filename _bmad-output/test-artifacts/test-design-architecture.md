@@ -74,7 +74,7 @@ inputDocuments:
 | ------- | -------- | ----------- | ----------- | ------ | ----- | ---------- | ----- |
 | R-005 | TECH | Component type enum mismatch (Zod ↔ Prisma) | 2 | 2 | 4 | Shared enum source of truth, test all 9 values | Dev |
 | R-006 | PERF | Inventory list pagination with large dataset | 2 | 2 | 4 | Load test with 10k+ records, validate query performance | QA |
-| R-007 | SEC | Admin-only actions accessible by STAFF role | 2 | 3 | 6 | Role-based access integration test per admin action | Dev |
+| R-007 | SEC | Admin-only actions accessible by TECHNICIAN role | 2 | 3 | 6 | Role-based access integration test per admin action | Dev |
 
 ### Low-Priority Risks (Score 1-2)
 

@@ -3,14 +3,14 @@
 ## Deferred from: code review of 4-7-relocate-component (2026-09-20)
 
 - Check-then-act races without transaction in relocate flow — systemic pattern across all server actions, single-user lab tool makes window negligible.
-- No per-action RBAC/ownership check on relocate — matches app-wide pattern (all component actions check login only).
+- No per-action RBAC/ownership check on relocate — matches app-wide pattern (all component actions check login only). — RESOLVED by Epic 9 (Story 9-2: fail-closed ADMIN gates + isAdmin UI hiding).
 - Unbounded all-units fetch for relocate dropdown — lab-scale data (single-digit units), pagination unnecessary.
 - Units list page not revalidated after relocate — minor staleness, page reload on next visit refreshes.
 - Framework-level race error paths (FK violation / P2025 / revalidatePath throw surfacing as generic failure) — theoretical windows, no action.
 
 ## Deferred from: code review of software group 8-1..8-5 (2026-09-20)
 
-- No per-action RBAC/ownership check on software actions — matches app-wide pattern (login check only).
+- No per-action RBAC/ownership check on software actions — matches app-wide pattern (login check only). — RESOLVED by Epic 9 (Story 9-2: fail-closed ADMIN gates + isAdmin UI hiding).
 - Success toasts destroyed by window.location.reload() — app-wide no-optimistic-updates pattern (project-context).
 - Modal/row a11y gaps (tabIndex rows, title-only buttons, no dialog roles/focus trap) — matches existing component-table patterns throughout.
 - Check-then-act races (unit deleted between check and write, concurrent deletes) — theoretical windows, consistent with all existing actions.
@@ -18,7 +18,7 @@
 
 ## Deferred from: code review of reports group 8-6..8-7 (2026-09-20)
 
-- No role gate on report action — matches app-wide pattern (login check only).
+- No role gate on report action — matches app-wide pattern (login check only). — RESOLVED by Epic 9 (reports are shared-view per the locked matrix; inventory/PR mutations gated by Story 9-2).
 - Rapid-filter response race (earlier response overwrites later) — theoretical; React transitions serialize at lab interaction rates.
 - Report pagination — report inherently needs full dataset; lab-scale data.
 - Deep-linkable filters via searchParams — not in ACs; nice-to-have.

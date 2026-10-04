@@ -88,4 +88,4 @@ development_status:
   9-1-rename-staff-to-technician: review
   9-2-enforce-permission-matrix: review
   9-3-repair-proxy-admin-routes: review
-  9-4-update-tests-and-docs: backlog
+  9-4-update-tests-and-docs: review
