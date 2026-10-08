@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useTransition, useCallback } from 'react';
 import { ShoppingCart, Plus, Search, X, ChevronUp, ChevronDown, Pencil, CheckCircle, XCircle, Package, Ban, Send, ExternalLink, Printer } from 'lucide-react';
+import { formatPeso } from '@/lib/format';
 import { CreateRequestForm } from './components/CreateRequestForm';
 import type { StockPart } from './components/CreateRequestForm';
 import { RejectRequestDialog } from './components/RejectRequestDialog';
@@ -52,6 +53,71 @@ function StatusBadge({ status }: { status: string }) {
     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusStyles[status] || ''}`}>
       {status}
     </span>
+  );
+}
+
+function requestCost(req: PurchaseRequest): number {
+  return req.items.reduce((sum, i) => {
+    const price = i.unit_price ? parseFloat(i.unit_price) : 0;
+    return sum + price * i.quantity;
+  }, 0);
+}
+
+function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
+  const grandTotal = requests.reduce((sum, r) => sum + requestCost(r), 0);
+  const dateStr = new Date().toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  return (
+    <div className="pr-print-letter bg-white text-black p-8 max-w-[210mm] mx-auto">
+      <div className="text-center border-b-4 border-double border-black pb-4 mb-5">
+        <h1 className="text-3xl font-bold tracking-wide">Procurvin</h1>
+        <p className="text-xs tracking-[0.25em] uppercase mt-1">Laboratory Procurement &amp; Inventory System</p>
+      </div>
+
+      <div className="text-center mb-5">
+        <h2 className="text-xl font-bold tracking-[0.2em]">PURCHASE REQUESTS SUMMARY</h2>
+        <p className="text-sm mt-1">As of {dateStr} · {requests.length} request{requests.length !== 1 ? 's' : ''}</p>
+      </div>
+
+      <table className="w-full text-sm border-collapse mb-6">
+        <thead>
+          <tr className="border-b-2 border-black">
+            <th className="text-left py-2 pr-2">PR Number</th>
+            <th className="text-left py-2 pr-2">Date</th>
+            <th className="text-left py-2 pr-2">Status</th>
+            <th className="text-center py-2 pr-2">Items</th>
+            <th className="text-center py-2 pr-2">Qty</th>
+            <th className="text-right py-2">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {requests.map((req) => {
+            const totalQty = req.items.reduce((sum, i) => sum + i.quantity, 0);
+            const totalCost = requestCost(req);
+            return (
+              <tr key={req.id} className="border-b border-gray-300">
+                <td className="py-2 pr-2 font-mono">{req.pr_number}</td>
+                <td className="py-2 pr-2">{new Date(req.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                <td className="py-2 pr-2">{req.status}</td>
+                <td className="py-2 pr-2 text-center">{req.items.length}</td>
+                <td className="py-2 pr-2 text-center">{totalQty}</td>
+                <td className="py-2 text-right tabular-nums">{totalCost > 0 ? formatPeso(totalCost) : '-'}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colSpan={5} className="py-2 pr-2 text-right font-bold">GRAND TOTAL</td>
+            <td className="py-2 text-right font-bold tabular-nums">{formatPeso(grandTotal)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
   );
 }
 
@@ -175,10 +241,16 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
           <h2 className="text-3xl font-bold">Purchase Requests</h2>
           <p className="text-muted-foreground">Track and manage internal procurement</p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Request
-        </Button>
+        <div className="flex items-center gap-2 report-no-print">
+          <Button variant="outline" onClick={() => window.print()} className="gap-2">
+            <Printer className="h-4 w-4" />
+            Print List
+          </Button>
+          <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            New Request
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-4 items-center">
@@ -248,10 +320,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
               <tbody>
                 {filteredItems.map((req) => {
                   const totalQty = req.items.reduce((sum, i) => sum + i.quantity, 0);
-                  const totalCost = req.items.reduce((sum, i) => {
-                    const price = i.unit_price ? parseFloat(i.unit_price) : 0;
-                    return sum + price * i.quantity;
-                  }, 0);
+                  const totalCost = requestCost(req);
 
                   return (
                     <tr key={req.id} className="border-b last:border-b-0 hover:bg-muted/30" tabIndex={0}>
@@ -274,7 +343,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
                       <td className="p-3 text-center text-sm">{totalQty}</td>
                       <td className="p-3 text-center"><StatusBadge status={req.status} /></td>
                       <td className="p-3 text-right text-sm tabular-nums">
-                        {totalCost > 0 ? `$${totalCost.toFixed(2)}` : '-'}
+                        {totalCost > 0 ? formatPeso(totalCost) : '-'}
                       </td>
                       <td className="p-3 text-center text-sm text-muted-foreground">{formatDate(req.updated_at)}</td>
                       <td className="p-3 text-center w-[180px]">
@@ -345,6 +414,10 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
       {isFormOpen && (
         <CreateRequestForm onClose={() => setIsFormOpen(false)} onSuccess={handleSuccess} stockParts={stockParts} />
       )}
+
+      <div className="print-only hidden">
+        <PrintRequestList requests={filteredItems} />
+      </div>
 
       {rejectingRequest && (
         <RejectRequestDialog
