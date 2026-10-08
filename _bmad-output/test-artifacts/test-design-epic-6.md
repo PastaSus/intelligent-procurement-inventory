@@ -46,7 +46,7 @@ lastSaved: '2026-07-05'
 
 | Risk ID | Category | Description | Probability | Impact | Score | Mitigation | Owner |
 | ------- | -------- | ----------- | ----------- | ------ | ----- | ---------- | ----- |
-| R6-004 | DATA | PR number format incorrect | 2 | 2 | 4 | Unit test: regex validates PR-YYYYMMDD-RRRRRR | Dev |
+| R6-004 | DATA | PR number format incorrect | 2 | 2 | 4 | Unit test: regex validates PR-YYYYMMDD-XXXX | Dev |
 | R6-005 | BUS | DRAFT PR cannot be edited after submit | 2 | 2 | 4 | Integration test: REQUESTED+ status rejects edit | Dev |
 
 ---
