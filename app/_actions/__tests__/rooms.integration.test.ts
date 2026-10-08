@@ -22,6 +22,11 @@ async function noSession() {
   vi.mocked(getSession).mockResolvedValue(null);
 }
 
+async function techSession() {
+  const { getSession } = await import('@/lib/auth');
+  vi.mocked(getSession).mockResolvedValue({ userId: 'tech-001', email: 'tech@example.com', role: 'TECHNICIAN' });
+}
+
 describe('createLabRoom', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -222,6 +227,18 @@ describe('deleteLabRoom', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('units');
+  });
+
+  it('denies TECHNICIAN delete with zero DB change', async () => {
+    await techSession();
+
+    const fd = new FormData();
+    fd.set('id', 'room-1');
+    const result = await deleteLabRoom(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('administrators');
+    expect(prisma.laboratoryRoom.update).not.toHaveBeenCalled();
   });
 
   it('deletes room successfully', async () => {
