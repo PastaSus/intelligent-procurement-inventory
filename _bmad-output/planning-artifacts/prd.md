@@ -233,7 +233,7 @@ Simple audit trail: timestamps + user ID on every record.
 
 ### Business Logic
 
-- **Low stock alerts:** Query `WHERE quantity < reorder_point`
+- **Low stock alerts:** Query `WHERE quantity <= reorder_point`
 - **PO workflow:** Draft → Approved → Sent (status enum)
 - **Single location:** MVP only, no multi-warehouse support
 

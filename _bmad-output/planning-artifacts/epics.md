@@ -304,7 +304,7 @@ So that I know when to request more parts.
 **Given** user navigates to Spare Parts page
 **When** page loads
 **Then** system displays all spare parts with quantity and reorder point
-**And** items where quantity < reorder_point are highlighted with color-coded indicators
+**And** items where quantity <= reorder_point are highlighted with color-coded indicators
 **And** low stock count is displayed at the top
 
 #### Story 5.3: Automated Replenishment Check

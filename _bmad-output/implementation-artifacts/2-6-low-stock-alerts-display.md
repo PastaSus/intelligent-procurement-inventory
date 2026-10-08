@@ -12,7 +12,7 @@ So that I know what needs reordering.
 
 1. **Given** user is on Inventory page or Dashboard
    **When** page loads
-   **Then** items where quantity < reorder_point are highlighted (red/yellow/green indicators)
+   **Then** items where quantity <= reorder_point are highlighted (red/yellow/green indicators)
    **And** progress bars show stock vs reorder point (FR24)
    **And** low stock alert count appears in dashboard stats (FR21)
 
