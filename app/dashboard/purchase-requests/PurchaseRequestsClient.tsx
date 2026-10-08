@@ -171,12 +171,10 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin }: PurchaseReq
           <h2 className="text-3xl font-bold">Purchase Requests</h2>
           <p className="text-muted-foreground">Track and manage internal procurement</p>
         </div>
-        {isAdmin && (
-          <Button onClick={() => setIsFormOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            New Request
-          </Button>
-        )}
+        <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          New Request
+        </Button>
       </div>
 
       <div className="flex flex-wrap gap-4 items-center">

@@ -20,9 +20,8 @@ export async function createPurchaseRequest(formData: FormData) {
     if (!session?.userId) {
       return { success: false, error: 'You must be logged in to create purchase requests' };
     }
-    if (session.role !== 'ADMIN') {
-      return { success: false, error: 'Only administrators can create purchase requests' };
-    }
+    // Any authenticated role may create a DRAFT request.
+    // Submit/approve/reject/fulfill remain ADMIN-only (checked in those actions).
 
     const rawItems = formData.get('items');
     let items: Array<{ itemName: string; quantity: number }> = [];

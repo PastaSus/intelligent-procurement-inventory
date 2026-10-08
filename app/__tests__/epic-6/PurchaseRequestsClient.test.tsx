@@ -103,10 +103,10 @@ describe('PurchaseRequestsClient', () => {
     expect(screen.getByTitle('Mark Fulfilled')).toBeInTheDocument();
   });
 
-  it('hides New Request button when not admin', () => {
+  it('shows New Request button to all roles (technicians create DRAFTs)', () => {
     render(<PurchaseRequestsClient initialRequests={[]} isAdmin={false} />);
 
-    expect(screen.queryByRole('button', { name: /new request/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /new request/i })).toBeInTheDocument();
   });
 
   it('hides submit button for DRAFT requests when not admin', () => {
