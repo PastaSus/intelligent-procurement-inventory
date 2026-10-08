@@ -46,20 +46,19 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
 
   return (
     <div className="pr-print-letter bg-white text-black p-8 max-w-[210mm] mx-auto">
-      <div className="text-center border-b-2 border-black pb-4 mb-6">
-        <h1 className="text-2xl font-bold">Procurvin</h1>
-        <p className="text-sm">Laboratory Procurement &amp; Inventory System</p>
-        <h2 className="text-xl font-bold mt-3 underline underline-offset-4">PURCHASE REQUEST</h2>
+      <div className="text-center border-b-4 border-double border-black pb-4 mb-5">
+        <h1 className="text-3xl font-bold tracking-wide">Procurvin</h1>
+        <p className="text-xs tracking-[0.25em] uppercase mt-1">Laboratory Procurement &amp; Inventory System</p>
       </div>
 
-      <div className="flex justify-between text-sm mb-6">
-        <div>
-          <p><span className="font-semibold">PR Number:</span> <span className="font-mono">{request.pr_number}</span></p>
-          <p><span className="font-semibold">Status:</span> {request.status}</p>
-        </div>
-        <div className="text-right">
-          <p><span className="font-semibold">Date:</span> {dateStr}</p>
-        </div>
+      <div className="text-center mb-5">
+        <h2 className="text-xl font-bold tracking-[0.2em]">PURCHASE REQUEST</h2>
+      </div>
+
+      <div className="flex justify-between gap-4 text-sm border-y-2 border-black py-2 px-1 mb-6">
+        <p><span className="font-semibold">PR Number:</span> <span className="font-mono">{request.pr_number}</span></p>
+        <p><span className="font-semibold">Status:</span> {request.status}</p>
+        <p><span className="font-semibold">Date:</span> {dateStr}</p>
       </div>
 
       <table className="w-full text-sm border-collapse mb-6">
@@ -102,16 +101,15 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
         </div>
       )}
 
-      <div className="signature-blocks flex justify-between gap-6 mt-12 text-sm">
-        <div className="flex-1 text-center">
-          <div className="border-t border-black pt-1 mt-16">Prepared by (Requester)</div>
-        </div>
-        <div className="flex-1 text-center">
-          <div className="border-t border-black pt-1 mt-16">Approved by (Laboratory Head)</div>
-        </div>
-        <div className="flex-1 text-center">
-          <div className="border-t border-black pt-1 mt-16">Vice-President</div>
-        </div>
+      <div className="signature-blocks flex justify-between gap-8 mt-14 text-sm">
+        {['Prepared by (Requester)', 'Approved by (Laboratory Head)', 'Vice-President'].map((label) => (
+          <div key={label} className="flex-1 text-center">
+            <div className="h-14" />
+            <div className="border-t border-black pt-1 font-semibold">{label}</div>
+            <p className="text-xs mt-1">Signature over printed name</p>
+            <p className="text-xs mt-3 text-left">Date: ______________</p>
+          </div>
+        ))}
       </div>
     </div>
   );
