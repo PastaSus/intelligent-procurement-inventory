@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PurchaseRequestsClient } from '@/app/dashboard/purchase-requests/PurchaseRequestsClient';
 
@@ -27,6 +27,12 @@ function makePR(overrides: Record<string, any> = {}) {
 }
 
 describe('PurchaseRequestsClient', () => {
+  // The print-only summary duplicates PR numbers/statuses/totals in the DOM,
+  // so on-screen assertions scope to the visible table.
+  function onScreenTable(container: HTMLElement) {
+    return within(container.querySelector('div.bg-card table') as HTMLElement);
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
     Object.defineProperty(window, 'location', {
@@ -50,10 +56,10 @@ describe('PurchaseRequestsClient', () => {
 
   it('renders request rows with PR numbers', () => {
     const requests = [makePR({ pr_number: 'PR-20260705-ABCD' })];
-    render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
-    expect(screen.getByText('PR-20260705-ABCD')).toBeInTheDocument();
-    expect(screen.getByText('Mouse')).toBeInTheDocument();
+    expect(onScreenTable(container).getByText('PR-20260705-ABCD')).toBeInTheDocument();
+    expect(onScreenTable(container).getByText('Mouse')).toBeInTheDocument();
   });
 
   it('shows status badge for each request', () => {
@@ -64,13 +70,13 @@ describe('PurchaseRequestsClient', () => {
       makePR({ status: 'REJECTED' }),
       makePR({ status: 'FULFILLED' }),
     ];
-    render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
-    expect(screen.getByText('DRAFT')).toBeInTheDocument();
-    expect(screen.getByText('REQUESTED')).toBeInTheDocument();
-    expect(screen.getByText('APPROVED')).toBeInTheDocument();
-    expect(screen.getByText('REJECTED')).toBeInTheDocument();
-    expect(screen.getByText('FULFILLED')).toBeInTheDocument();
+    expect(onScreenTable(container).getByText('DRAFT')).toBeInTheDocument();
+    expect(onScreenTable(container).getByText('REQUESTED')).toBeInTheDocument();
+    expect(onScreenTable(container).getByText('APPROVED')).toBeInTheDocument();
+    expect(onScreenTable(container).getByText('REJECTED')).toBeInTheDocument();
+    expect(onScreenTable(container).getByText('FULFILLED')).toBeInTheDocument();
   });
 
   it('shows submit button for DRAFT requests', () => {
@@ -186,5 +192,40 @@ describe('PurchaseRequestsClient', () => {
 
     await user.click(screen.getByTitle('Print Request Letter'));
     expect(screen.getByText(/print preview/i)).toBeInTheDocument();
+  });
+
+  it('shows Print List button that calls window.print', async () => {
+    const user = userEvent.setup();
+    window.print = vi.fn();
+    const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
+    render(<PurchaseRequestsClient initialRequests={requests} isAdmin={false} />);
+
+    await user.click(screen.getByRole('button', { name: /print list/i }));
+    expect(window.print).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders a print-only summary of the listed requests', () => {
+    const requests = [
+      makePR({ pr_number: 'PR-20260705-AAAA' }),
+      makePR({ pr_number: 'PR-20260705-BBBB' }),
+    ];
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+    const printSection = container.querySelector('.print-only');
+    expect(printSection).not.toBeNull();
+    expect(printSection?.textContent).toContain('PURCHASE REQUESTS SUMMARY');
+    expect(printSection?.textContent).toContain('PR-20260705-AAAA');
+    expect(printSection?.textContent).toContain('PR-20260705-BBBB');
+  });
+
+  it('displays row totals in PHP pesos', () => {
+    const requests = [makePR({
+      items: [
+        { id: 'i1', item_name: 'Mouse', quantity: 2, unit_price: '150.00', total: '300.00', created_at: new Date(), updated_at: new Date() },
+      ],
+    })];
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+    expect(onScreenTable(container).getByText('₱300.00')).toBeInTheDocument();
   });
 });
