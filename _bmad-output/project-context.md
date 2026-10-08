@@ -57,7 +57,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Soft-delete semantic**: `LaboratoryRoom`, `ComputerUnit` (combined), `InventoryItem`, `PurchaseRequest` use soft-delete (`deleted` flag). `ComputerComponent` and `RequestItem` use hard cascade-delete through parent — they omit `deleted`/`created_by`/`updated_by` fields.
 - **No `created_by`/`updated_by` on children**: `ComputerComponent` and `RequestItem` omit these fields. Only top-level entities have them.
 - **Session in actions**: Use `getSession()` from `lib/auth.ts`. Admin-gated actions must check `session.role === 'ADMIN'`. Roles: ADMIN (full access) and TECHNICIAN (rooms/units/components/software CRUD incl. NEEDS_REPAIR flags; inventory + purchase requests read-only; reports view).
-- **PR auto-numbering**: `pr_number` format is `PR-YYYYMMDD-RRRRRR` (date + 6 random uppercase alphanumeric).
+- **PR auto-numbering**: `pr_number` format is `PR-YYYYMMDD-XXXX` (date + 4 random uppercase alphanumeric).
 
 ### Component Patterns
 

@@ -1,20 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { generatePRNumber } from '@/app/_actions/purchase-requests';
 
-const PR_NUMBER_REGEX = /^PR-\d{8}-[A-Z0-9]{6}$/;
+vi.mock('@/lib/prisma');
+vi.mock('@/lib/auth', () => ({
+  getSession: vi.fn(),
+  setMockRole: vi.fn(),
+  resetMockRole: vi.fn(),
+}));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
-function generatePRNumber(): string {
-  const date = new Date();
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const rand = Array.from({ length: 6 }, () =>
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]
-  ).join('');
-  return `PR-${y}${m}${d}-${rand}`;
-}
+const PR_NUMBER_REGEX = /^PR-\d{8}-[A-Z0-9]{4}$/;
 
 describe('PR Number Format', () => {
-  it('matches PR-YYYYMMDD-RRRRRR format', () => {
+  it('matches PR-YYYYMMDD-XXXX format', () => {
     const prNumber = generatePRNumber();
     expect(prNumber).toMatch(PR_NUMBER_REGEX);
   });
@@ -32,10 +30,10 @@ describe('PR Number Format', () => {
     expect(numbers.size).toBe(100);
   });
 
-  it('random part is 6 uppercase alphanumeric characters', () => {
+  it('random part is 4 uppercase alphanumeric characters', () => {
     const prNumber = generatePRNumber();
     const randomPart = prNumber.slice(12);
-    expect(randomPart).toHaveLength(6);
-    expect(randomPart).toMatch(/^[A-Z0-9]{6}$/);
+    expect(randomPart).toHaveLength(4);
+    expect(randomPart).toMatch(/^[A-Z0-9]{4}$/);
   });
 });
