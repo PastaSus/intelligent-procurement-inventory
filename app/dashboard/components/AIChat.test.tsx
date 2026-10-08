@@ -19,7 +19,7 @@ describe('AIChat Component', () => {
     it('should render with initial greeting message', () => {
       render(<AIChat />);
 
-      const greeting = screen.getByText(/I can help you with inventory insights/i);
+      const greeting = screen.getByText(/I can help you with lab asset insights/i);
       expect(greeting).toBeInTheDocument();
     });
 
