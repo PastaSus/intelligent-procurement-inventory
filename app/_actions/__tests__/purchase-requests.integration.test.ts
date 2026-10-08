@@ -108,19 +108,18 @@ describe('createPurchaseRequest', () => {
     expect(result.error).toContain('unique');
   });
 
-  it('denies TECHNICIAN create with zero DB change', async () => {
+  it('allows TECHNICIAN create as DRAFT', async () => {
     await techSession();
+    vi.mocked(prisma.purchaseRequest.findUnique).mockResolvedValue(null);
+    const mockPR = factoryPR({ status: 'DRAFT' });
+    vi.mocked(prisma.purchaseRequest.create).mockResolvedValue(mockPR);
 
     const fd = makePRForm([{ itemName: 'Mouse', quantity: 10 }]);
     const result = await createPurchaseRequest(fd);
 
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('administrators');
-    expect(prisma.$transaction).not.toHaveBeenCalled();
-
-    vi.mocked(prisma.purchaseRequest.findUnique).mockResolvedValue(null);
-    const recheck = await prisma.purchaseRequest.findUnique({ where: { id: 'pr-tech' } });
-    expect(recheck).toBeNull();
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual(mockPR);
+    expect(prisma.$transaction).toHaveBeenCalled();
   });
 });
 
