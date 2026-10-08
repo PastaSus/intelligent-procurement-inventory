@@ -113,6 +113,7 @@ model InventoryItem {
   created_by    String?
   updated_by    String?
   deleted       Boolean       @default(false)
+  request_items RequestItem[]
 
   @@index([sku])
   @@index([component_type])
@@ -139,6 +140,7 @@ model PurchaseRequest {
 model RequestItem {
   id                  String          @id @default(cuid())
   purchase_request_id String
+  inventory_item_id   String?
   item_name           String
   quantity            Int
   unit_price          Decimal?        @db.Decimal(10, 2)
@@ -146,8 +148,10 @@ model RequestItem {
   created_at          DateTime        @default(now())
   updated_at          DateTime        @updatedAt
   purchase_request    PurchaseRequest @relation(fields: [purchase_request_id], references: [id], onDelete: Cascade)
+  inventory_item      InventoryItem?  @relation(fields: [inventory_item_id], references: [id])
 
   @@index([purchase_request_id])
+  @@index([inventory_item_id])
 }
 
 enum Role {

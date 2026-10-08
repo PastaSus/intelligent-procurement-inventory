@@ -3,6 +3,7 @@
 import { useState, useMemo, useTransition, useCallback } from 'react';
 import { ShoppingCart, Plus, Search, X, ChevronUp, ChevronDown, Pencil, CheckCircle, XCircle, Package, Ban, Send, ExternalLink } from 'lucide-react';
 import { CreateRequestForm } from './components/CreateRequestForm';
+import type { StockPart } from './components/CreateRequestForm';
 import { RejectRequestDialog } from './components/RejectRequestDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,7 @@ interface PurchaseRequest {
 interface PurchaseRequestsClientProps {
   initialRequests: PurchaseRequest[];
   isAdmin: boolean;
+  stockParts?: StockPart[];
 }
 
 const statusStyles: Record<string, string> = {
@@ -52,7 +54,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function PurchaseRequestsClient({ initialRequests, isAdmin }: PurchaseRequestsClientProps) {
+export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = [] }: PurchaseRequestsClientProps) {
   const [requests, setRequests] = useState(initialRequests);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -332,7 +334,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin }: PurchaseReq
       </div>
 
       {isFormOpen && (
-        <CreateRequestForm onClose={() => setIsFormOpen(false)} onSuccess={handleSuccess} />
+        <CreateRequestForm onClose={() => setIsFormOpen(false)} onSuccess={handleSuccess} stockParts={stockParts} />
       )}
 
       {rejectingRequest && (
