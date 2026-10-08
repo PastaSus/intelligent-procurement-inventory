@@ -27,7 +27,9 @@ test.describe('Purchase requests', () => {
 
   test('shows validation error for empty line items', async ({ page }) => {
     await page.getByRole('button', { name: /new request/i }).click();
+    // Whitespace passes native `required` so the app-level validation runs
+    await page.getByPlaceholder('Item name').fill('   ');
     await page.getByRole('button', { name: /create & save/i }).click();
-    await expect(page.getByText(/at least one line item/i)).toBeVisible();
+    await expect(page.getByRole('main').getByText(/at least one line item/i)).toBeVisible();
   });
 });
