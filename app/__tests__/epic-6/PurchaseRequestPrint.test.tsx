@@ -37,7 +37,7 @@ describe('PurchaseRequestPrint', () => {
   it('shows line totals, grand total, and notes', () => {
     render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
 
-    expect(screen.getAllByText('$300.00').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('₱300.00').length).toBeGreaterThan(0);
     expect(screen.getAllByText('For Lab 2 monitors').length).toBeGreaterThan(0);
   });
 

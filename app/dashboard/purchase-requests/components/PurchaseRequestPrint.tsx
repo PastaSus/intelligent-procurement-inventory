@@ -2,6 +2,7 @@
 
 import { Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { formatPeso } from '@/lib/format';
 
 interface PrintRequestItem {
   id: string;
@@ -24,10 +25,6 @@ interface PrintPurchaseRequest {
 interface PurchaseRequestPrintProps {
   request: PrintPurchaseRequest;
   onClose: () => void;
-}
-
-function formatMoney(value: number): string {
-  return `$${value.toFixed(2)}`;
 }
 
 function itemTotal(item: PrintRequestItem): number {
@@ -78,10 +75,10 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
               <td className="py-2 pr-2">{item.item_name}</td>
               <td className="py-2 pr-2 text-center">{item.quantity}</td>
               <td className="py-2 pr-2 text-right tabular-nums">
-                {item.unit_price ? formatMoney(parseFloat(item.unit_price)) : '-'}
+                {item.unit_price ? formatPeso(parseFloat(item.unit_price)) : '-'}
               </td>
               <td className="py-2 text-right tabular-nums">
-                {itemTotal(item) > 0 ? formatMoney(itemTotal(item)) : '-'}
+                {itemTotal(item) > 0 ? formatPeso(itemTotal(item)) : '-'}
               </td>
             </tr>
           ))}
@@ -89,7 +86,7 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
         <tfoot>
           <tr>
             <td colSpan={4} className="py-2 pr-2 text-right font-bold">GRAND TOTAL</td>
-            <td className="py-2 text-right font-bold tabular-nums">{formatMoney(grandTotal)}</td>
+            <td className="py-2 text-right font-bold tabular-nums">{formatPeso(grandTotal)}</td>
           </tr>
         </tfoot>
       </table>
