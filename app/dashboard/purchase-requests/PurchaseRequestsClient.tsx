@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo, useTransition, useCallback } from 'react';
-import { ShoppingCart, Plus, Search, X, ChevronUp, ChevronDown, Pencil, CheckCircle, XCircle, Package, Ban, Send, ExternalLink } from 'lucide-react';
+import { ShoppingCart, Plus, Search, X, ChevronUp, ChevronDown, Pencil, CheckCircle, XCircle, Package, Ban, Send, ExternalLink, Printer } from 'lucide-react';
 import { CreateRequestForm } from './components/CreateRequestForm';
 import { RejectRequestDialog } from './components/RejectRequestDialog';
+import { PurchaseRequestPrint } from './components/PurchaseRequestPrint';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -61,6 +62,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin }: PurchaseReq
   const [sortBy, setSortBy] = useState<'pr_number' | 'status' | 'total' | 'updated_at'>('updated_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [rejectingRequest, setRejectingRequest] = useState<PurchaseRequest | null>(null);
+  const [printingRequest, setPrintingRequest] = useState<PurchaseRequest | null>(null);
 
   const handleSuccess = useCallback(() => {
     setIsFormOpen(false);
@@ -315,6 +317,15 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin }: PurchaseReq
                               <Package className="h-4 w-4" />
                             </button>
                           )}
+                          {req.status === 'APPROVED' && (
+                            <button
+                              onClick={() => setPrintingRequest(req)}
+                              className="p-1.5 hover:bg-gray-200 rounded-md text-gray-700 hover:text-gray-900 transition-colors"
+                              title="Print Request Letter"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </button>
+                          )}
                           {(req.status === 'REJECTED' || req.status === 'FULFILLED') && (
                             <span className="text-xs text-muted-foreground italic">-</span>
                           )}
@@ -338,6 +349,13 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin }: PurchaseReq
           request={rejectingRequest}
           onClose={() => setRejectingRequest(null)}
           onSuccess={handleSuccess}
+        />
+      )}
+
+      {printingRequest && (
+        <PurchaseRequestPrint
+          request={printingRequest}
+          onClose={() => setPrintingRequest(null)}
         />
       )}
     </div>
