@@ -21,6 +21,11 @@ async function noSession() {
   vi.mocked(getSession).mockResolvedValue(null);
 }
 
+async function techSession() {
+  const { getSession } = await import('@/lib/auth');
+  vi.mocked(getSession).mockResolvedValue({ userId: 'tech-001', email: 'tech@example.com', role: 'TECHNICIAN' });
+}
+
 describe('createComputerUnit', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -179,6 +184,18 @@ describe('deleteComputerUnit', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('not found');
+  });
+
+  it('denies TECHNICIAN delete with zero DB change', async () => {
+    await techSession();
+
+    const fd = new FormData();
+    fd.set('id', 'unit-1');
+    const result = await deleteComputerUnit(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('administrators');
+    expect(prisma.computerUnit.delete).not.toHaveBeenCalled();
   });
 
   it('deletes unit and returns component count', async () => {

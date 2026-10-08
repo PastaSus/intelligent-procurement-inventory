@@ -155,6 +155,9 @@ export async function deleteComponent(formData: FormData) {
     if (!session?.userId) {
       return { success: false, error: 'You must be logged in' };
     }
+    if (session.role !== 'ADMIN') {
+      return { success: false, error: 'Only administrators can delete components' };
+    }
 
     const id = formData.get('id') as string;
     if (!id) {

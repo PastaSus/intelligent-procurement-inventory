@@ -124,6 +124,9 @@ export async function removeInstalledApplication(formData: FormData) {
     if (!session?.userId) {
       return { success: false, error: 'You must be logged in' };
     }
+    if (session.role !== 'ADMIN') {
+      return { success: false, error: 'Only administrators can remove installed applications' };
+    }
 
     const id = formData.get('id') as string;
     if (!id) {
