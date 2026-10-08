@@ -146,4 +146,20 @@ button:not(:disabled) {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
+
+  .pr-print-letter table {
+    font-size: 12px;
+  }
+
+  .pr-print-letter thead {
+    display: table-header-group;
+  }
+
+  .pr-print-letter tr {
+    break-inside: avoid;
+  }
+
+  .pr-print-letter .signature-blocks {
+    break-inside: avoid;
+  }
 }

@@ -178,4 +178,13 @@ describe('PurchaseRequestsClient', () => {
     const qtyCells = screen.getAllByText('15');
     expect(qtyCells.length).toBeGreaterThanOrEqual(1);
   });
+
+  it('opens print preview when print button clicked on APPROVED row', async () => {
+    const user = userEvent.setup();
+    const requests = [makePR({ status: 'APPROVED' })];
+    render(<PurchaseRequestsClient initialRequests={requests} isAdmin={false} />);
+
+    await user.click(screen.getByTitle('Print Request Letter'));
+    expect(screen.getByText(/print preview/i)).toBeInTheDocument();
+  });
 });
