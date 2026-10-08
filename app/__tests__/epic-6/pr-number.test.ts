@@ -1,13 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { generatePRNumber } from '@/app/_actions/purchase-requests';
-
-vi.mock('@/lib/prisma');
-vi.mock('@/lib/auth', () => ({
-  getSession: vi.fn(),
-  setMockRole: vi.fn(),
-  resetMockRole: vi.fn(),
-}));
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+import { generatePRNumber } from '@/lib/pr-number';
 
 const PR_NUMBER_REGEX = /^PR-\d{8}-[A-Z0-9]{4}$/;
 

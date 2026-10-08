@@ -1,18 +1,10 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { generatePRNumber } from '@/lib/pr-number';
 import { createPurchaseRequestSchema, approveRequestSchema, rejectRequestSchema } from '@/lib/validators/purchase-request';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-
-export function generatePRNumber(): string {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `PR-${year}${month}${day}-${random}`;
-}
 
 export async function createPurchaseRequest(formData: FormData) {
   try {
