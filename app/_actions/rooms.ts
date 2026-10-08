@@ -95,6 +95,9 @@ export async function deleteLabRoom(formData: FormData) {
     if (!session?.userId) {
       return { success: false, error: 'You must be logged in' };
     }
+    if (session.role !== 'ADMIN') {
+      return { success: false, error: 'Only administrators can delete rooms' };
+    }
 
     const id = formData.get('id') as string;
     if (!id) {
