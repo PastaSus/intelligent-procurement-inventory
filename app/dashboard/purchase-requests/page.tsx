@@ -26,10 +26,17 @@ export default async function PurchaseRequestsPage() {
     })),
   }));
 
+  const stockParts = await prisma.inventoryItem.findMany({
+    where: { deleted: false },
+    orderBy: { name: 'asc' },
+    select: { id: true, sku: true, name: true, quantity: true },
+  });
+
   return (
     <PurchaseRequestsClient
       initialRequests={serialized}
       isAdmin={session.role === 'ADMIN'}
+      stockParts={stockParts}
     />
   );
 }
