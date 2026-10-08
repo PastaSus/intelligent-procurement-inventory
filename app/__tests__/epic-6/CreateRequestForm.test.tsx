@@ -14,8 +14,8 @@ vi.spyOn(crypto, 'randomUUID').mockImplementation(() => {
 });
 
 describe('CreateRequestForm', () => {
-  let onClose: ReturnType<typeof vi.fn>;
-  let onSuccess: ReturnType<typeof vi.fn>;
+  let onClose: any;
+  let onSuccess: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -25,7 +25,7 @@ describe('CreateRequestForm', () => {
     vi.mocked(createPurchaseRequest).mockResolvedValue({
       success: true,
       data: { id: 'pr-1', pr_number: 'PR-20260705-ABCD', items: [] },
-    });
+    } as any);
   });
 
   it('renders form with initial line item', () => {
@@ -106,5 +106,44 @@ describe('CreateRequestForm', () => {
     await user.type(notesTextarea, 'Urgent restock');
 
     expect(notesTextarea).toHaveValue('Urgent restock');
+  });
+
+  it('selecting a stock part snapshots its name and submits its id', async () => {
+    const user = userEvent.setup();
+    const stockParts = [{ id: 'inv-1', sku: 'MS-LOGI-M90', name: 'Logitech M90 Mouse', quantity: 8 }];
+    render(<CreateRequestForm onClose={onClose} onSuccess={onSuccess} stockParts={stockParts} />);
+
+    await user.click(screen.getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: /MS-LOGI-M90.*Logitech M90 Mouse/i }));
+
+    const nameInput = screen.getByPlaceholderText('Item name');
+    expect(nameInput).toHaveValue('Logitech M90 Mouse');
+    expect(nameInput).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: /create & save/i }));
+
+    await waitFor(() => {
+      expect(createPurchaseRequest).toHaveBeenCalledTimes(1);
+    });
+    const fd = vi.mocked(createPurchaseRequest).mock.calls[0][0] as FormData;
+    const items = JSON.parse(fd.get('items') as string);
+    expect(items[0]).toMatchObject({ itemName: 'Logitech M90 Mouse', inventoryItemId: 'inv-1' });
+  });
+
+  it('custom items submit free-text names without a stock id', async () => {
+    const user = userEvent.setup();
+    const stockParts = [{ id: 'inv-1', sku: 'MS-LOGI-M90', name: 'Logitech M90 Mouse', quantity: 8 }];
+    render(<CreateRequestForm onClose={onClose} onSuccess={onSuccess} stockParts={stockParts} />);
+
+    await user.type(screen.getByPlaceholderText('Item name'), 'Special cable');
+    await user.click(screen.getByRole('button', { name: /create & save/i }));
+
+    await waitFor(() => {
+      expect(createPurchaseRequest).toHaveBeenCalledTimes(1);
+    });
+    const fd = vi.mocked(createPurchaseRequest).mock.calls[0][0] as FormData;
+    const items = JSON.parse(fd.get('items') as string);
+    expect(items[0].itemName).toBe('Special cable');
+    expect(items[0].inventoryItemId).toBeUndefined();
   });
 });

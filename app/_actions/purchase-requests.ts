@@ -24,7 +24,7 @@ export async function createPurchaseRequest(formData: FormData) {
     // Submit/approve/reject/fulfill remain ADMIN-only (checked in those actions).
 
     const rawItems = formData.get('items');
-    let items: Array<{ itemName: string; quantity: number }> = [];
+    let items: Array<{ itemName: string; quantity: number; unitPrice?: number; inventoryItemId?: string }> = [];
 
     if (rawItems) {
       try {
@@ -42,6 +42,22 @@ export async function createPurchaseRequest(formData: FormData) {
     const result = createPurchaseRequestSchema.safeParse(rawData);
     if (!result.success) {
       return { success: false, error: result.error.issues[0].message };
+    }
+
+    // Fail closed: every referenced stock part must exist and not be deleted.
+    const referencedIds = [...new Set(
+      result.data.items.map((i) => i.inventoryItemId).filter((id): id is string => !!id)
+    )];
+    if (referencedIds.length > 0) {
+      const existingParts = await prisma.inventoryItem.findMany({
+        where: { id: { in: referencedIds }, deleted: false },
+        select: { id: true },
+      });
+      const found = new Set(existingParts.map((p) => p.id));
+      const missing = referencedIds.filter((id) => !found.has(id));
+      if (missing.length > 0) {
+        return { success: false, error: 'One or more selected stock parts no longer exist' };
+      }
     }
 
     const pr = await prisma.$transaction(async (tx) => {
@@ -69,6 +85,7 @@ export async function createPurchaseRequest(formData: FormData) {
               item_name: item.itemName.trim(),
               quantity: item.quantity,
               ...(item.unitPrice !== undefined && { unit_price: item.unitPrice }),
+              ...(item.inventoryItemId !== undefined && { inventory_item_id: item.inventoryItemId }),
             })),
           },
         },
@@ -231,10 +248,19 @@ export async function fulfillPurchaseRequest(formData: FormData) {
         where: { purchase_request_id: id },
       });
       for (const ri of requestItems) {
-        await tx.inventoryItem.updateMany({
-          where: { name: { contains: ri.item_name, mode: 'insensitive' } },
-          data: { quantity: { increment: ri.quantity } },
-        });
+        if (ri.inventory_item_id) {
+          // Linked stock part: exact increment, never fuzzy.
+          await tx.inventoryItem.update({
+            where: { id: ri.inventory_item_id },
+            data: { quantity: { increment: ri.quantity } },
+          });
+        } else {
+          // Legacy free-text rows: name-match fallback only.
+          await tx.inventoryItem.updateMany({
+            where: { name: { contains: ri.item_name, mode: 'insensitive' } },
+            data: { quantity: { increment: ri.quantity } },
+          });
+        }
       }
 
       return tx.purchaseRequest.update({

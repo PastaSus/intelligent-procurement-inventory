@@ -29,7 +29,7 @@ async function techSession() {
   vi.mocked(getSession).mockResolvedValue({ userId: 'tech-001', email: 'tech@example.com', role: 'TECHNICIAN' });
 }
 
-function makePRForm(items: Array<{ itemName: string; quantity: number }>, notes?: string): FormData {
+function makePRForm(items: Array<{ itemName: string; quantity: number; unitPrice?: number; inventoryItemId?: string }>, notes?: string): FormData {
   const fd = new FormData();
   fd.set('items', JSON.stringify(items));
   if (notes) fd.set('notes', notes);
@@ -83,6 +83,31 @@ describe('createPurchaseRequest', () => {
     expect(prisma.$transaction).toHaveBeenCalled();
   });
 
+  it('stores inventoryItemId when a stock part is linked', async () => {
+    vi.mocked(prisma.purchaseRequest.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.inventoryItem.findMany).mockResolvedValue([{ id: 'inv-1' }] as any);
+    const mockPR = factoryPR({ status: 'DRAFT' });
+    vi.mocked(prisma.purchaseRequest.create).mockResolvedValue(mockPR);
+
+    const fd = makePRForm([{ itemName: 'Mouse', quantity: 10, inventoryItemId: 'inv-1' }]);
+    const result = await createPurchaseRequest(fd);
+
+    expect(result.success).toBe(true);
+    const createArg = vi.mocked(prisma.purchaseRequest.create).mock.calls[0][0] as any;
+    expect(createArg.data.items.create[0].inventory_item_id).toBe('inv-1');
+    expect(createArg.data.items.create[0].item_name).toBe('Mouse');
+  });
+
+  it('rejects unknown stock part references with zero DB change', async () => {
+    vi.mocked(prisma.inventoryItem.findMany).mockResolvedValue([]);
+
+    const fd = makePRForm([{ itemName: 'Mouse', quantity: 10, inventoryItemId: 'inv-gone' }]);
+    const result = await createPurchaseRequest(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('no longer exist');
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
   it('retries PR number on collision', async () => {
     const collided = factoryPR({ pr_number: 'PR-20260705-ABCD' });
     vi.mocked(prisma.purchaseRequest.findUnique)
@@ -380,7 +405,7 @@ describe('fulfillPurchaseRequest', () => {
     vi.mocked(prisma.purchaseRequest.update).mockResolvedValue(fulfilled as any);
 
     vi.mocked(prisma.requestItem.findMany).mockResolvedValue([
-      { id: 'ri-1', purchase_request_id: 'pr-1', item_name: 'Mouse', quantity: 10 },
+      { id: 'ri-1', purchase_request_id: 'pr-1', item_name: 'Mouse', quantity: 10, inventory_item_id: null },
     ] as any);
 
     const fd = new FormData();
@@ -391,6 +416,29 @@ describe('fulfillPurchaseRequest', () => {
     expect(result.data).toEqual(fulfilled);
     expect(prisma.$transaction).toHaveBeenCalled();
     expect(prisma.inventoryItem.updateMany).toHaveBeenCalled();
+    expect(prisma.inventoryItem.update).not.toHaveBeenCalled();
+  });
+
+  it('fulfills linked items by exact id without fuzzy name match', async () => {
+    const approved = factoryPR({ id: 'pr-1', status: 'APPROVED' });
+    vi.mocked(prisma.purchaseRequest.findUnique).mockResolvedValue(approved as any);
+    const fulfilled = { ...approved, status: 'FULFILLED' };
+    vi.mocked(prisma.purchaseRequest.update).mockResolvedValue(fulfilled as any);
+
+    vi.mocked(prisma.requestItem.findMany).mockResolvedValue([
+      { id: 'ri-1', purchase_request_id: 'pr-1', item_name: 'Mouse', quantity: 10, inventory_item_id: 'inv-1' },
+    ] as any);
+
+    const fd = new FormData();
+    fd.set('id', 'pr-1');
+    const result = await fulfillPurchaseRequest(fd);
+
+    expect(result.success).toBe(true);
+    expect(prisma.inventoryItem.update).toHaveBeenCalledWith({
+      where: { id: 'inv-1' },
+      data: { quantity: { increment: 10 } },
+    });
+    expect(prisma.inventoryItem.updateMany).not.toHaveBeenCalled();
   });
 
   it('denies TECHNICIAN fulfill with zero DB change', async () => {

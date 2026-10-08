@@ -4,32 +4,44 @@ import { useState, useTransition } from 'react';
 import { createPurchaseRequest } from '@/app/_actions/purchase-requests';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/lib/toast-context';
 import { X, Plus, Trash2 } from 'lucide-react';
+
+export interface StockPart {
+  id: string;
+  sku: string;
+  name: string;
+  quantity: number;
+}
 
 interface LineItem {
   key: string;
   itemName: string;
   quantity: number;
   unitPrice: string;
+  inventoryItemId: string;
 }
 
 interface CreateRequestFormProps {
   onClose: () => void;
   onSuccess?: () => void;
+  stockParts?: StockPart[];
 }
 
-export function CreateRequestForm({ onClose, onSuccess }: CreateRequestFormProps) {
+const CUSTOM_VALUE = '__custom__';
+
+export function CreateRequestForm({ onClose, onSuccess, stockParts = [] }: CreateRequestFormProps) {
   const [isPending, startTransition] = useTransition();
   const { addToast } = useToast();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState('');
   const [lineItems, setLineItems] = useState<LineItem[]>([
-    { key: crypto.randomUUID(), itemName: '', quantity: 1, unitPrice: '' },
+    { key: crypto.randomUUID(), itemName: '', quantity: 1, unitPrice: '', inventoryItemId: '' },
   ]);
 
   function addLineItem() {
-    setLineItems(prev => [...prev, { key: crypto.randomUUID(), itemName: '', quantity: 1, unitPrice: '' }]);
+    setLineItems(prev => [...prev, { key: crypto.randomUUID(), itemName: '', quantity: 1, unitPrice: '', inventoryItemId: '' }]);
   }
 
   function removeLineItem(key: string) {
@@ -39,6 +51,20 @@ export function CreateRequestForm({ onClose, onSuccess }: CreateRequestFormProps
   function updateLineItem(key: string, field: keyof LineItem, value: string) {
     setLineItems(prev => prev.map(item =>
       item.key === key ? { ...item, [field]: value } : item
+    ));
+  }
+
+  function selectStockPart(key: string, value: string) {
+    if (value === CUSTOM_VALUE) {
+      setLineItems(prev => prev.map(item =>
+        item.key === key ? { ...item, inventoryItemId: '' } : item
+      ));
+      return;
+    }
+    const part = stockParts.find(p => p.id === value);
+    if (!part) return;
+    setLineItems(prev => prev.map(item =>
+      item.key === key ? { ...item, inventoryItemId: part.id, itemName: part.name } : item
     ));
   }
 
@@ -57,6 +83,7 @@ export function CreateRequestForm({ onClose, onSuccess }: CreateRequestFormProps
       itemName: item.itemName.trim(),
       quantity: item.quantity,
       ...(item.unitPrice ? { unitPrice: parseFloat(item.unitPrice) } : {}),
+      ...(item.inventoryItemId ? { inventoryItemId: item.inventoryItemId } : {}),
     }));
 
     const formData = new FormData();
@@ -102,12 +129,29 @@ export function CreateRequestForm({ onClose, onSuccess }: CreateRequestFormProps
             {lineItems.map((item, index) => (
               <div key={item.key} className="flex items-start gap-2 p-3 rounded-lg border bg-muted/20">
                 <div className="flex-1 space-y-2">
+                  <Select
+                    value={item.inventoryItemId || CUSTOM_VALUE}
+                    onValueChange={(v) => selectStockPart(item.key, v)}
+                    disabled={isPending}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select stock part…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={CUSTOM_VALUE}>Custom / not in stock</SelectItem>
+                      {stockParts.map(part => (
+                        <SelectItem key={part.id} value={part.id}>
+                          {part.sku} — {part.name} (qty {part.quantity})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Input
                     placeholder="Item name"
                     value={item.itemName}
                     onChange={(e) => updateLineItem(item.key, 'itemName', e.target.value)}
                     required
-                    disabled={isPending}
+                    disabled={isPending || !!item.inventoryItemId}
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <div>
