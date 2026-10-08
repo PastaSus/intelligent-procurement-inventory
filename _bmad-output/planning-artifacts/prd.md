@@ -65,7 +65,7 @@ Postgres stores the data, the AI layer makes it accessible. The value isn't proa
 
 | Attribute             | Value                                                           |
 | --------------------- | --------------------------------------------------------------- |
-| **Project Type**      | Web Application (PERN Stack)                                    |
+| **Project Type**      | Web Application (Next.js + Prisma + PostgreSQL stack)           |
 | **Domain**            | E-commerce / Supply Chain / Inventory Management                |
 | **Complexity**        | Medium (AI integration, database relationships, real-time data) |
 | **Project Context**   | Greenfield (new build)                                          |

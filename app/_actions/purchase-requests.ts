@@ -5,7 +5,7 @@ import { createPurchaseRequestSchema, approveRequestSchema, rejectRequestSchema 
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
-function generatePRNumber(): string {
+export function generatePRNumber(): string {
   const date = new Date();
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
