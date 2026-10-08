@@ -185,7 +185,7 @@ export function InventoryClient({
   }, [items, search, selectedComponentType, stockStatus, sortBy, sortOrder]);
 
   const lowStockCount = items.filter(
-    (item) => item.quantity < item.reorder_point && item.quantity > 0,
+    (item) => item.quantity <= item.reorder_point && item.quantity > 0,
   ).length;
   const criticalCount = items.filter((item) => item.quantity === 0).length;
   const totalPages = Math.ceil(totalCount / pageSize);
