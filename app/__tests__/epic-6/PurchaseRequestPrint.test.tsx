@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PurchaseRequestPrint } from '@/app/dashboard/purchase-requests/components/PurchaseRequestPrint';
 
-function makeRequest(overrides: Record<string, any> = {}) {
+function makeRequest(overrides: { notes?: string | null } = {}) {
   return {
     id: 'pr-1',
     pr_number: 'PR-20261008-ABCD',
