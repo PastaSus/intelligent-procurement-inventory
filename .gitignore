@@ -49,6 +49,7 @@ next-env.d.ts
 # playwright
 /playwright-report/
 /test-results/
+/e2e/.auth/
 
 *.docx
 *.py

@@ -25,11 +25,13 @@ test.describe('Room management', () => {
     await page.getByRole('button', { name: /create room/i }).click();
     await expect(page.getByText(roomName)).toBeVisible({ timeout: 5000 });
 
-    const deleteButton = page.getByTitle('Delete').last();
+    const deleteButton = page.getByRole('row', { name: new RegExp(roomName) }).getByTitle('Delete');
     await deleteButton.click();
     await expect(page.getByText(/are you sure/i)).toBeVisible();
-    await page.getByRole('button', { name: /delete/i }).click();
-    await expect(page.getByText(roomName)).not.toBeVisible();
+    await page.locator('div.fixed.inset-0').getByRole('button', { name: 'Delete', exact: true }).click();
+    // Modal closes when the delete action completes; redirect follows after a delay
+    await expect(page.locator('div.fixed.inset-0')).toHaveCount(0, { timeout: 20000 });
+    await expect(page.getByText(roomName)).not.toBeVisible({ timeout: 15000 });
   });
 
   test('search filters rooms', async ({ page }) => {
@@ -39,12 +41,17 @@ test.describe('Room management', () => {
   });
 
   test('pagination appears with many rooms', async ({ page }) => {
-    for (let i = 0; i < 52; i++) {
-      await page.goto('/dashboard/rooms');
+    // 50 creates with a full reload after each one is slow in dev (remote DB);
+    // 3 seeded + 50 > pageSize (50) so the pager still appears
+    test.setTimeout(420000);
+    for (let i = 0; i < 50; i++) {
       await page.getByRole('button', { name: /add room/i }).click();
       await page.getByLabel(/room name/i).fill(`Pagination-Room-${i}`);
       await page.getByRole('button', { name: /create room/i }).click();
-      await expect(page.getByText(`Pagination-Room-${i}`)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(`Pagination-Room-${i}`)).toBeVisible({ timeout: 15000 });
+      // Create triggers a full page reload; let it settle or the next
+      // iteration clicks Add on the old page and its modal gets detached
+      await page.waitForLoadState('networkidle', { timeout: 30000 });
     }
     await expect(page.getByText(/page 1/i)).toBeVisible();
   });
