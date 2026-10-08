@@ -30,7 +30,7 @@ export async function getLabContext(): Promise<LabContext> {
       >`
         SELECT name, sku, quantity, reorder_point
         FROM "InventoryItem"
-        WHERE deleted = false AND quantity < reorder_point AND reorder_point > 0
+        WHERE deleted = false AND quantity <= reorder_point AND reorder_point > 0
         ORDER BY quantity ASC
         LIMIT 10
       `,

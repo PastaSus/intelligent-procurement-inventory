@@ -26,7 +26,7 @@ export async function getDashboardStats() {
       prisma.computerComponent.count({ where: { status: 'NEEDS_REPLACEMENT' } }),
       prisma.$queryRaw<[{ count: bigint }]>`
         SELECT COUNT(*) as count FROM "InventoryItem"
-        WHERE deleted = false AND quantity < "reorder_point"
+        WHERE deleted = false AND quantity <= "reorder_point"
       `,
       prisma.purchaseRequest.count({
         where: { deleted: false, status: 'REQUESTED' },
