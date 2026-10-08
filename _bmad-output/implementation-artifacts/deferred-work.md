@@ -1,5 +1,9 @@
 # Deferred Work
 
+## Deferred from: pre-defense review (2026-10-08)
+
+- Switch technician seed account from `tech@example.com` to the real lab technician's email — pending professor confirmation of the address. When doing it: update the upsert key in `prisma/seed.ts` (plus stale-row cleanup for the old address, same pattern as the existing `staff@example.com` deleteMany), update the seed-data note in `_bmad-output/project-context.md`, reseed, and re-verify login + e2e. Context: admin is already real (`aarongtxd@gmail.com` / `admin123`); tech is still placeholder (`tech@example.com` / `tech123`). Note the DB also carries a legacy `admin@example.com` ADMIN row from older seeds (users are upserted, not wiped) — e2e currently signs in with it.
+
 ## Deferred from: code review of 4-7-relocate-component (2026-09-20)
 
 - Check-then-act races without transaction in relocate flow — systemic pattern across all server actions, single-user lab tool makes window negligible.
