@@ -41,12 +41,27 @@ describe('PurchaseRequestPrint', () => {
     expect(screen.getAllByText('For Lab 2 monitors').length).toBeGreaterThan(0);
   });
 
-  it('renders Prepared-by, Approved-by, and Vice-President signature blocks', () => {
+  it('renders role labels, typeable name fields, and the default noted name', () => {
     render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
 
-    expect(screen.getAllByText('Prepared by (Requester)').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Approved by (Laboratory Head)').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Vice-President').length).toBeGreaterThan(0);
+    for (const role of ['Prepared by', 'Checked by', 'Approved by', 'Noted by', 'Vice-President']) {
+      expect(screen.getAllByText(role).length).toBeGreaterThan(0);
+    }
+    // Noted-by defaults to the dean; preview input + print-only static text
+    expect(screen.getAllByText('Diosdado C. Caronongan').length).toBeGreaterThan(0);
+    expect(screen.getByRole('textbox', { name: 'Noted by name' })).toHaveDisplayValue('Diosdado C. Caronongan');
+    expect(screen.getByRole('textbox', { name: 'Checked by name' })).toHaveDisplayValue('');
+  });
+
+  it('syncs typed signatory names to the print-only letter', async () => {
+    const user = userEvent.setup();
+    render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
+
+    await user.type(screen.getByRole('textbox', { name: 'Checked by name' }), 'Maria Santos');
+
+    expect(screen.getByRole('textbox', { name: 'Checked by name' })).toHaveDisplayValue('Maria Santos');
+    // print-only static copy reflects the typed value
+    expect(screen.getAllByText('Maria Santos').length).toBeGreaterThan(0);
   });
 
   it('omits the notes section when notes are null', () => {

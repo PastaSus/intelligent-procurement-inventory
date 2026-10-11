@@ -7,6 +7,7 @@ import { CreateRequestForm } from './components/CreateRequestForm';
 import type { StockPart } from './components/CreateRequestForm';
 import { RejectRequestDialog } from './components/RejectRequestDialog';
 import { PurchaseRequestPrint } from './components/PurchaseRequestPrint';
+import { SignatoryBlocks, SIGNATORIES, DEFAULT_SIGNATORY_NAMES, type SignatoryKey } from './components/SignatoryBlocks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -63,7 +64,7 @@ function requestCost(req: PurchaseRequest): number {
   }, 0);
 }
 
-function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
+function PrintRequestList({ requests, names }: { requests: PurchaseRequest[]; names: Record<SignatoryKey, string> }) {
   const grandTotal = requests.reduce((sum, r) => sum + requestCost(r), 0);
   const dateStr = new Date().toLocaleDateString('en-US', {
     month: 'long',
@@ -117,6 +118,8 @@ function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
           </tr>
         </tfoot>
       </table>
+
+      <SignatoryBlocks names={names} />
     </div>
   );
 }
@@ -131,6 +134,11 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [rejectingRequest, setRejectingRequest] = useState<PurchaseRequest | null>(null);
   const [printingRequest, setPrintingRequest] = useState<PurchaseRequest | null>(null);
+  const [signatoryNames, setSignatoryNames] = useState<Record<SignatoryKey, string>>(DEFAULT_SIGNATORY_NAMES);
+
+  function handleSignatoryChange(key: SignatoryKey, value: string) {
+    setSignatoryNames((prev) => ({ ...prev, [key]: value }));
+  }
 
   const handleSuccess = useCallback(() => {
     setIsFormOpen(false);
@@ -236,7 +244,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between report-no-print">
         <div>
           <h2 className="text-3xl font-bold">Purchase Requests</h2>
           <p className="text-muted-foreground">Track and manage internal procurement</p>
@@ -253,7 +261,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-4 items-center">
+      <div className="flex flex-wrap gap-4 items-center report-no-print">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -285,7 +293,24 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
         </Select>
       </div>
 
-      <div className="bg-card rounded-lg border">
+      <div className="bg-card rounded-lg border p-4 report-no-print">
+        <p className="text-sm font-medium mb-3">Signatories for printed list</p>
+        <div className="flex flex-wrap gap-3">
+          {SIGNATORIES.map(({ key, role }) => (
+            <label key={key} className="flex-1 min-w-[160px] text-xs font-medium flex flex-col gap-1">
+              {role}
+              <Input
+                aria-label={`${role} name`}
+                placeholder="Type name..."
+                value={signatoryNames[key]}
+                onChange={(e) => handleSignatoryChange(key, e.target.value)}
+              />
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-card rounded-lg border report-no-print">
         <div className="p-4 border-b flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -416,7 +441,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
       )}
 
       <div className="print-only hidden">
-        <PrintRequestList requests={filteredItems} />
+        <PrintRequestList requests={filteredItems} names={signatoryNames} />
       </div>
 
       {rejectingRequest && (
@@ -429,6 +454,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
 
       {printingRequest && (
         <PurchaseRequestPrint
+          key={printingRequest.id}
           request={printingRequest}
           onClose={() => setPrintingRequest(null)}
         />

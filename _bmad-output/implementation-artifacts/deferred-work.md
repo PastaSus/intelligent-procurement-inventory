@@ -26,3 +26,7 @@
 - Rapid-filter response race (earlier response overwrites later) — theoretical; React transitions serialize at lab interaction rates.
 - Report pagination — report inherently needs full dataset; lab-scale data.
 - Deep-linkable filters via searchParams — not in ACs; nice-to-have.
+
+## Deferred from: review of shared signatory footer (2026-10-11)
+
+- window.print() with the letter modal open prints both print roots (list summary + single letter) with independent signatory states and no print scoping — pre-existing dual `.print-only` architecture, out of scope for the footer extraction.

@@ -218,6 +218,63 @@ describe('PurchaseRequestsClient', () => {
     expect(printSection?.textContent).toContain('PR-20260705-BBBB');
   });
 
+  it('ends the print-only summary with the 5-block signatory footer', () => {
+    const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+    const printSection = container.querySelector('.print-only');
+    expect(printSection).not.toBeNull();
+    for (const role of ['Prepared by', 'Checked by', 'Approved by', 'Noted by', 'Vice-President']) {
+      expect(printSection?.textContent).toContain(role);
+    }
+    expect(printSection?.textContent).toContain('Diosdado C. Caronongan');
+    expect(printSection?.textContent).toContain('Signature over printed name');
+  });
+
+  it('places Noted by and Vice-President on a spaced second footer row', () => {
+    const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+    const printSection = container.querySelector('.print-only');
+    const rows = printSection?.querySelectorAll('.signature-blocks');
+    expect(rows?.length).toBe(2);
+    expect(rows?.[0]?.textContent).toContain('Prepared by');
+    expect(rows?.[0]?.textContent).not.toContain('Noted by');
+    expect(rows?.[1]?.textContent).toContain('Noted by');
+    expect(rows?.[1]?.textContent).toContain('Vice-President');
+  });
+
+  it('syncs typed editor names to the print-only list footer', async () => {
+    const user = userEvent.setup();
+    const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+    await user.type(screen.getByRole('textbox', { name: 'Checked by name' }), 'Maria Santos');
+
+    const printSection = container.querySelector('.print-only');
+    expect(printSection?.textContent).toContain('Maria Santos');
+  });
+
+  it('keeps the signatory editor out of the printed output', () => {
+    const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+    const editor = Array.from(container.querySelectorAll('.report-no-print'))
+      .find((el) => el.textContent?.includes('Signatories for printed list'));
+    expect(editor).not.toBeUndefined();
+  });
+
+  it('hides screen UI sections from the printed output', () => {
+    const requests = [makePR({ status: 'APPROVED' })];
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+    const screenTable = container.querySelector('div.bg-card table');
+    expect(screenTable?.closest('.report-no-print')).not.toBeNull();
+    expect(screen.getByPlaceholderText(/search by pr number/i).closest('.report-no-print')).not.toBeNull();
+    expect(screen.getByTitle('Print Request Letter').closest('.report-no-print')).not.toBeNull();
+    expect(screen.getByRole('button', { name: /print list/i }).closest('.report-no-print')).not.toBeNull();
+  });
+
   it('displays row totals in PHP pesos', () => {
     const requests = [makePR({
       items: [
