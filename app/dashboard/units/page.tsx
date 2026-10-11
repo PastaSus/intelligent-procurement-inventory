@@ -1,8 +1,14 @@
 import { prisma } from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 import { UnitsClient } from './UnitsClient';
 import { SearchParams } from './types';
 
 export default async function UnitsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const session = await getSession();
+  if (!session?.userId) {
+    redirect('/login');
+  }
   const params = await searchParams;
 
   const page = parseInt(params.page || '1', 10);
@@ -45,6 +51,7 @@ export default async function UnitsPage({ searchParams }: { searchParams: Promis
       currentPage={page}
       pageSize={pageSize}
       rooms={rooms}
+      isAdmin={session.role === 'ADMIN'}
     />
   );
 }

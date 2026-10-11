@@ -81,7 +81,7 @@ export function CreateRequestForm({ onClose, onSuccess, stockParts = [] }: Creat
 
     const items = filtered.map(item => ({
       itemName: item.itemName.trim(),
-      quantity: item.quantity,
+      quantity: Number(item.quantity),
       ...(item.unitPrice ? { unitPrice: parseFloat(item.unitPrice) } : {}),
       ...(item.inventoryItemId ? { inventoryItemId: item.inventoryItemId } : {}),
     }));

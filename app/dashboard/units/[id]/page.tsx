@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import { notFound } from 'next/navigation';
+import { getSession } from '@/lib/auth';
+import { notFound, redirect } from 'next/navigation';
 import { ComponentsClient } from './ComponentsClient';
 
 const COMPONENT_TYPES = [
@@ -12,6 +13,11 @@ interface PageProps {
 }
 
 export default async function UnitDetailPage({ params }: PageProps) {
+  const session = await getSession();
+  if (!session?.userId) {
+    redirect('/login');
+  }
+
   const { id } = await params;
 
   const unit = await prisma.computerUnit.findUnique({
@@ -52,6 +58,7 @@ export default async function UnitDetailPage({ params }: PageProps) {
       initialSoftware={unit.installedApplications}
       componentTypes={COMPONENT_TYPES}
       allUnits={allUnitsMapped}
+      isAdmin={session.role === 'ADMIN'}
     />
   );
 }

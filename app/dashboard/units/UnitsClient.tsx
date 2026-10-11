@@ -31,9 +31,10 @@ interface UnitsClientProps {
   currentPage: number;
   pageSize: number;
   rooms: Room[];
+  isAdmin?: boolean;
 }
 
-export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, rooms }: UnitsClientProps) {
+export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, rooms, isAdmin = true }: UnitsClientProps) {
   const [units] = useState(initialUnits);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<ComputerUnit | null>(null);
@@ -259,13 +260,15 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
-                        <button
-                          onClick={() => setDeletingUnit(unit)}
-                          className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-red-600 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => setDeletingUnit(unit)}
+                            className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-red-600 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -300,7 +303,7 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
         <EditUnitForm unit={editingUnit} onClose={() => setEditingUnit(null)} onSuccess={handleSuccess} rooms={rooms} />
       )}
 
-      {deletingUnit && (
+      {deletingUnit && isAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg border p-6 max-w-md w-full mx-4 shadow-lg">
             <div className="flex items-center gap-3 mb-4">

@@ -21,9 +21,10 @@ interface RoomsClientProps {
   totalCount: number;
   currentPage: number;
   pageSize: number;
+  isAdmin?: boolean;
 }
 
-export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize }: RoomsClientProps) {
+export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize, isAdmin = true }: RoomsClientProps) {
   const [rooms] = useState(initialRooms);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<LabRoom | null>(null);
@@ -214,13 +215,15 @@ export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize }:
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
-                        <button
-                          onClick={() => setDeletingRoom(room)}
-                          className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-red-600 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => setDeletingRoom(room)}
+                            className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-red-600 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -255,7 +258,7 @@ export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize }:
         <EditRoomForm room={editingRoom} onClose={() => setEditingRoom(null)} onSuccess={handleSuccess} />
       )}
 
-      {deletingRoom && (
+      {deletingRoom && isAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg border p-6 max-w-md w-full mx-4 shadow-lg">
             <div className="flex items-center gap-3 mb-4">
