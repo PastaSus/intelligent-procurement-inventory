@@ -98,9 +98,9 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
         </div>
       )}
 
-      <div className="signature-blocks flex justify-between gap-8 mt-14 text-sm">
-        {['Prepared by (Requester)', 'Approved by (Laboratory Head)', 'Vice-President'].map((label) => (
-          <div key={label} className="flex-1 text-center">
+      <div className="signature-blocks flex flex-wrap justify-between gap-6 mt-14 text-sm">
+        {['Prepared by (Requester)', 'Checked by (Administrator)', 'Approved by (Laboratory Head)', 'Noted by (Diosdado C. Caronongan)', 'Vice-President'].map((label) => (
+          <div key={label} className="flex-1 min-w-[120px] text-center">
             <div className="h-14" />
             <div className="border-t border-black pt-1 font-semibold">{label}</div>
             <p className="text-xs mt-1">Signature over printed name</p>
