@@ -231,6 +231,19 @@ describe('PurchaseRequestsClient', () => {
     expect(printSection?.textContent).toContain('Signature over printed name');
   });
 
+  it('places Noted by and Vice-President on a spaced second footer row', () => {
+    const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+    const printSection = container.querySelector('.print-only');
+    const rows = printSection?.querySelectorAll('.signature-blocks');
+    expect(rows?.length).toBe(2);
+    expect(rows?.[0]?.textContent).toContain('Prepared by');
+    expect(rows?.[0]?.textContent).not.toContain('Noted by');
+    expect(rows?.[1]?.textContent).toContain('Noted by');
+    expect(rows?.[1]?.textContent).toContain('Vice-President');
+  });
+
   it('syncs typed editor names to the print-only list footer', async () => {
     const user = userEvent.setup();
     const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
