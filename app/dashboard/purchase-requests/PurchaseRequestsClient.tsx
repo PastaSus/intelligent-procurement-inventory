@@ -244,7 +244,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between report-no-print">
+      <div className="flex flex-col items-start gap-3 text-left sm:flex-row sm:items-center sm:justify-between report-no-print">
         <div>
           <h2 className="text-3xl font-bold">Purchase Requests</h2>
           <p className="text-muted-foreground">Track and manage internal procurement</p>

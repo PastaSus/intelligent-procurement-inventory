@@ -112,7 +112,7 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
 
   return (
     <div className="space-y-6 hardware-report">
-      <div className="flex items-center justify-between report-no-print">
+      <div className="flex flex-col items-start gap-3 text-left sm:flex-row sm:items-center sm:justify-between report-no-print">
         <div>
           <h2 className="text-3xl font-bold">Hardware Inventory Report</h2>
           <p className="text-muted-foreground">
