@@ -27,7 +27,7 @@ describe('Sidebar', () => {
     expect(screen.getByText('Component Health')).toBeInTheDocument();
     expect(screen.getByText('Spare Parts')).toBeInTheDocument();
     expect(screen.getByText('Requests')).toBeInTheDocument();
-    expect(screen.getByText('Chat')).toBeInTheDocument();
+    expect(screen.getByText('AI-Chat')).toBeInTheDocument();
   });
 
   it('highlights dashboard when on dashboard', () => {
@@ -76,7 +76,7 @@ describe('BottomNavigation', () => {
     vi.clearAllMocks();
   });
 
-  it('renders first 5 nav items', () => {
+  it('renders 4 primary items plus a More button (chat excluded, floats separately)', () => {
     mockUsePathname.mockReturnValue('/dashboard');
 
     render(<BottomNavigation />);
@@ -85,7 +85,36 @@ describe('BottomNavigation', () => {
     expect(screen.getByLabelText('Rooms')).toBeInTheDocument();
     expect(screen.getByLabelText('Units')).toBeInTheDocument();
     expect(screen.getByLabelText('Component Health')).toBeInTheDocument();
-    expect(screen.getByLabelText('Spare Parts')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'More' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Spare Parts')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Requests')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Reports')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('AI-Chat')).not.toBeInTheDocument();
+  });
+
+  it('opens More sheet with remaining tabs and closes on selection', async () => {
+    const user = userEvent.setup();
+    mockUsePathname.mockReturnValue('/dashboard');
+
+    render(<BottomNavigation />);
+
+    await user.click(screen.getByRole('button', { name: 'More' }));
+
+    expect(screen.getByRole('dialog', { name: 'More navigation' })).toBeInTheDocument();
+    expect(screen.getByText('Spare Parts')).toBeInTheDocument();
+    expect(screen.getByText('Requests')).toBeInTheDocument();
+    expect(screen.getByText('Reports')).toBeInTheDocument();
+    expect(screen.queryByText('AI-Chat')).not.toBeInTheDocument();
+
+    await user.click(screen.getByText('Reports'));
+    expect(screen.queryByRole('dialog', { name: 'More navigation' })).not.toBeInTheDocument();
+  });
+
+  it('highlights More button when on an overflow route', () => {
+    mockUsePathname.mockReturnValue('/dashboard/reports');
+
+    render(<BottomNavigation />);
+
+    expect(screen.getByRole('button', { name: 'More' }).className).toContain('text-[#402020]');
   });
 });
