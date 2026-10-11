@@ -244,7 +244,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between report-no-print">
         <div>
           <h2 className="text-3xl font-bold">Purchase Requests</h2>
           <p className="text-muted-foreground">Track and manage internal procurement</p>
@@ -261,7 +261,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-4 items-center">
+      <div className="flex flex-wrap gap-4 items-center report-no-print">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -310,7 +310,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
         </div>
       </div>
 
-      <div className="bg-card rounded-lg border">
+      <div className="bg-card rounded-lg border report-no-print">
         <div className="p-4 border-b flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
