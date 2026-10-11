@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatPeso } from '@/lib/format';
@@ -33,7 +34,27 @@ function itemTotal(item: PrintRequestItem): number {
   return price * item.quantity;
 }
 
-function LetterBody({ request }: { request: PrintPurchaseRequest }) {
+type SignatoryKey = 'prepared' | 'checked' | 'approved' | 'noted' | 'vp';
+
+const SIGNATORIES: { key: SignatoryKey; role: string }[] = [
+  { key: 'prepared', role: 'Prepared by' },
+  { key: 'checked', role: 'Checked by' },
+  { key: 'approved', role: 'Approved by' },
+  { key: 'noted', role: 'Noted by' },
+  { key: 'vp', role: 'Vice-President' },
+];
+
+function LetterBody({
+  request,
+  names,
+  editable = false,
+  onNamesChange,
+}: {
+  request: PrintPurchaseRequest;
+  names: Record<SignatoryKey, string>;
+  editable?: boolean;
+  onNamesChange?: (key: SignatoryKey, value: string) => void;
+}) {
   const grandTotal = request.items.reduce((sum, i) => sum + itemTotal(i), 0);
   const dateStr = new Date(request.updated_at).toLocaleDateString('en-US', {
     month: 'long',
@@ -99,10 +120,23 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
       )}
 
       <div className="signature-blocks flex flex-wrap justify-between gap-6 mt-14 text-sm">
-        {['Prepared by (Requester)', 'Checked by (Administrator)', 'Approved by (Laboratory Head)', 'Noted by (Diosdado C. Caronongan)', 'Vice-President'].map((label) => (
-          <div key={label} className="flex-1 min-w-[120px] text-center">
+        {SIGNATORIES.map(({ key, role }) => (
+          <div key={key} className="flex-1 min-w-[120px] text-center">
             <div className="h-14" />
-            <div className="border-t border-black pt-1 font-semibold">{label}</div>
+            {editable ? (
+              <input
+                aria-label={`${role} name`}
+                placeholder="Type name..."
+                value={names[key]}
+                onChange={(e) => onNamesChange?.(key, e.target.value)}
+                className="w-full border-t border-black pt-1 font-semibold text-center bg-transparent outline-none placeholder:font-normal placeholder:text-gray-400"
+              />
+            ) : (
+              <div className="border-t border-black pt-1 font-semibold min-h-[1.5rem]">
+                {names[key] || ' '}
+              </div>
+            )}
+            <div className="pt-1 font-semibold">{role}</div>
             <p className="text-xs mt-1">Signature over printed name</p>
             <p className="text-xs mt-3 text-left">Date: ______________</p>
           </div>
@@ -113,6 +147,18 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
 }
 
 export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintProps) {
+  const [names, setNames] = useState<Record<SignatoryKey, string>>({
+    prepared: '',
+    checked: '',
+    approved: '',
+    noted: 'Diosdado C. Caronongan',
+    vp: '',
+  });
+
+  function handleNamesChange(key: SignatoryKey, value: string) {
+    setNames((prev) => ({ ...prev, [key]: value }));
+  }
+
   return (
     <>
       <div className="report-no-print fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
@@ -131,13 +177,13 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
             </div>
           </div>
           <div className="p-4 bg-muted/30">
-            <LetterBody request={request} />
+            <LetterBody request={request} names={names} editable onNamesChange={handleNamesChange} />
           </div>
         </div>
       </div>
 
       <div className="print-only hidden">
-        <LetterBody request={request} />
+        <LetterBody request={request} names={names} />
       </div>
     </>
   );
