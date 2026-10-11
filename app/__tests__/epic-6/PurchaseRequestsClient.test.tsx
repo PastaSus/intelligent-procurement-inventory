@@ -251,6 +251,17 @@ describe('PurchaseRequestsClient', () => {
     expect(editor).not.toBeUndefined();
   });
 
+  it('hides screen UI sections from the printed output', () => {
+    const requests = [makePR({ status: 'APPROVED' })];
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+    const screenTable = container.querySelector('div.bg-card table');
+    expect(screenTable?.closest('.report-no-print')).not.toBeNull();
+    expect(screen.getByPlaceholderText(/search by pr number/i).closest('.report-no-print')).not.toBeNull();
+    expect(screen.getByTitle('Print Request Letter').closest('.report-no-print')).not.toBeNull();
+    expect(screen.getByRole('button', { name: /print list/i }).closest('.report-no-print')).not.toBeNull();
+  });
+
   it('displays row totals in PHP pesos', () => {
     const requests = [makePR({
       items: [
