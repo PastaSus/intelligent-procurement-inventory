@@ -1,8 +1,14 @@
 import { prisma } from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 import { RoomsClient } from './RoomsClient';
 import { SearchParams } from './types';
 
 export default async function RoomsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const session = await getSession();
+  if (!session?.userId) {
+    redirect('/login');
+  }
   const params = await searchParams;
 
   const page = parseInt(params.page || '1', 10);
@@ -33,6 +39,7 @@ export default async function RoomsPage({ searchParams }: { searchParams: Promis
       totalCount={totalCount}
       currentPage={page}
       pageSize={pageSize}
+      isAdmin={session.role === 'ADMIN'}
     />
   );
 }

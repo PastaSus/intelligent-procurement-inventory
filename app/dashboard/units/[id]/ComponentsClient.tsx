@@ -46,6 +46,7 @@ interface ComponentsClientProps {
   initialSoftware: Software[];
   componentTypes: readonly string[];
   allUnits: UnitInfo[];
+  isAdmin?: boolean;
 }
 
 const statusStyles: Record<string, string> = {
@@ -60,7 +61,7 @@ const statusIcons: Record<string, React.ElementType> = {
   NEEDS_REPLACEMENT: AlertTriangle,
 };
 
-export function ComponentsClient({ unit, initialComponents, initialSoftware, componentTypes, allUnits }: ComponentsClientProps) {
+export function ComponentsClient({ unit, initialComponents, initialSoftware, componentTypes, allUnits, isAdmin = true }: ComponentsClientProps) {
   const [components, setComponents] = useState(initialComponents);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSoftwareFormOpen, setIsSoftwareFormOpen] = useState(false);
@@ -258,13 +259,15 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
-                          <button
-                            onClick={() => setDeletingComponent(component)}
-                            className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-red-600 transition-colors"
-                            title="Remove"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => setDeletingComponent(component)}
+                              className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-red-600 transition-colors"
+                              title="Remove"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>
@@ -300,6 +303,7 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
           software={initialSoftware}
           onEdit={setEditingSoftware}
           onRemove={setRemovingSoftware}
+          isAdmin={isAdmin}
         />
       </div>
 
@@ -319,7 +323,7 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
         />
       )}
 
-      {removingSoftware && (
+      {removingSoftware && isAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg border p-6 max-w-md w-full mx-4 shadow-lg">
             <div className="flex items-center gap-3 mb-4">
@@ -359,7 +363,7 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
         />
       )}
 
-      {deletingComponent && (
+      {deletingComponent && isAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg border p-6 max-w-md w-full mx-4 shadow-lg">
             <div className="flex items-center gap-3 mb-4">

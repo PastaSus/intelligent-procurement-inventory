@@ -15,6 +15,7 @@ interface SoftwareListProps {
   software: SoftwareItem[];
   onEdit: (app: SoftwareItem) => void;
   onRemove: (app: SoftwareItem) => void;
+  isAdmin?: boolean;
 }
 
 const licenseStyles: Record<string, string> = {
@@ -40,7 +41,7 @@ function formatDate(date: Date) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export function SoftwareList({ software, onEdit, onRemove }: SoftwareListProps) {
+export function SoftwareList({ software, onEdit, onRemove, isAdmin = true }: SoftwareListProps) {
   if (software.length === 0) {
     return (
       <div className="p-8 text-center text-muted-foreground">
@@ -89,13 +90,15 @@ export function SoftwareList({ software, onEdit, onRemove }: SoftwareListProps) 
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
-                  <button
-                    onClick={() => onRemove(app)}
-                    className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-red-600 transition-colors"
-                    title="Remove"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => onRemove(app)}
+                      className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-red-600 transition-colors"
+                      title="Remove"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>
