@@ -41,11 +41,13 @@ describe('PurchaseRequestPrint', () => {
     expect(screen.getAllByText('For Lab 2 monitors').length).toBeGreaterThan(0);
   });
 
-  it('renders Prepared-by, Approved-by, and Vice-President signature blocks', () => {
+  it('renders Prepared-by, Checked-by, Approved-by, Noted-by, and Vice-President signature blocks', () => {
     render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
 
     expect(screen.getAllByText('Prepared by (Requester)').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Checked by (Administrator)').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Approved by (Laboratory Head)').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Noted by (Diosdado C. Caronongan)').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Vice-President').length).toBeGreaterThan(0);
   });
 
