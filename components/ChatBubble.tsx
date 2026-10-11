@@ -26,7 +26,10 @@ function getInitialSide(): DockSide {
 
 export function ChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
-  const [side, setSide] = useState<DockSide>(getInitialSide);
+  // Always start on the server-rendered default; the stored side is applied
+  // in the mount effect below. Reading storage in the initializer causes a
+  // hydration mismatch whose stale server class React never patches.
+  const [side, setSide] = useState<DockSide>("right");
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -38,6 +41,7 @@ export function ChatBubble() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const didMountPersist = useRef(false);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -46,8 +50,20 @@ export function ChatBubble() {
     }
   }, [messages, isOpen]);
 
-  // Persist dock side so the bubble stays out of the user's way
+  // Re-sync after hydration: the server prerender always ships the default
+  // side, so the hydrated button class can be stale. Reading storage on
+  // mount forces a re-render that patches the positioning classes.
   useEffect(() => {
+    setSide(getInitialSide());
+  }, []);
+
+  // Persist dock side so the bubble stays out of the user's way.
+  // Skips the mount run so a stale hydrated state can never clobber storage.
+  useEffect(() => {
+    if (!didMountPersist.current) {
+      didMountPersist.current = true;
+      return;
+    }
     try {
       window.localStorage.setItem(DOCK_STORAGE_KEY, side);
     } catch {

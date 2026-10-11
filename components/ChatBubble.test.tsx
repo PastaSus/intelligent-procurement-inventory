@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderToString } from 'react-dom/server';
+import { hydrateRoot } from 'react-dom/client';
+import { act } from 'react';
 import { ChatBubble } from './ChatBubble';
 
 describe('ChatBubble dock toggle', () => {
@@ -39,5 +42,24 @@ describe('ChatBubble dock toggle', () => {
     render(<ChatBubble />);
 
     expect(screen.getByRole('button', { name: 'Open chat' }).className).toContain('left-6');
+  });
+
+  it('recovers stored side after SSR hydration ships the default', async () => {
+    // Server prerender has no storage: always ships right-6.
+    window.localStorage.clear();
+    const ssrHtml = renderToString(<ChatBubble />);
+    expect(ssrHtml).toContain('right-6');
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    container.innerHTML = ssrHtml;
+    // Client boots with a stored preference, then hydrates mismatched HTML.
+    window.localStorage.setItem('ai-chat-bubble-side', 'left');
+    await act(async () => {
+      hydrateRoot(container, <ChatBubble />);
+    });
+
+    expect(screen.getByRole('button', { name: 'Open chat' }).className).toContain('left-6');
+    container.remove();
   });
 });
