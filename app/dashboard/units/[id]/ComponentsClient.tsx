@@ -147,7 +147,7 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start gap-3 text-left sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Link
             href="/dashboard/units"
@@ -159,7 +159,7 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
           <h2 className="text-3xl font-bold">{unit.unit_name}</h2>
           <p className="text-muted-foreground">{unit.roomName}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {missingTypes.length > 0 && (
             <Button variant="outline" onClick={handleBulkAdd} disabled={isPending} className="gap-2">
               <Sparkles className="h-4 w-4" />
