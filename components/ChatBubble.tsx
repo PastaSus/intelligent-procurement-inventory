@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send } from "lucide-react";
+import { MessageCircle, X, Send, ArrowLeft, ArrowRight } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -9,8 +9,24 @@ interface Message {
   timestamp: Date;
 }
 
+type DockSide = "left" | "right";
+
+const DOCK_STORAGE_KEY = "ai-chat-bubble-side";
+
+function getInitialSide(): DockSide {
+  if (typeof window === "undefined") return "right";
+  try {
+    return window.localStorage.getItem(DOCK_STORAGE_KEY) === "left"
+      ? "left"
+      : "right";
+  } catch {
+    return "right";
+  }
+}
+
 export function ChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
+  const [side, setSide] = useState<DockSide>(getInitialSide);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -29,6 +45,15 @@ export function ChatBubble() {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isOpen]);
+
+  // Persist dock side so the bubble stays out of the user's way
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(DOCK_STORAGE_KEY, side);
+    } catch {
+      // Storage unavailable — side still applies for this session
+    }
+  }, [side]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -100,7 +125,7 @@ export function ChatBubble() {
       {/* Floating Bubble Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-20 right-6 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center hover:scale-110 transition-transform"
+        className={`fixed bottom-20 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all flex items-center justify-center hover:scale-110 transition-transform ${side === "right" ? "right-6" : "left-6"}`}
         aria-label={isOpen ? "Close chat" : "Open chat"}
         aria-expanded={isOpen}
         aria-controls="chat-popup"
@@ -116,14 +141,38 @@ export function ChatBubble() {
       {isOpen && (
         <div
           id="chat-popup"
-          className="fixed bottom-36 right-6 z-40 w-96 max-w-[calc(100vw-2rem)] rounded-lg border bg-card shadow-lg flex flex-col h-[500px]"
+          className={`fixed bottom-36 z-40 w-96 max-w-[calc(100vw-2rem)] rounded-lg border bg-card shadow-lg flex flex-col h-[500px] ${side === "right" ? "right-6" : "left-6"}`}
         >
           {/* Header */}
-          <div className="border-b p-4">
-            <h3 className="font-semibold">AI Assistant</h3>
-            <p className="text-xs text-muted-foreground">
-              Ask about your lab assets
-            </p>
+          <div className="border-b p-4 flex items-center justify-between gap-2">
+            <div>
+              <h3 className="font-semibold">AI Assistant</h3>
+              <p className="text-xs text-muted-foreground">
+                Ask about your lab assets
+              </p>
+            </div>
+            <div className="flex items-center gap-1" role="group" aria-label="Dock chat bubble">
+              <button
+                type="button"
+                onClick={() => setSide("left")}
+                aria-label="Dock chat to left"
+                aria-pressed={side === "left"}
+                title="Dock to left"
+                className={`p-1.5 rounded-md transition-colors ${side === "left" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setSide("right")}
+                aria-label="Dock chat to right"
+                aria-pressed={side === "right"}
+                title="Dock to right"
+                className={`p-1.5 rounded-md transition-colors ${side === "right" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+              >
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Messages container */}
