@@ -9,7 +9,7 @@ const mockNavItems = [
   { label: 'Component Health', shortLabel: 'Health', href: '/dashboard/component-status' },
   { label: 'Spare Parts', shortLabel: 'Spares', href: '/dashboard/inventory' },
   { label: 'Requests', href: '/dashboard/purchase-requests' },
-  { label: 'Chat', href: '/dashboard/chat' },
+  { label: 'AI-Chat', href: '/dashboard/chat' },
 ];
 
 function isActiveLink(pathname: string, href: string): boolean {
