@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatPeso } from '@/lib/format';
+import { SignatoryBlocks, DEFAULT_SIGNATORY_NAMES, type SignatoryKey } from './SignatoryBlocks';
 
 interface PrintRequestItem {
   id: string;
@@ -33,16 +34,6 @@ function itemTotal(item: PrintRequestItem): number {
   const price = item.unit_price ? parseFloat(item.unit_price) : 0;
   return price * item.quantity;
 }
-
-type SignatoryKey = 'prepared' | 'checked' | 'approved' | 'noted' | 'vp';
-
-const SIGNATORIES: { key: SignatoryKey; role: string }[] = [
-  { key: 'prepared', role: 'Prepared by' },
-  { key: 'checked', role: 'Checked by' },
-  { key: 'approved', role: 'Approved by' },
-  { key: 'noted', role: 'Noted by' },
-  { key: 'vp', role: 'Vice-President' },
-];
 
 function LetterBody({
   request,
@@ -119,41 +110,13 @@ function LetterBody({
         </div>
       )}
 
-      <div className="signature-blocks flex flex-wrap justify-between gap-6 mt-14 text-sm">
-        {SIGNATORIES.map(({ key, role }) => (
-          <div key={key} className="flex-1 min-w-[120px] text-center">
-            <div className="h-14" />
-            {editable ? (
-              <input
-                aria-label={`${role} name`}
-                placeholder="Type name..."
-                value={names[key]}
-                onChange={(e) => onNamesChange?.(key, e.target.value)}
-                className="w-full border-t border-black pt-1 font-semibold text-center bg-transparent outline-none placeholder:font-normal placeholder:text-gray-400"
-              />
-            ) : (
-              <div className="border-t border-black pt-1 font-semibold min-h-[1.5rem]">
-                {names[key] || ' '}
-              </div>
-            )}
-            <div className="pt-1 font-semibold">{role}</div>
-            <p className="text-xs mt-1">Signature over printed name</p>
-            <p className="text-xs mt-3 text-left">Date: ______________</p>
-          </div>
-        ))}
-      </div>
+      <SignatoryBlocks names={names} editable={editable} onNamesChange={onNamesChange} />
     </div>
   );
 }
 
 export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintProps) {
-  const [names, setNames] = useState<Record<SignatoryKey, string>>({
-    prepared: '',
-    checked: '',
-    approved: '',
-    noted: 'Diosdado C. Caronongan',
-    vp: '',
-  });
+  const [names, setNames] = useState<Record<SignatoryKey, string>>(DEFAULT_SIGNATORY_NAMES);
 
   function handleNamesChange(key: SignatoryKey, value: string) {
     setNames((prev) => ({ ...prev, [key]: value }));
