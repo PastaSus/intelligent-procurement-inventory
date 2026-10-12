@@ -224,14 +224,14 @@ describe('PurchaseRequestsClient', () => {
 
     const printSection = container.querySelector('.print-only');
     expect(printSection).not.toBeNull();
-    for (const role of ['Prepared by', 'Checked by', 'Approved by', 'Noted by', 'Vice-President']) {
+    for (const role of ['Prepared by', 'Checked by', 'Approved by', 'Noted by', 'Technician']) {
       expect(printSection?.textContent).toContain(role);
     }
     expect(printSection?.textContent).toContain('Diosdado C. Caronongan');
     expect(printSection?.textContent).toContain('Signature over printed name');
   });
 
-  it('places Noted by and Vice-President on a spaced second footer row', () => {
+  it('places Noted by and Technician on a spaced second footer row', () => {
     const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
     const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
@@ -241,7 +241,7 @@ describe('PurchaseRequestsClient', () => {
     expect(rows?.[0]?.textContent).toContain('Prepared by');
     expect(rows?.[0]?.textContent).not.toContain('Noted by');
     expect(rows?.[1]?.textContent).toContain('Noted by');
-    expect(rows?.[1]?.textContent).toContain('Vice-President');
+    expect(rows?.[1]?.textContent).toContain('Technician');
   });
 
   it('syncs typed editor names to the print-only list footer', async () => {

@@ -1,13 +1,13 @@
 'use client';
 
-export type SignatoryKey = 'prepared' | 'checked' | 'approved' | 'noted' | 'vp';
+export type SignatoryKey = 'prepared' | 'checked' | 'approved' | 'noted' | 'technician';
 
 export const SIGNATORIES: { key: SignatoryKey; role: string }[] = [
   { key: 'prepared', role: 'Prepared by' },
   { key: 'checked', role: 'Checked by' },
   { key: 'approved', role: 'Approved by' },
   { key: 'noted', role: 'Noted by' },
-  { key: 'vp', role: 'Vice-President' },
+  { key: 'technician', role: 'Technician' },
 ];
 
 export const DEFAULT_SIGNATORY_NAMES: Record<SignatoryKey, string> = {
@@ -15,7 +15,7 @@ export const DEFAULT_SIGNATORY_NAMES: Record<SignatoryKey, string> = {
   checked: '',
   approved: '',
   noted: 'Diosdado C. Caronongan',
-  vp: '',
+  technician: '',
 };
 
 interface SignatoryBlocksProps {

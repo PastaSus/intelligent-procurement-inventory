@@ -44,7 +44,7 @@ describe('PurchaseRequestPrint', () => {
   it('renders role labels, typeable name fields, and the default noted name', () => {
     render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
 
-    for (const role of ['Prepared by', 'Checked by', 'Approved by', 'Noted by', 'Vice-President']) {
+    for (const role of ['Prepared by', 'Checked by', 'Approved by', 'Noted by', 'Technician']) {
       expect(screen.getAllByText(role).length).toBeGreaterThan(0);
     }
     // Noted-by defaults to the dean; preview input + print-only static text
