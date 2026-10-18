@@ -58,6 +58,12 @@ async function main() {
     create: { name: 'Laboratory 128A', created_by: admin.id, updated_by: admin.id },
   });
 
+  const roomLR2 = await prisma.laboratoryRoom.upsert({
+    where: { name: 'LR2' },
+    update: {},
+    create: { name: 'LR2', created_by: admin.id, updated_by: admin.id },
+  });
+
   const unitData = [
     { unitName: 'LR1U01', roomId: roomA.id },
     { unitName: 'LR1U02', roomId: roomA.id },
@@ -82,6 +88,45 @@ async function main() {
 
   const allUnits = await prisma.computerUnit.findMany();
 
+  // NOTE: ComputerUnit has no case/chassis column in the schema, so the
+  // case model per unit (Trigon, Galaxy, etc.) is documented here in the
+  // seed source only. If case needs to be queryable, add a migration.
+  const lr2UnitData = [
+    { unitName: 'LR201', caseModel: 'Trigon' },
+    { unitName: 'LR203', caseModel: 'Trigon' },
+    { unitName: 'LR204', caseModel: 'Neutron Odyssey' },
+    { unitName: 'LR205', caseModel: 'Trendsonic' },
+    { unitName: 'LR206', caseModel: 'Generic' },
+    { unitName: 'LR207', caseModel: 'Generic' },
+    { unitName: 'LR209', caseModel: 'Powerlogic' },
+    { unitName: 'LR211', caseModel: 'Galaxy' },
+    { unitName: 'LR212', caseModel: 'Powerlogic' },
+    { unitName: 'LR213', caseModel: 'Galaxy' },
+    { unitName: 'LR214', caseModel: 'Trendsonic' },
+    { unitName: 'LR215', caseModel: 'Trendsonic' },
+    { unitName: 'LR216', caseModel: 'Powerlogic' },
+  ];
+
+  for (const u of lr2UnitData) {
+    await prisma.computerUnit.upsert({
+      where: { unit_name_laboratory_room_id: { unit_name: u.unitName, laboratory_room_id: roomLR2.id } },
+      update: {},
+      create: {
+        unit_name: u.unitName,
+        laboratory_room_id: roomLR2.id,
+        created_by: admin.id,
+        updated_by: admin.id,
+      },
+    });
+  }
+
+  // Standard rooms keep the full 9-component generic set; LR2 units get
+  // only the 3 specified peripherals below (no duplicate types per unit).
+  const standardUnits = allUnits;
+  const lr2Units = await prisma.computerUnit.findMany({
+    where: { laboratory_room_id: roomLR2.id },
+  });
+
   type CompSpec = { type: ComponentType; spec: string };
   const componentSpecs: CompSpec[] = [
     { type: 'MOTHERBOARD', spec: 'Gigabyte GA-H81M-DS2V' },
@@ -96,7 +141,7 @@ async function main() {
   ];
 
   let serialCounter = 1;
-  for (const unit of allUnits) {
+  for (const unit of standardUnits) {
     for (const cs of componentSpecs) {
       const serial = `${unit.unit_name}-${cs.type}-${String(serialCounter).padStart(4, '0')}`;
       await prisma.computerComponent.create({
@@ -119,7 +164,7 @@ async function main() {
     { name: 'Google Chrome', version: '131.0', licenseType: 'FREE' },
   ];
 
-  for (const unit of allUnits) {
+  for (const unit of standardUnits) {
     for (const app of appSpecs) {
       await prisma.installedApplication.create({
         data: {
@@ -130,6 +175,50 @@ async function main() {
         },
       });
     }
+  }
+
+  // LR2 default peripherals. Requested status "WORKING" maps to the
+  // schema's ComponentStatus.FUNCTIONAL (only FUNCTIONAL /
+  // NEEDS_REPAIR / NEEDS_REPLACEMENT exist).
+  const lr2MonitorOverrides: Record<string, string> = {
+    LR201: 'Acer V196HQL 18.5"',
+    LR203: 'Chimei 19" LCD',
+    LR204: 'LG Flatron 19"',
+    LR213: 'Dell E1916HV 19.5"',
+  };
+
+  type LR2Peripheral = { type: ComponentType; spec: string };
+  let lr2Serial = 1;
+  for (const unit of lr2Units) {
+    const peripherals: LR2Peripheral[] = [
+      { type: 'MOUSE', spec: 'A4Tech OP-620D Optical Mouse' },
+      { type: 'KEYBOARD', spec: 'A4Tech KBS-720 Standard USB' },
+      { type: 'MONITOR', spec: lr2MonitorOverrides[unit.unit_name] ?? 'Generic 18.5" LCD' },
+    ];
+    for (const p of peripherals) {
+      const serial = `${unit.unit_name}-${p.type}-LR2-${String(lr2Serial).padStart(3, '0')}`;
+      await prisma.computerComponent.create({
+        data: {
+          computer_unit_id: unit.id,
+          type: p.type,
+          serial_number: serial,
+          specifications: p.spec,
+          status: 'FUNCTIONAL',
+        },
+      });
+      lr2Serial++;
+    }
+  }
+
+  const lr2UnitCount = await prisma.computerUnit.count({
+    where: { laboratory_room_id: roomLR2.id },
+  });
+  const lr2PeripheralCount = await prisma.computerComponent.count({
+    where: { computer_unit: { laboratory_room_id: roomLR2.id } },
+  });
+  console.log(`LR2 verification: ${lr2UnitCount} units, ${lr2PeripheralCount} peripherals (expected 13 / 39)`);
+  if (lr2UnitCount !== 13 || lr2PeripheralCount !== 39) {
+    throw new Error('LR2 seed verification failed: expected 13 units and 39 peripherals');
   }
 
   await prisma.inventoryItem.createMany({
