@@ -32,7 +32,7 @@
 | Field | Type | Description |
 |-------|------|-------------|
 | id | String (cuid) | Primary key |
-| name | String | Unique room name (e.g., "Laboratory 127A") |
+| name | String | Unique room name (e.g., "LR2") |
 | created_at | DateTime | Creation timestamp |
 | updated_at | DateTime | Last update timestamp |
 | created_by | String? | User who created this record |
@@ -47,7 +47,7 @@
 | Field | Type | Description |
 |-------|------|-------------|
 | id | String (cuid) | Primary key |
-| unit_name | String | Unit identifier (e.g., "LR1U01") |
+| unit_name | String | Unit identifier (e.g., "LR201") |
 | laboratory_room_id | String | Foreign key to LaboratoryRoom |
 | created_at | DateTime | Creation timestamp |
 | updated_at | DateTime | Last update timestamp |
