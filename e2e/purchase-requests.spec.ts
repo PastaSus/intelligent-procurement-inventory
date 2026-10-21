@@ -1,6 +1,27 @@
 import { test, expect } from '@playwright/test';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function clearPurchaseRequests() {
+  await prisma.requestItem.deleteMany();
+  await prisma.purchaseRequest.deleteMany();
+}
 
 test.describe('Purchase requests', () => {
+  // Serial: the empty-state assertion depends on the create test not running
+  // concurrently, and these tests share the purchase_requests table.
+  test.describe.configure({ mode: 'serial' });
+
+  test.beforeEach(async () => {
+    await clearPurchaseRequests();
+  });
+
+  test.afterAll(async () => {
+    await clearPurchaseRequests();
+    await prisma.$disconnect();
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.goto('/dashboard/purchase-requests');
   });
@@ -22,7 +43,10 @@ test.describe('Purchase requests', () => {
     await page.getByPlaceholder('Item name').fill('E2E Test Mouse');
     await page.getByRole('button', { name: /create & save/i }).click();
 
-    await expect(page.getByText(/PR-/)).toBeVisible({ timeout: 5000 });
+    // Scope to the visible list table; the print-only summary also contains PR numbers.
+    await expect(page.getByRole('table').getByText(/PR-\d{8}-[A-Z0-9]{4}/)).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   test('shows validation error for empty line items', async ({ page }) => {

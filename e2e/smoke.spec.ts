@@ -38,7 +38,9 @@ test.describe('Dashboard smoke tests', () => {
     await page.goto('/dashboard');
     await page.getByRole('link', { name: 'Requests' }).click();
     await expect(page).toHaveURL(/\/dashboard\/purchase-requests/);
-    await expect(page.locator('main h2')).toContainText('Purchase Requests');
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Purchase Requests', exact: true }),
+    ).toBeVisible();
   });
 
   test('navigates to chat via sidebar', async ({ page }) => {
