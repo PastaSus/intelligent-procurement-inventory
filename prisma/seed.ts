@@ -1,4 +1,4 @@
-import { PrismaClient, ComponentType, LicenseType } from '@prisma/client';
+import { PrismaClient, ComponentType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -41,24 +41,6 @@ async function main() {
     },
   });
 
-  const roomA = await prisma.laboratoryRoom.upsert({
-    where: { name: 'Laboratory 127A' },
-    update: {},
-    create: { name: 'Laboratory 127A', created_by: admin.id, updated_by: admin.id },
-  });
-
-  const roomB = await prisma.laboratoryRoom.upsert({
-    where: { name: 'Laboratory 127B' },
-    update: {},
-    create: { name: 'Laboratory 127B', created_by: admin.id, updated_by: admin.id },
-  });
-
-  const roomC = await prisma.laboratoryRoom.upsert({
-    where: { name: 'Laboratory 128A' },
-    update: {},
-    create: { name: 'Laboratory 128A', created_by: admin.id, updated_by: admin.id },
-  });
-
   const roomLR2 = await prisma.laboratoryRoom.upsert({
     where: { name: 'LR2' },
     update: {},
@@ -76,15 +58,6 @@ async function main() {
     update: {},
     create: { name: 'LR4', created_by: admin.id, updated_by: admin.id },
   });
-
-  const unitData = [
-    { unitName: 'LR1U01', roomId: roomA.id },
-    { unitName: 'LR1U02', roomId: roomA.id },
-    { unitName: 'LR1U03', roomId: roomA.id },
-    { unitName: 'LR2U01', roomId: roomB.id },
-    { unitName: 'LR2U02', roomId: roomB.id },
-    { unitName: 'LR3U01', roomId: roomC.id },
-  ];
 
   // NOTE: ComputerUnit has no case/chassis column in the schema, so the
   // case model per unit (Trigon, Galaxy, etc.) is documented here in the
@@ -123,12 +96,6 @@ async function main() {
 
   await prisma.computerUnit.createMany({
     data: [
-      ...unitData.map((u) => ({
-        unit_name: u.unitName,
-        laboratory_room_id: u.roomId,
-        created_by: admin.id,
-        updated_by: admin.id,
-      })),
       ...lr2UnitData.map((u) => ({
         unit_name: u.unitName,
         laboratory_room_id: roomLR2.id,
@@ -150,11 +117,7 @@ async function main() {
     ],
   });
 
-  // Standard rooms keep the full 9-component generic set; LR2 units get
-  // only the 3 specified peripherals below (no duplicate types per unit).
-  const standardUnits = await prisma.computerUnit.findMany({
-    where: { laboratory_room_id: { in: [roomA.id, roomB.id, roomC.id] } },
-  });
+  // Each room gets its own component set below.
   const lr2Units = await prisma.computerUnit.findMany({
     where: { laboratory_room_id: roomLR2.id },
   });
@@ -164,57 +127,9 @@ async function main() {
   const lr4Units = await prisma.computerUnit.findMany({
     where: { laboratory_room_id: roomLR4.id },
   });
-  console.log(`Seeded rooms and units (${standardUnits.length + lr2Units.length + mm3Units.length + lr4Units.length} units).`);
+  console.log(`Seeded rooms and units (${lr2Units.length + mm3Units.length + lr4Units.length} units).`);
 
   type CompSpec = { type: ComponentType; spec: string };
-  const componentSpecs: CompSpec[] = [
-    { type: 'MOTHERBOARD', spec: 'Gigabyte GA-H81M-DS2V' },
-    { type: 'PROCESSOR', spec: 'Intel Core i5 4460' },
-    { type: 'MEMORY', spec: '8GB DDR3 1600MHz' },
-    { type: 'HDD', spec: '500GB Seagate Barracuda' },
-    { type: 'MONITOR', spec: 'Samsung 20" LED' },
-    { type: 'KEYBOARD', spec: 'Logitech K120' },
-    { type: 'MOUSE', spec: 'Logitech M90' },
-    { type: 'AVR', spec: 'Servo 500W AVR' },
-    { type: 'OPTICAL_DRIVE', spec: 'LG GH24 DVD Writer' },
-  ];
-
-  let serialCounter = 1;
-  const standardComponentData = [];
-  for (const unit of standardUnits) {
-    for (const cs of componentSpecs) {
-      const serial = `${unit.unit_name}-${cs.type}-${String(serialCounter).padStart(4, '0')}`;
-      standardComponentData.push({
-        computer_unit_id: unit.id,
-        type: cs.type,
-        serial_number: serial,
-        specifications: cs.spec,
-        status: 'FUNCTIONAL' as const,
-      });
-      serialCounter++;
-    }
-  }
-  await prisma.computerComponent.createMany({ data: standardComponentData });
-
-  type AppSpec = { name: string; version: string; licenseType: LicenseType };
-  const appSpecs: AppSpec[] = [
-    { name: 'Windows 11 Pro', version: '23H2', licenseType: 'COMMERCIAL' },
-    { name: 'Microsoft Office 2021', version: '16.0', licenseType: 'COMMERCIAL' },
-    { name: 'Google Chrome', version: '131.0', licenseType: 'FREE' },
-  ];
-
-  const standardAppData = [];
-  for (const unit of standardUnits) {
-    for (const app of appSpecs) {
-      standardAppData.push({
-        computer_unit_id: unit.id,
-        name: app.name,
-        version: app.version,
-        license_type: app.licenseType,
-      });
-    }
-  }
-  await prisma.installedApplication.createMany({ data: standardAppData });
 
   // LR2 default peripherals. Requested status "WORKING" maps to the
   // schema's ComponentStatus.FUNCTIONAL (only FUNCTIONAL /
