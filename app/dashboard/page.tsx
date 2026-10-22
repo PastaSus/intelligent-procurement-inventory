@@ -64,7 +64,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard icon={Package} label="Parts to Order" value={stats.lowStockCount} variant="warning" href="/dashboard/inventory" />
+        <StatCard icon={Package} label="Items with low stock" value={stats.lowStockCount} variant="warning" href="/dashboard/inventory" />
         <StatCard icon={Wrench} label="Needs Repair" value={stats.needsRepair} variant="info" href="/dashboard/component-status" />
         <StatCard icon={AlertTriangle} label="Needs Replacement" value={stats.needsReplacement} variant="warning" href="/dashboard/component-status" />
         <StatCard icon={ShoppingCart} label="Pending Requests" value={stats.pendingRequests} variant="secondary" href="/dashboard/purchase-requests" />
