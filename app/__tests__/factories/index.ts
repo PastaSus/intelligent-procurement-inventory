@@ -15,6 +15,8 @@ export interface LaboratoryRoom {
   deleted: boolean;
   created_at: Date;
   updated_at: Date;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export function createRoom(overrides?: Partial<LaboratoryRoom>): LaboratoryRoom {
@@ -24,6 +26,8 @@ export function createRoom(overrides?: Partial<LaboratoryRoom>): LaboratoryRoom 
     deleted: false,
     created_at: new Date(),
     updated_at: new Date(),
+    created_by: null,
+    updated_by: null,
     ...overrides,
   };
 }
@@ -39,6 +43,8 @@ export interface ComputerUnit {
   deleted: boolean;
   created_at: Date;
   updated_at: Date;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export function createUnit(overrides?: Partial<ComputerUnit>): ComputerUnit {
@@ -49,6 +55,8 @@ export function createUnit(overrides?: Partial<ComputerUnit>): ComputerUnit {
     deleted: false,
     created_at: new Date(),
     updated_at: new Date(),
+    created_by: null,
+    updated_by: null,
     ...overrides,
   };
 }
@@ -56,10 +64,14 @@ export function createUnit(overrides?: Partial<ComputerUnit>): ComputerUnit {
 export interface ComputerComponent {
   id: string;
   computer_unit_id: string;
-  type: string;
+  type: 'MOTHERBOARD' | 'PROCESSOR' | 'MEMORY' | 'HDD' | 'MONITOR' | 'KEYBOARD' | 'MOUSE' | 'AVR' | 'OPTICAL_DRIVE';
   serial_number: string;
   specifications: string;
   status: 'FUNCTIONAL' | 'NEEDS_REPAIR' | 'NEEDS_REPLACEMENT';
+  created_at: Date;
+  updated_at: Date;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export function createComponent(overrides?: Partial<ComputerComponent>): ComputerComponent {
@@ -70,6 +82,10 @@ export function createComponent(overrides?: Partial<ComputerComponent>): Compute
     serial_number: `SN-${nextVal('SN')}`,
     specifications: 'Standard',
     status: 'FUNCTIONAL',
+    created_at: new Date(),
+    updated_at: new Date(),
+    created_by: null,
+    updated_by: null,
     ...overrides,
   };
 }

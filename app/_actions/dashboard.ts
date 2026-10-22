@@ -14,6 +14,7 @@ export async function getDashboardStats() {
       totalRooms,
       totalUnits,
       totalComponents,
+      totalSpareParts,
       needsRepair,
       needsReplacement,
       lowStockCount,
@@ -22,6 +23,7 @@ export async function getDashboardStats() {
       prisma.laboratoryRoom.count({ where: { deleted: false } }),
       prisma.computerUnit.count({ where: { deleted: false } }),
       prisma.computerComponent.count(),
+      prisma.inventoryItem.count({ where: { deleted: false } }),
       prisma.computerComponent.count({ where: { status: 'NEEDS_REPAIR' } }),
       prisma.computerComponent.count({ where: { status: 'NEEDS_REPLACEMENT' } }),
       prisma.$queryRaw<[{ count: bigint }]>`
@@ -39,6 +41,7 @@ export async function getDashboardStats() {
         totalRooms,
         totalUnits,
         totalComponents,
+        totalSpareParts,
         needsRepair,
         needsReplacement,
         lowStockCount: Number(lowStockCount[0]?.count || 0),

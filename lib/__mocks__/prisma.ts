@@ -1,8 +1,8 @@
 import { vi } from 'vitest';
 
 const laboratoryRoom = { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), findMany: vi.fn() };
-const computerUnit = { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), findMany: vi.fn() };
-const computerComponent = { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), findMany: vi.fn() };
+const computerUnit = { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), deleteMany: vi.fn(), findMany: vi.fn(), createMany: vi.fn() };
+const computerComponent = { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() };
 const inventoryItem = { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn(), findMany: vi.fn() };
 const purchaseRequest = { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() };
 const requestItem = { findMany: vi.fn(), create: vi.fn() };
@@ -12,5 +12,5 @@ const txModels = { laboratoryRoom, computerUnit, computerComponent, inventoryIte
 
 export const prisma = {
   ...txModels,
-  $transaction: vi.fn((fn: any) => fn(txModels)),
+  $transaction: vi.fn((fn: (tx: typeof txModels) => unknown) => fn(txModels)),
 };

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
-import { createComponent, updateComponent, deleteComponent, bulkAddComponents } from '@/app/_actions/components';
-import { createRoom, createUnit, createComponent as factoryComponent, createInventoryItem, resetCounter } from '@/app/__tests__/factories';
+import { createComponent, updateComponent, deleteComponent, bulkAddComponents, batchUpdateComponents } from '@/app/_actions/components';
+import { createUnit, createComponent as factoryComponent, createInventoryItem, resetCounter } from '@/app/__tests__/factories';
 
 vi.mock('@/lib/prisma');
 vi.mock('@/lib/auth', () => ({
@@ -242,7 +242,7 @@ describe('deleteComponent', () => {
 });
 
 describe('bulkAddComponents', () => {
-  const ALL_TYPES = ['MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD', 'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE'];
+  const ALL_TYPES = ['MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD', 'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE'] as const;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -299,8 +299,100 @@ describe('bulkAddComponents', () => {
 
     expect(result.success).toBe(true);
     expect(result.data).toBeDefined();
-    if (result.success) {
+    if (result.success && result.data) {
       expect(result.data.length).toBe(ALL_TYPES.length);
     }
+  });
+});
+
+describe('batchUpdateComponents', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    resetCounter();
+    await defaultSession();
+  });
+
+  function makeFormData(
+    ids: string[] = ['comp-1', 'comp-2'],
+    overrides: { status?: string; specifications?: string } = {},
+  ) {
+    const fd = new FormData();
+    for (const id of ids) {
+      fd.append('componentIds', id);
+    }
+    if (overrides.status) {
+      fd.set('status', overrides.status);
+    }
+    if (overrides.specifications) {
+      fd.set('specifications', overrides.specifications);
+    }
+    return fd;
+  }
+
+  it('returns error when not authenticated', async () => {
+    await noSession();
+
+    const result = await batchUpdateComponents(makeFormData([], { status: 'FUNCTIONAL' }));
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('logged in');
+  });
+
+  it('requires at least one selected component', async () => {
+    const result = await batchUpdateComponents(makeFormData([], { status: 'FUNCTIONAL' }));
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Select at least one');
+  });
+
+  it('requires a status or specifications change', async () => {
+    const result = await batchUpdateComponents(makeFormData());
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Choose a status');
+  });
+
+  it('rejects a selection that includes a missing component', async () => {
+    vi.mocked(prisma.computerComponent.findMany).mockResolvedValue([
+      factoryComponent({ id: 'comp-1', computer_unit_id: 'unit-1' }),
+    ]);
+
+    const result = await batchUpdateComponents(makeFormData(['comp-1', 'comp-2'], { status: 'FUNCTIONAL' }));
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('no longer exist');
+  });
+
+  it('updates the status of selected components across units', async () => {
+    vi.mocked(prisma.computerComponent.findMany).mockResolvedValue([
+      factoryComponent({ id: 'comp-1', computer_unit_id: 'unit-1' }),
+      factoryComponent({ id: 'comp-2', computer_unit_id: 'unit-2' }),
+    ]);
+    vi.mocked(prisma.computerComponent.updateMany).mockResolvedValue({ count: 2 });
+
+    const result = await batchUpdateComponents(makeFormData(['comp-1', 'comp-2'], { status: 'NEEDS_REPAIR' }));
+
+    expect(result).toEqual({ success: true, data: { count: 2, units: 2 } });
+    expect(prisma.computerComponent.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['comp-1', 'comp-2'] } },
+      data: { status: 'NEEDS_REPAIR', updated_by: 'admin-001' },
+    });
+  });
+
+  it('updates specifications only when requested', async () => {
+    vi.mocked(prisma.computerComponent.findMany).mockResolvedValue([
+      factoryComponent({ id: 'comp-1', computer_unit_id: 'unit-1' }),
+    ]);
+    vi.mocked(prisma.computerComponent.updateMany).mockResolvedValue({ count: 1 });
+
+    const result = await batchUpdateComponents(
+      makeFormData(['comp-1'], { specifications: 'Replaced with 8GB DDR4' }),
+    );
+
+    expect(result).toEqual({ success: true, data: { count: 1, units: 1 } });
+    expect(prisma.computerComponent.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['comp-1'] } },
+      data: { specifications: 'Replaced with 8GB DDR4', updated_by: 'admin-001' },
+    });
   });
 });
