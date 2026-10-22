@@ -127,6 +127,17 @@ button:not(:disabled) {
     display: none !important;
   }
 
+  body,
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  main {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
   .print-only {
     display: block !important;
   }
