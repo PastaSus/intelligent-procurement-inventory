@@ -24,6 +24,33 @@ interface RoomsClientProps {
   isAdmin?: boolean;
 }
 
+type RoomSortColumn = 'name' | 'unitCount' | 'updated_at';
+
+function SortHeader({
+  column,
+  label,
+  sortBy,
+  sortOrder,
+  onSort,
+}: {
+  column: RoomSortColumn;
+  label: string;
+  sortBy: RoomSortColumn;
+  sortOrder: 'asc' | 'desc';
+  onSort: (column: RoomSortColumn) => void;
+}) {
+  const isActive = sortBy === column;
+  return (
+    <button
+      onClick={() => onSort(column)}
+      className="flex items-center gap-1 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+    >
+      <span>{label}</span>
+      {isActive && (sortOrder === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+    </button>
+  );
+}
+
 export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize, isAdmin = true }: RoomsClientProps) {
   const [rooms] = useState(initialRooms);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -31,7 +58,7 @@ export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize, i
   const [deletingRoom, setDeletingRoom] = useState<LabRoom | null>(null);
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'unitCount' | 'updated_at'>('name');
+  const [sortBy, setSortBy] = useState<RoomSortColumn>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const handleSuccess = () => {
@@ -92,26 +119,13 @@ export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize, i
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  function handleSort(column: typeof sortBy) {
+  function handleSort(column: RoomSortColumn) {
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(column);
       setSortOrder('asc');
     }
-  }
-
-  function SortHeader({ column, label }: { column: typeof sortBy; label: string }) {
-    const isActive = sortBy === column;
-    return (
-      <button
-        onClick={() => handleSort(column)}
-        className="flex items-center gap-1 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-      >
-        <span>{label}</span>
-        {isActive && (sortOrder === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-      </button>
-    );
   }
 
   function formatDate(date: Date) {
@@ -184,9 +198,9 @@ export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize, i
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 text-sm font-medium"><SortHeader column="name" label="Room Name" /></th>
-                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="unitCount" label="Computer Units" /></th>
-                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="updated_at" label="Updated" /></th>
+                  <th className="text-left p-3 text-sm font-medium"><SortHeader column="name" label="Room Name" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
+                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="unitCount" label="Computer Units" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
+                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="updated_at" label="Updated" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
                   <th className="text-center w-[100px] p-3 text-sm font-medium">Actions</th>
                 </tr>
               </thead>
