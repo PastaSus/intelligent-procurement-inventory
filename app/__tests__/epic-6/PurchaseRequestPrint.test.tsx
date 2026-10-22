@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PurchaseRequestPrint } from '@/app/dashboard/purchase-requests/components/PurchaseRequestPrint';
 
-function makeRequest(overrides: { notes?: string | null } = {}) {
+function makeRequest(overrides: { notes?: string | null; status?: string } = {}) {
   return {
     id: 'pr-1',
     pr_number: 'PR-20261008-ABCD',
@@ -90,6 +90,19 @@ describe('PurchaseRequestPrint', () => {
 
     await user.click(screen.getByRole('button', { name: /^print$/i }));
     expect(window.print).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables printing for requests that were not approved', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <PurchaseRequestPrint request={makeRequest({ status: 'REJECTED' })} onClose={() => {}} />,
+    );
+
+    const printButton = screen.getByRole('button', { name: /^print$/i });
+    expect(printButton).toBeDisabled();
+    await user.click(printButton);
+    expect(window.print).not.toHaveBeenCalled();
+    expect(container.querySelector('.print-only')).toBeNull();
   });
 
   it('calls onClose when the Close button is clicked', async () => {
