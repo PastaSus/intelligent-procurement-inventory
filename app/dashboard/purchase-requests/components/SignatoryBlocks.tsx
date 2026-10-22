@@ -11,17 +11,14 @@ export const SIGNATORIES: { key: SignatoryKey; role: string; signer: string; nam
 
 export function SignatoryBlocks() {
   return (
-    <div className="signature-blocks flex flex-wrap justify-between gap-6">
+    <div className="signature-blocks grid grid-cols-2 gap-x-12 gap-y-8">
       {SIGNATORIES.map(({ key, role, signer, name }) => (
-        <div key={key} className="flex-1 min-w-[120px] max-w-[200px] text-center">
+        <div key={key} className="w-full text-center">
           <div className="font-semibold">{role}</div>
           <div className="h-16" aria-hidden="true" />
           <div className="border-t border-black pt-1 min-h-[1.5rem] break-words">
             {name ? (
-              <>
-                <div className="font-semibold">{name}</div>
-                <div className="text-xs">{signer}</div>
-              </>
+              <div className="font-semibold">{name}</div>
             ) : (
               <div className="font-semibold">{signer}</div>
             )}
