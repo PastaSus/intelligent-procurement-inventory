@@ -197,17 +197,48 @@ describe('PurchaseRequestsClient', () => {
   it('shows Print List button that calls window.print', async () => {
     const user = userEvent.setup();
     window.print = vi.fn();
-    const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
+    const requests = [makePR({ pr_number: 'PR-20260705-AAAA', status: 'APPROVED' })];
     render(<PurchaseRequestsClient initialRequests={requests} isAdmin={false} />);
 
     await user.click(screen.getByRole('button', { name: /print list/i }));
     expect(window.print).toHaveBeenCalledTimes(1);
   });
 
+  it('disables Print List when there are no approved requests', () => {
+    const requests = [
+      makePR({ status: 'DRAFT' }),
+      makePR({ status: 'REQUESTED' }),
+      makePR({ status: 'REJECTED' }),
+    ];
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+    expect(screen.getByRole('button', { name: /print list/i })).toBeDisabled();
+    expect(container.querySelector('.print-only')).toBeNull();
+  });
+
+  it('only includes approved and fulfilled requests in the print list', () => {
+    const requests = [
+      makePR({ pr_number: 'PR-DRAFT', status: 'DRAFT' }),
+      makePR({ pr_number: 'PR-REQUESTED', status: 'REQUESTED' }),
+      makePR({ pr_number: 'PR-REJECTED', status: 'REJECTED' }),
+      makePR({ pr_number: 'PR-APPROVED', status: 'APPROVED' }),
+      makePR({ pr_number: 'PR-FULFILLED', status: 'FULFILLED' }),
+    ];
+    const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+    const printSection = container.querySelector('.print-only');
+    expect(printSection).not.toBeNull();
+    expect(printSection?.textContent).toContain('PR-APPROVED');
+    expect(printSection?.textContent).toContain('PR-FULFILLED');
+    expect(printSection?.textContent).not.toContain('PR-DRAFT');
+    expect(printSection?.textContent).not.toContain('PR-REQUESTED');
+    expect(printSection?.textContent).not.toContain('PR-REJECTED');
+  });
+
   it('renders a print-only summary of the listed requests', () => {
     const requests = [
-      makePR({ pr_number: 'PR-20260705-AAAA' }),
-      makePR({ pr_number: 'PR-20260705-BBBB' }),
+      makePR({ pr_number: 'PR-20260705-AAAA', status: 'APPROVED' }),
+      makePR({ pr_number: 'PR-20260705-BBBB', status: 'APPROVED' }),
     ];
     const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
@@ -228,7 +259,7 @@ describe('PurchaseRequestsClient', () => {
   });
 
   it('ends the print-only summary with the 4-block signatory footer', () => {
-    const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
+    const requests = [makePR({ pr_number: 'PR-20260705-AAAA', status: 'APPROVED' })];
     const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
     const printSection = container.querySelector('.print-only');
@@ -244,7 +275,7 @@ describe('PurchaseRequestsClient', () => {
   });
 
   it('places all four signatories in a compact aligned row in order', () => {
-    const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
+    const requests = [makePR({ pr_number: 'PR-20260705-AAAA', status: 'APPROVED' })];
     const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
     const printSection = container.querySelector('.print-only');
@@ -264,7 +295,7 @@ describe('PurchaseRequestsClient', () => {
   });
 
   it('keeps the signatory editor out of the printed output', () => {
-    const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
+    const requests = [makePR({ pr_number: 'PR-20260705-AAAA', status: 'APPROVED' })];
     const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
     const printSection = container.querySelector('.print-only');

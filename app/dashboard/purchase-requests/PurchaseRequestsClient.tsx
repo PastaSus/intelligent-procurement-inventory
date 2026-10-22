@@ -218,6 +218,11 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
     return result;
   }, [requests, statusFilter, search, sortBy, sortOrder]);
 
+  const printableRequests = useMemo(
+    () => filteredItems.filter((req) => req.status === 'APPROVED' || req.status === 'FULFILLED'),
+    [filteredItems],
+  );
+
   function handleSort(column: typeof sortBy) {
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -263,7 +268,17 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
           <p className="text-muted-foreground">Track and manage internal procurement</p>
         </div>
         <div className="flex items-center gap-2 report-no-print">
-          <Button variant="outline" onClick={printDocument} className="gap-2">
+          <Button
+            variant="outline"
+            onClick={printDocument}
+            className="gap-2"
+            disabled={printableRequests.length === 0}
+            title={
+              printableRequests.length === 0
+                ? 'No approved requests to print'
+                : `Print ${printableRequests.length} approved request${printableRequests.length === 1 ? '' : 's'}`
+            }
+          >
             <Printer className="h-4 w-4" />
             Print List
           </Button>
@@ -436,9 +451,11 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
         <CreateRequestForm onClose={() => setIsFormOpen(false)} onSuccess={handleSuccess} stockParts={stockParts} />
       )}
 
-      <div className="print-only hidden">
-        <PrintRequestList requests={filteredItems} />
-      </div>
+      {printableRequests.length > 0 && (
+        <div className="print-only hidden">
+          <PrintRequestList requests={printableRequests} />
+        </div>
+      )}
 
       {rejectingRequest && (
         <RejectRequestDialog
