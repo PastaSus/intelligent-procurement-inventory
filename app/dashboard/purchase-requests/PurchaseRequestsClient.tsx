@@ -3,11 +3,12 @@
 import { useState, useMemo, useTransition, useCallback } from 'react';
 import { ShoppingCart, Plus, Search, X, ChevronUp, ChevronDown, Pencil, CheckCircle, XCircle, Package, Ban, Send, ExternalLink, Printer } from 'lucide-react';
 import { formatPeso } from '@/lib/format';
+import { printDocument } from '@/lib/print';
 import { CreateRequestForm } from './components/CreateRequestForm';
 import type { StockPart } from './components/CreateRequestForm';
 import { RejectRequestDialog } from './components/RejectRequestDialog';
 import { PurchaseRequestPrint } from './components/PurchaseRequestPrint';
-import { SignatoryBlocks, SIGNATORIES, DEFAULT_SIGNATORY_NAMES, type SignatoryKey } from './components/SignatoryBlocks';
+import { SignatoryBlocks } from './components/SignatoryBlocks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -64,7 +65,7 @@ function requestCost(req: PurchaseRequest): number {
   }, 0);
 }
 
-function PrintRequestList({ requests, names }: { requests: PurchaseRequest[]; names: Record<SignatoryKey, string> }) {
+function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
   const grandTotal = requests.reduce((sum, r) => sum + requestCost(r), 0);
   const dateStr = new Date().toLocaleDateString('en-US', {
     month: 'long',
@@ -73,10 +74,25 @@ function PrintRequestList({ requests, names }: { requests: PurchaseRequest[]; na
   });
 
   return (
-    <div className="pr-print-letter bg-white text-black p-8 max-w-[210mm] mx-auto">
-      <div className="text-center border-b-4 border-double border-black pb-4 mb-5">
-        <h1 className="text-3xl font-bold tracking-wide">Procurvin</h1>
-        <p className="text-xs tracking-[0.25em] uppercase mt-1">Laboratory Procurement &amp; Inventory System</p>
+    <div className="pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto">
+      <div className="border-b-4 border-double border-black pb-4 mb-5">
+        <div className="flex items-center justify-between gap-4">
+          <img
+            src="/university_of_luzon_logo-upscaled.png"
+            alt="University of Luzon logo"
+            width={64}
+            height={64}
+            className="shrink-0 object-contain"
+          />
+          <h1 className="flex-1 text-center text-2xl font-bold tracking-wide">College of Computer Studies</h1>
+          <img
+            src="/ccs-logo-upscaled.png"
+            alt="College of Computer Studies logo"
+            width={64}
+            height={64}
+            className="shrink-0 object-contain"
+          />
+        </div>
       </div>
 
       <div className="text-center mb-5">
@@ -104,7 +120,9 @@ function PrintRequestList({ requests, names }: { requests: PurchaseRequest[]; na
                 <td className="py-2 pr-2 font-mono">{req.pr_number}</td>
                 <td className="py-2 pr-2">{new Date(req.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                 <td className="py-2 pr-2">{req.status}</td>
-                <td className="py-2 pr-2 text-center">{req.items.length}</td>
+                <td className="py-2 pr-2">
+                  {req.items.length > 0 ? req.items.map((i) => i.item_name).join(', ') : '-'}
+                </td>
                 <td className="py-2 pr-2 text-center">{totalQty}</td>
                 <td className="py-2 text-right tabular-nums">{totalCost > 0 ? formatPeso(totalCost) : '-'}</td>
               </tr>
@@ -119,7 +137,7 @@ function PrintRequestList({ requests, names }: { requests: PurchaseRequest[]; na
         </tfoot>
       </table>
 
-      <SignatoryBlocks names={names} />
+      <SignatoryBlocks />
     </div>
   );
 }
@@ -134,11 +152,6 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [rejectingRequest, setRejectingRequest] = useState<PurchaseRequest | null>(null);
   const [printingRequest, setPrintingRequest] = useState<PurchaseRequest | null>(null);
-  const [signatoryNames, setSignatoryNames] = useState<Record<SignatoryKey, string>>(DEFAULT_SIGNATORY_NAMES);
-
-  function handleSignatoryChange(key: SignatoryKey, value: string) {
-    setSignatoryNames((prev) => ({ ...prev, [key]: value }));
-  }
 
   const handleSuccess = useCallback(() => {
     setIsFormOpen(false);
@@ -250,7 +263,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
           <p className="text-muted-foreground">Track and manage internal procurement</p>
         </div>
         <div className="flex items-center gap-2 report-no-print">
-          <Button variant="outline" onClick={() => window.print()} className="gap-2">
+          <Button variant="outline" onClick={printDocument} className="gap-2">
             <Printer className="h-4 w-4" />
             Print List
           </Button>
@@ -291,23 +304,6 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
             ))}
           </SelectContent>
         </Select>
-      </div>
-
-      <div className="bg-card rounded-lg border p-4 report-no-print">
-        <p className="text-sm font-medium mb-3">Signatories for printed list</p>
-        <div className="flex flex-wrap gap-3">
-          {SIGNATORIES.map(({ key, role }) => (
-            <label key={key} className="flex-1 min-w-[160px] text-xs font-medium flex flex-col gap-1">
-              {role}
-              <Input
-                aria-label={`${role} name`}
-                placeholder="Type name..."
-                value={signatoryNames[key]}
-                onChange={(e) => handleSignatoryChange(key, e.target.value)}
-              />
-            </label>
-          ))}
-        </div>
       </div>
 
       <div className="bg-card rounded-lg border report-no-print">
@@ -441,7 +437,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
       )}
 
       <div className="print-only hidden">
-        <PrintRequestList requests={filteredItems} names={signatoryNames} />
+        <PrintRequestList requests={filteredItems} />
       </div>
 
       {rejectingRequest && (

@@ -103,10 +103,33 @@ button:not(:disabled) {
   animation: slide-in 0.3s ease-out;
 }
 
+.pr-print-letter-paged {
+  display: flex;
+  flex-direction: column;
+  min-height: 270mm;
+}
+
+.pr-print-letter-paged .signature-blocks {
+  margin-top: auto;
+  break-inside: avoid;
+}
+
 @media print {
   @page {
     size: A4;
     margin: 12mm;
+  }
+
+  @page pr-letter {
+    size: A4;
+    margin: 0;
+  }
+
+  .pr-print-letter-paged {
+    page: pr-letter;
+    box-sizing: content-box;
+    padding: 12mm;
+    min-height: 271mm;
   }
 
   aside,
@@ -114,6 +137,17 @@ button:not(:disabled) {
   header,
   .report-no-print {
     display: none !important;
+  }
+
+  body,
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  main {
+    width: 100% !important;
+    max-width: none !important;
   }
 
   .print-only {

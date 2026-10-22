@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { printDocument } from '@/lib/print';
 import { formatPeso } from '@/lib/format';
-import { SignatoryBlocks, DEFAULT_SIGNATORY_NAMES, type SignatoryKey } from './SignatoryBlocks';
+import { SignatoryBlocks } from './SignatoryBlocks';
 
 interface PrintRequestItem {
   id: string;
@@ -35,17 +35,7 @@ function itemTotal(item: PrintRequestItem): number {
   return price * item.quantity;
 }
 
-function LetterBody({
-  request,
-  names,
-  editable = false,
-  onNamesChange,
-}: {
-  request: PrintPurchaseRequest;
-  names: Record<SignatoryKey, string>;
-  editable?: boolean;
-  onNamesChange?: (key: SignatoryKey, value: string) => void;
-}) {
+function LetterBody({ request }: { request: PrintPurchaseRequest }) {
   const grandTotal = request.items.reduce((sum, i) => sum + itemTotal(i), 0);
   const dateStr = new Date(request.updated_at).toLocaleDateString('en-US', {
     month: 'long',
@@ -54,10 +44,25 @@ function LetterBody({
   });
 
   return (
-    <div className="pr-print-letter bg-white text-black p-8 max-w-[210mm] mx-auto">
-      <div className="text-center border-b-4 border-double border-black pb-4 mb-5">
-        <h1 className="text-3xl font-bold tracking-wide">Procurvin</h1>
-        <p className="text-xs tracking-[0.25em] uppercase mt-1">Laboratory Procurement &amp; Inventory System</p>
+    <div className="pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto">
+      <div className="border-b-4 border-double border-black pb-4 mb-5">
+        <div className="flex items-center justify-between gap-4">
+          <img
+            src="/university_of_luzon_logo-upscaled.png"
+            alt="University of Luzon logo"
+            width={64}
+            height={64}
+            className="shrink-0 object-contain"
+          />
+          <h1 className="flex-1 text-center text-2xl font-bold tracking-wide">College of Computer Studies</h1>
+          <img
+            src="/ccs-logo-upscaled.png"
+            alt="College of Computer Studies logo"
+            width={64}
+            height={64}
+            className="shrink-0 object-contain"
+          />
+        </div>
       </div>
 
       <div className="text-center mb-5">
@@ -110,18 +115,12 @@ function LetterBody({
         </div>
       )}
 
-      <SignatoryBlocks names={names} editable={editable} onNamesChange={onNamesChange} />
+      <SignatoryBlocks />
     </div>
   );
 }
 
 export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintProps) {
-  const [names, setNames] = useState<Record<SignatoryKey, string>>(DEFAULT_SIGNATORY_NAMES);
-
-  function handleNamesChange(key: SignatoryKey, value: string) {
-    setNames((prev) => ({ ...prev, [key]: value }));
-  }
-
   return (
     <>
       <div className="report-no-print fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
@@ -129,7 +128,7 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
           <div className="flex items-center justify-between p-4 border-b">
             <h3 className="text-lg font-semibold">Print Preview — {request.pr_number}</h3>
             <div className="flex items-center gap-2">
-              <Button onClick={() => window.print()} className="gap-2">
+              <Button onClick={printDocument} className="gap-2">
                 <Printer className="h-4 w-4" />
                 Print
               </Button>
@@ -140,13 +139,13 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
             </div>
           </div>
           <div className="p-4 bg-muted/30">
-            <LetterBody request={request} names={names} editable onNamesChange={handleNamesChange} />
+            <LetterBody request={request} />
           </div>
         </div>
       </div>
 
       <div className="print-only hidden">
-        <LetterBody request={request} names={names} />
+        <LetterBody request={request} />
       </div>
     </>
   );
