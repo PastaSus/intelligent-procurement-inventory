@@ -40,7 +40,7 @@ const componentTypes = [
   'MOTHERBOARD',
   'PROCESSOR',
   'MEMORY',
-  'HDD',
+  'STORAGE',
   'MONITOR',
   'KEYBOARD',
   'MOUSE',

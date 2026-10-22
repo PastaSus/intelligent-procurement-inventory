@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const ComponentTypeEnum = z.enum([
-  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD',
+  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'STORAGE',
   'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
 ]);
 

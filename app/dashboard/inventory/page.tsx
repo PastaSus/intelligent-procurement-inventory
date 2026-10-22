@@ -5,7 +5,7 @@ import { InventoryClient } from './InventoryClient';
 import { SearchParams } from './types';
 
 const COMPONENT_TYPES = [
-  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD',
+  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'STORAGE',
   'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
 ] as const;
 

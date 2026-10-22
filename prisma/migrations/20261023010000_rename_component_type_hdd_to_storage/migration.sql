@@ -1,0 +1,1 @@
+ALTER TYPE "ComponentType" RENAME VALUE 'HDD' TO 'STORAGE';

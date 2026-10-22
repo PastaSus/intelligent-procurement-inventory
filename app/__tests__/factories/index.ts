@@ -64,7 +64,7 @@ export function createUnit(overrides?: Partial<ComputerUnit>): ComputerUnit {
 export interface ComputerComponent {
   id: string;
   computer_unit_id: string;
-  type: 'MOTHERBOARD' | 'PROCESSOR' | 'MEMORY' | 'HDD' | 'MONITOR' | 'KEYBOARD' | 'MOUSE' | 'AVR' | 'OPTICAL_DRIVE';
+  type: 'MOTHERBOARD' | 'PROCESSOR' | 'MEMORY' | 'STORAGE' | 'MONITOR' | 'KEYBOARD' | 'MOUSE' | 'AVR' | 'OPTICAL_DRIVE';
   serial_number: string;
   specifications: string;
   status: 'FUNCTIONAL' | 'NEEDS_REPAIR' | 'NEEDS_REPLACEMENT';
