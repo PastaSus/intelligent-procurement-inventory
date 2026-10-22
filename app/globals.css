@@ -103,6 +103,16 @@ button:not(:disabled) {
   animation: slide-in 0.3s ease-out;
 }
 
+.pr-print-letter-single {
+  display: flex;
+  flex-direction: column;
+  min-height: 272mm;
+}
+
+.pr-print-letter-single .signature-blocks {
+  margin-top: auto;
+}
+
 @media print {
   @page {
     size: A4;
@@ -161,15 +171,5 @@ button:not(:disabled) {
 
   .pr-print-letter .signature-blocks {
     break-inside: avoid;
-  }
-
-  .pr-print-letter-single {
-    display: flex;
-    flex-direction: column;
-    min-height: 272mm;
-  }
-
-  .pr-print-letter-single .signature-blocks {
-    margin-top: auto;
   }
 }
