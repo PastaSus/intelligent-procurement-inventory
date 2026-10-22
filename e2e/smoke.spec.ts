@@ -8,35 +8,35 @@ test.describe('Dashboard smoke tests', () => {
 
   test('navigates to rooms via sidebar', async ({ page }) => {
     await page.goto('/dashboard');
-    await page.getByRole('link', { name: 'Rooms' }).click();
+    await page.locator('aside nav').getByRole('link', { name: 'Rooms' }).click();
     await expect(page).toHaveURL(/\/dashboard\/rooms/);
     await expect(page.locator('main h2')).toContainText('Laboratory Rooms');
   });
 
   test('navigates to units via sidebar', async ({ page }) => {
     await page.goto('/dashboard');
-    await page.getByRole('link', { name: 'Units' }).click();
+    await page.locator('aside nav').getByRole('link', { name: 'Units' }).click();
     await expect(page).toHaveURL(/\/dashboard\/units/);
     await expect(page.locator('main h2')).toContainText('Computer Units');
   });
 
   test('navigates to component health via sidebar', async ({ page }) => {
     await page.goto('/dashboard');
-    await page.getByRole('link', { name: 'Component Health' }).click();
+    await page.locator('aside nav').getByRole('link', { name: 'Component Health' }).click();
     await expect(page).toHaveURL(/\/dashboard\/component-status/);
     await expect(page.locator('main h2')).toContainText('Component Health');
   });
 
   test('navigates to spare parts via sidebar', async ({ page }) => {
     await page.goto('/dashboard');
-    await page.getByRole('link', { name: 'Spare Parts' }).click();
+    await page.locator('aside nav').getByRole('link', { name: 'Spare Parts' }).click();
     await expect(page).toHaveURL(/\/dashboard\/inventory/);
     await expect(page.locator('main h2')).toContainText('Spare Parts');
   });
 
   test('navigates to purchase requests via sidebar', async ({ page }) => {
     await page.goto('/dashboard');
-    await page.getByRole('link', { name: 'Requests' }).click();
+    await page.locator('aside nav').getByRole('link', { name: 'Requests' }).click();
     await expect(page).toHaveURL(/\/dashboard\/purchase-requests/);
     await expect(
       page.getByRole('heading', { level: 2, name: 'Purchase Requests', exact: true }),
@@ -45,7 +45,7 @@ test.describe('Dashboard smoke tests', () => {
 
   test('navigates to chat via sidebar', async ({ page }) => {
     await page.goto('/dashboard');
-    await page.getByRole('link', { name: 'Chat' }).click();
+    await page.locator('aside nav').getByRole('link', { name: 'Chat' }).click();
     await expect(page).toHaveURL(/\/dashboard\/chat/);
     await expect(page.locator('main h1')).toContainText('AI Chat Assistant');
   });
