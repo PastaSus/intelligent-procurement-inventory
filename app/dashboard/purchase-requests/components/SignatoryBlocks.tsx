@@ -11,20 +11,20 @@ export const SIGNATORIES: { key: SignatoryKey; role: string; signer: string; nam
 
 export function SignatoryBlocks() {
   return (
-    <div className="signature-blocks grid grid-cols-2 gap-x-12 gap-y-8">
+    <div className="signature-blocks grid grid-cols-4 gap-6">
       {SIGNATORIES.map(({ key, role, signer, name }) => (
         <div key={key} className="w-full text-center">
-          <div className="font-semibold">{role}</div>
-          <div className="h-16" aria-hidden="true" />
-          <div className="border-t border-black pt-1 min-h-[1.5rem] break-words">
+          <div className="text-sm font-semibold">{role}</div>
+          <div className="h-12" aria-hidden="true" />
+          <div className="border-t border-black pt-1 min-h-[1.25rem] break-words">
             {name ? (
-              <div className="font-semibold">{name}</div>
+              <div className="text-sm font-semibold leading-tight">{name}</div>
             ) : (
-              <div className="font-semibold">{signer}</div>
+              <div className="text-sm font-semibold">{signer}</div>
             )}
           </div>
-          <p className="text-xs mt-1">Signature over Printed Name</p>
-          <p className="text-xs mt-3 text-left">Date: ______________</p>
+          <p className="text-[10px] mt-1">Signature over Printed Name</p>
+          <p className="text-[10px] mt-2">Date: ____________</p>
         </div>
       ))}
     </div>

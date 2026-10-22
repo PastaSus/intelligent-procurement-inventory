@@ -243,7 +243,7 @@ describe('PurchaseRequestsClient', () => {
     expect(printSection?.textContent).toContain('Diosdado C. Caronongan');
   });
 
-  it('places all four signatories in an aligned grid in order', () => {
+  it('places all four signatories in a compact aligned row in order', () => {
     const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
     const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
@@ -253,7 +253,7 @@ describe('PurchaseRequestsClient', () => {
     expect(columns?.length).toBe(1);
     const rowBlock = columns?.[0];
     expect(rowBlock?.className).toContain('grid');
-    expect(rowBlock?.className).toContain('grid-cols-2');
+    expect(rowBlock?.className).toContain('grid-cols-4');
     expect(rowBlock?.className).not.toContain('flex-col');
     expect(rowBlock?.children.length).toBe(4);
     const text = rowBlock?.textContent ?? '';

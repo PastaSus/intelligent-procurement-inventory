@@ -59,7 +59,7 @@ describe('PurchaseRequestPrint', () => {
     expect(screen.getAllByText('Diosdado C. Caronongan').length).toBeGreaterThan(0);
   });
 
-  it('renders the four signatories in an aligned 2x2 grid', () => {
+  it('renders the four signatories in a compact aligned row', () => {
     const { container } = render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
 
     const printArea = container.querySelector('.print-only');
@@ -68,7 +68,7 @@ describe('PurchaseRequestPrint', () => {
     expect(columns?.length).toBe(1);
     const rowBlock = columns?.[0];
     expect(rowBlock?.className).toContain('grid');
-    expect(rowBlock?.className).toContain('grid-cols-2');
+    expect(rowBlock?.className).toContain('grid-cols-4');
     expect(rowBlock?.className).not.toContain('flex-col');
     expect(rowBlock?.children.length).toBe(4);
     const text = rowBlock?.textContent ?? '';
