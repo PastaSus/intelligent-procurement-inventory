@@ -94,16 +94,6 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
     0
   );
 
-  function handleDrillStatus(nextStatus: string) {
-    setStatus(nextStatus);
-    applyFilters({ status: nextStatus });
-  }
-
-  function handleDrillType(nextType: string) {
-    setComponentType(nextType);
-    applyFilters({ componentType: nextType });
-  }
-
   function handleResetFilters() {
     setRoomId('all');
     setStatus('all');
@@ -135,14 +125,7 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
         </p>
       </div>
 
-      <ReportSummary
-        rooms={visibleRooms}
-        activeStatus={status}
-        activeType={componentType}
-        onSelectStatus={handleDrillStatus}
-        onSelectType={handleDrillType}
-        onReset={handleResetFilters}
-      />
+      <ReportSummary rooms={visibleRooms} onReset={handleResetFilters} />
 
       <div className="flex flex-wrap gap-3 report-no-print">
         <div className="w-48">

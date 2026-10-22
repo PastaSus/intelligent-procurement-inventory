@@ -68,10 +68,11 @@ interface UnitsClientProps {
   currentPage: number;
   pageSize: number;
   rooms: Room[];
+  initialRoomId?: string;
   isAdmin?: boolean;
 }
 
-export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, rooms, isAdmin = true }: UnitsClientProps) {
+export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, rooms, initialRoomId = 'all', isAdmin = true }: UnitsClientProps) {
   const [units] = useState(initialUnits);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isBatchFormOpen, setIsBatchFormOpen] = useState(false);
@@ -81,7 +82,7 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
   const [isBatchDeleteOpen, setIsBatchDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
-  const [selectedRoomId, setSelectedRoomId] = useState('all');
+  const [selectedRoomId, setSelectedRoomId] = useState(initialRoomId);
   const [sortBy, setSortBy] = useState<'unitName' | 'roomName' | 'componentCount' | 'updated_at'>('unitName');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -171,6 +172,12 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
   }, [units, search, selectedRoomId, sortBy, sortOrder]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  function pageHref(page: number) {
+    const params = new URLSearchParams({ page: String(page) });
+    if (selectedRoomId !== 'all') params.set('room_id', selectedRoomId);
+    return `/dashboard/units?${params.toString()}`;
+  }
 
   const filteredIds = useMemo(() => filteredItems.map((unit) => unit.id), [filteredItems]);
   const selectedUnits = useMemo(
@@ -268,7 +275,13 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Room</span>
-          <Select value={selectedRoomId} onValueChange={(value) => { setSelectedRoomId(value); setSelectedIds(new Set()); }}>
+          <Select value={selectedRoomId} onValueChange={(value) => {
+            setSelectedRoomId(value);
+            setSelectedIds(new Set());
+            window.location.href = value === 'all'
+              ? '/dashboard/units'
+              : `/dashboard/units?room_id=${encodeURIComponent(value)}`;
+          }}>
             <SelectTrigger className="w-[170px]" aria-label="Filter by room">
               <SelectValue placeholder="All Rooms" />
             </SelectTrigger>
@@ -448,11 +461,11 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
             <span className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</span>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" disabled={currentPage <= 1}
-                onClick={() => window.location.href = `/dashboard/units?page=${currentPage - 1}`}>
+                onClick={() => window.location.href = pageHref(currentPage - 1)}>
                 <ChevronLeft className="h-4 w-4" /> Previous
               </Button>
               <Button variant="outline" size="sm" disabled={currentPage >= totalPages}
-                onClick={() => window.location.href = `/dashboard/units?page=${currentPage + 1}`}>
+                onClick={() => window.location.href = pageHref(currentPage + 1)}>
                 Next <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

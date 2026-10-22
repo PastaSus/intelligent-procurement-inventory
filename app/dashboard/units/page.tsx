@@ -11,13 +11,23 @@ export default async function UnitsPage({ searchParams }: { searchParams: Promis
   }
   const params = await searchParams;
 
-  const page = parseInt(params.page || '1', 10);
+  const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
   const pageSize = 50;
   const skip = (page - 1) * pageSize;
 
+  const rooms = await prisma.laboratoryRoom.findMany({
+    where: { deleted: false },
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  });
+
+  const initialRoomId = params.room_id && rooms.some((room) => room.id === params.room_id)
+    ? params.room_id
+    : 'all';
+
   const where: Record<string, unknown> = { deleted: false };
-  if (params.room_id) {
-    where.laboratory_room_id = params.room_id;
+  if (initialRoomId !== 'all') {
+    where.laboratory_room_id = initialRoomId;
   }
 
   const units = await prisma.computerUnit.findMany({
@@ -39,12 +49,6 @@ export default async function UnitsPage({ searchParams }: { searchParams: Promis
 
   const totalCount = await prisma.computerUnit.count({ where });
 
-  const rooms = await prisma.laboratoryRoom.findMany({
-    where: { deleted: false },
-    select: { id: true, name: true },
-    orderBy: { name: 'asc' },
-  });
-
   return (
     <UnitsClient
       initialUnits={units}
@@ -52,6 +56,7 @@ export default async function UnitsPage({ searchParams }: { searchParams: Promis
       currentPage={page}
       pageSize={pageSize}
       rooms={rooms}
+      initialRoomId={initialRoomId}
       isAdmin={session.role === 'ADMIN'}
     />
   );
