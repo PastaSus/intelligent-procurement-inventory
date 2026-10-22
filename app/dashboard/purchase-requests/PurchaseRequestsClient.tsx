@@ -3,6 +3,7 @@
 import { useState, useMemo, useTransition, useCallback } from 'react';
 import { ShoppingCart, Plus, Search, X, ChevronUp, ChevronDown, Pencil, CheckCircle, XCircle, Package, Ban, Send, ExternalLink, Printer } from 'lucide-react';
 import { formatPeso } from '@/lib/format';
+import { printDocument } from '@/lib/print';
 import { CreateRequestForm } from './components/CreateRequestForm';
 import type { StockPart } from './components/CreateRequestForm';
 import { RejectRequestDialog } from './components/RejectRequestDialog';
@@ -262,7 +263,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
           <p className="text-muted-foreground">Track and manage internal procurement</p>
         </div>
         <div className="flex items-center gap-2 report-no-print">
-          <Button variant="outline" onClick={() => window.print()} className="gap-2">
+          <Button variant="outline" onClick={printDocument} className="gap-2">
             <Printer className="h-4 w-4" />
             Print List
           </Button>

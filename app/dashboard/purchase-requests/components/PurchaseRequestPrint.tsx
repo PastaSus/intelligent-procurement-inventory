@@ -2,6 +2,7 @@
 
 import { Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { printDocument } from '@/lib/print';
 import { formatPeso } from '@/lib/format';
 import { SignatoryBlocks } from './SignatoryBlocks';
 
@@ -127,7 +128,7 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
           <div className="flex items-center justify-between p-4 border-b">
             <h3 className="text-lg font-semibold">Print Preview — {request.pr_number}</h3>
             <div className="flex items-center gap-2">
-              <Button onClick={() => window.print()} className="gap-2">
+              <Button onClick={printDocument} className="gap-2">
                 <Printer className="h-4 w-4" />
                 Print
               </Button>

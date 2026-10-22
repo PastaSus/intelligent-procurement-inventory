@@ -6,6 +6,7 @@ import { ReportSummary } from './ReportSummary';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Printer, Cpu } from 'lucide-react';
+import { printDocument } from '@/lib/print';
 
 interface ReportComponent {
   id: string;
@@ -120,7 +121,7 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
             {' '}· {visibleRooms.length} rooms · {totalUnits} units · {totalComponents} components
           </p>
         </div>
-        <Button onClick={() => window.print()} className="gap-2">
+        <Button onClick={printDocument} className="gap-2">
           <Printer className="h-4 w-4" />
           Print
         </Button>
