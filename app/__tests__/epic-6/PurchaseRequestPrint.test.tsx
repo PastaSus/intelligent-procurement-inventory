@@ -56,7 +56,7 @@ describe('PurchaseRequestPrint', () => {
       expect(screen.getAllByText(signer).length).toBeGreaterThan(0);
     }
     expect(screen.queryAllByRole('textbox')).toHaveLength(0);
-    expect(screen.queryByText('Diosdado C. Caronongan')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Diosdado C. Caronongan').length).toBeGreaterThan(0);
   });
 
   it('renders the four signatories in a single print row', () => {

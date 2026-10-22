@@ -239,7 +239,7 @@ describe('PurchaseRequestsClient', () => {
       expect(printSection?.textContent).toContain(signer);
     }
     expect(printSection?.textContent).toContain('Signature over Printed Name');
-    expect(printSection?.textContent).not.toContain('Diosdado C. Caronongan');
+    expect(printSection?.textContent).toContain('Diosdado C. Caronongan');
   });
 
   it('places all four signatories in a single row in order', () => {
