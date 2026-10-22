@@ -44,15 +44,24 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
 
   return (
     <div className="pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto">
-      <div className="text-center border-b-4 border-double border-black pb-4 mb-5">
-        <img
-          src="/ccs-logo-upscaled.png"
-          alt="College of Computer Studies logo"
-          width={96}
-          height={96}
-          className="mx-auto mb-2 object-contain"
-        />
-        <h1 className="text-2xl font-bold tracking-wide">College of Computer Studies</h1>
+      <div className="border-b-4 border-double border-black pb-4 mb-5">
+        <div className="flex items-center justify-between gap-4">
+          <img
+            src="/university_of_luzon_logo-upscaled.png"
+            alt="University of Luzon logo"
+            width={64}
+            height={64}
+            className="shrink-0 object-contain"
+          />
+          <h1 className="flex-1 text-center text-2xl font-bold tracking-wide">College of Computer Studies</h1>
+          <img
+            src="/ccs-logo-upscaled.png"
+            alt="College of Computer Studies logo"
+            width={64}
+            height={64}
+            className="shrink-0 object-contain"
+          />
+        </div>
       </div>
 
       <div className="text-center mb-5">
