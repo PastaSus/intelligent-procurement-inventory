@@ -120,6 +120,18 @@ button:not(:disabled) {
     margin: 12mm;
   }
 
+  @page pr-letter {
+    size: A4;
+    margin: 0;
+  }
+
+  .pr-print-letter-paged {
+    page: pr-letter;
+    box-sizing: content-box;
+    padding: 12mm;
+    min-height: 271mm;
+  }
+
   aside,
   nav,
   header,
