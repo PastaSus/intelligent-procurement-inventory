@@ -7,7 +7,7 @@ import { CreateRequestForm } from './components/CreateRequestForm';
 import type { StockPart } from './components/CreateRequestForm';
 import { RejectRequestDialog } from './components/RejectRequestDialog';
 import { PurchaseRequestPrint } from './components/PurchaseRequestPrint';
-import { SignatoryBlocks, SIGNATORIES, DEFAULT_SIGNATORY_NAMES, type SignatoryKey } from './components/SignatoryBlocks';
+import { SignatoryBlocks } from './components/SignatoryBlocks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -64,7 +64,7 @@ function requestCost(req: PurchaseRequest): number {
   }, 0);
 }
 
-function PrintRequestList({ requests, names }: { requests: PurchaseRequest[]; names: Record<SignatoryKey, string> }) {
+function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
   const grandTotal = requests.reduce((sum, r) => sum + requestCost(r), 0);
   const dateStr = new Date().toLocaleDateString('en-US', {
     month: 'long',
@@ -119,7 +119,7 @@ function PrintRequestList({ requests, names }: { requests: PurchaseRequest[]; na
         </tfoot>
       </table>
 
-      <SignatoryBlocks names={names} />
+      <SignatoryBlocks />
     </div>
   );
 }
@@ -134,11 +134,6 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [rejectingRequest, setRejectingRequest] = useState<PurchaseRequest | null>(null);
   const [printingRequest, setPrintingRequest] = useState<PurchaseRequest | null>(null);
-  const [signatoryNames, setSignatoryNames] = useState<Record<SignatoryKey, string>>(DEFAULT_SIGNATORY_NAMES);
-
-  function handleSignatoryChange(key: SignatoryKey, value: string) {
-    setSignatoryNames((prev) => ({ ...prev, [key]: value }));
-  }
 
   const handleSuccess = useCallback(() => {
     setIsFormOpen(false);
@@ -293,23 +288,6 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
         </Select>
       </div>
 
-      <div className="bg-card rounded-lg border p-4 report-no-print">
-        <p className="text-sm font-medium mb-3">Signatories for printed list</p>
-        <div className="flex flex-wrap gap-3">
-          {SIGNATORIES.map(({ key, role }) => (
-            <label key={key} className="flex-1 min-w-[160px] text-xs font-medium flex flex-col gap-1">
-              {role}
-              <Input
-                aria-label={`${role} name`}
-                placeholder="Type name..."
-                value={signatoryNames[key]}
-                onChange={(e) => handleSignatoryChange(key, e.target.value)}
-              />
-            </label>
-          ))}
-        </div>
-      </div>
-
       <div className="bg-card rounded-lg border report-no-print">
         <div className="p-4 border-b flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
@@ -441,7 +419,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
       )}
 
       <div className="print-only hidden">
-        <PrintRequestList requests={filteredItems} names={signatoryNames} />
+        <PrintRequestList requests={filteredItems} />
       </div>
 
       {rejectingRequest && (

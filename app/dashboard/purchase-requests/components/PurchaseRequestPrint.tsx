@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatPeso } from '@/lib/format';
-import { SignatoryBlocks, DEFAULT_SIGNATORY_NAMES, type SignatoryKey } from './SignatoryBlocks';
+import { SignatoryBlocks } from './SignatoryBlocks';
 
 interface PrintRequestItem {
   id: string;
@@ -35,17 +34,7 @@ function itemTotal(item: PrintRequestItem): number {
   return price * item.quantity;
 }
 
-function LetterBody({
-  request,
-  names,
-  editable = false,
-  onNamesChange,
-}: {
-  request: PrintPurchaseRequest;
-  names: Record<SignatoryKey, string>;
-  editable?: boolean;
-  onNamesChange?: (key: SignatoryKey, value: string) => void;
-}) {
+function LetterBody({ request }: { request: PrintPurchaseRequest }) {
   const grandTotal = request.items.reduce((sum, i) => sum + itemTotal(i), 0);
   const dateStr = new Date(request.updated_at).toLocaleDateString('en-US', {
     month: 'long',
@@ -54,7 +43,7 @@ function LetterBody({
   });
 
   return (
-    <div className="pr-print-letter bg-white text-black p-8 max-w-[210mm] mx-auto">
+    <div className="pr-print-letter pr-print-letter-single bg-white text-black p-8 max-w-[210mm] mx-auto">
       <div className="text-center border-b-4 border-double border-black pb-4 mb-5">
         <h1 className="text-3xl font-bold tracking-wide">Procurvin</h1>
         <p className="text-xs tracking-[0.25em] uppercase mt-1">Laboratory Procurement &amp; Inventory System</p>
@@ -110,18 +99,12 @@ function LetterBody({
         </div>
       )}
 
-      <SignatoryBlocks names={names} editable={editable} onNamesChange={onNamesChange} />
+      <SignatoryBlocks />
     </div>
   );
 }
 
 export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintProps) {
-  const [names, setNames] = useState<Record<SignatoryKey, string>>(DEFAULT_SIGNATORY_NAMES);
-
-  function handleNamesChange(key: SignatoryKey, value: string) {
-    setNames((prev) => ({ ...prev, [key]: value }));
-  }
-
   return (
     <>
       <div className="report-no-print fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
@@ -140,13 +123,13 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
             </div>
           </div>
           <div className="p-4 bg-muted/30">
-            <LetterBody request={request} names={names} editable onNamesChange={handleNamesChange} />
+            <LetterBody request={request} />
           </div>
         </div>
       </div>
 
       <div className="print-only hidden">
-        <LetterBody request={request} names={names} />
+        <LetterBody request={request} />
       </div>
     </>
   );
