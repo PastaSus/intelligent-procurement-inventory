@@ -27,7 +27,7 @@ interface ReportSummaryProps {
 const ALL_STATUSES = ['FUNCTIONAL', 'NEEDS_REPAIR', 'NEEDS_REPLACEMENT'] as const;
 
 const ALL_TYPES = [
-  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD',
+  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'STORAGE',
   'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
 ] as const;
 

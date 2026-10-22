@@ -19,7 +19,7 @@ export async function getHardwareReport(filters: ReportFilters = {}) {
 
     const VALID_STATUSES: ComponentStatus[] = ['FUNCTIONAL', 'NEEDS_REPAIR', 'NEEDS_REPLACEMENT'];
     const VALID_TYPES: ComponentType[] = [
-      'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD',
+      'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'STORAGE',
       'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
     ];
     if (filters.status && !VALID_STATUSES.includes(filters.status as ComponentStatus)) {

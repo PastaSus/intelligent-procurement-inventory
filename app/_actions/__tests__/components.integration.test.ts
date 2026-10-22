@@ -242,7 +242,7 @@ describe('deleteComponent', () => {
 });
 
 describe('bulkAddComponents', () => {
-  const ALL_TYPES = ['MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD', 'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE'] as const;
+  const ALL_TYPES = ['MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'STORAGE', 'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE'] as const;
 
   beforeEach(async () => {
     vi.clearAllMocks();

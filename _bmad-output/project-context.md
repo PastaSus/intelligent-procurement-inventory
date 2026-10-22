@@ -112,7 +112,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Dark mode**: Via `@media (prefers-color-scheme: dark)` — no class-based toggle. Lighter accent (#5c2e2e) in dark mode.
 - **Toast notifications**: Use `useToast()` from `lib/toast-context.tsx`. Variants: success/error/warning/info.
 - **AI integration**: Groq via OpenAI SDK (`llama-3.1-8b-instant` model, 5s timeout). Fallback on 503/504/429/network error returns dashboard stats.
-- **Component types**: 9 enum values — MOTHERBOARD, PROCESSOR, MEMORY, HDD, MONITOR, KEYBOARD, MOUSE, AVR, OPTICAL_DRIVE.
+- **Component types**: 9 enum values — MOTHERBOARD, PROCESSOR, MEMORY, STORAGE, MONITOR, KEYBOARD, MOUSE, AVR, OPTICAL_DRIVE.
 - **Purchase statuses**: DRAFT→REQUESTED→APPROVED→REJECTED|FULFILLED. Transition rules enforced in server actions.
 - **Fulfill increments inventory**: When PR goes APPROVED→FULFILLED, inventory quantities increase in a Prisma transaction.
 - **Email service**: `lib/email.ts` uses nodemailer with SMTP env vars (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_NAME`, `SMTP_FROM`, `APP_URL`). Branded HTML emails with maroon/gold Procurvin styling.
