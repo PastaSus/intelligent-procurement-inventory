@@ -41,27 +41,34 @@ describe('PurchaseRequestPrint', () => {
     expect(screen.getAllByText('For Lab 2 monitors').length).toBeGreaterThan(0);
   });
 
-  it('renders role labels, typeable name fields, and the default noted name', () => {
+  it('renders the four signatory roles with signer titles and no name inputs', () => {
     render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
 
-    for (const role of ['Prepared by', 'Checked by', 'Approved by', 'Noted by', 'Technician']) {
+    for (const role of ['Prepared by', 'Checked by', 'Recommended by', 'Approved by']) {
       expect(screen.getAllByText(role).length).toBeGreaterThan(0);
     }
-    // Noted-by defaults to the dean; preview input + print-only static text
-    expect(screen.getAllByText('Diosdado C. Caronongan').length).toBeGreaterThan(0);
-    expect(screen.getByRole('textbox', { name: 'Noted by name' })).toHaveDisplayValue('Diosdado C. Caronongan');
-    expect(screen.getByRole('textbox', { name: 'Checked by name' })).toHaveDisplayValue('');
+    for (const signer of ['SA', 'Technician', 'Lab Admin', 'Dean']) {
+      expect(screen.getAllByText(signer).length).toBeGreaterThan(0);
+    }
+    expect(screen.queryAllByRole('textbox')).toHaveLength(0);
+    expect(screen.queryByText('Diosdado C. Caronongan')).not.toBeInTheDocument();
   });
 
-  it('syncs typed signatory names to the print-only letter', async () => {
-    const user = userEvent.setup();
-    render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
+  it('renders the four signatories in a single print row', () => {
+    const { container } = render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
 
-    await user.type(screen.getByRole('textbox', { name: 'Checked by name' }), 'Maria Santos');
-
-    expect(screen.getByRole('textbox', { name: 'Checked by name' })).toHaveDisplayValue('Maria Santos');
-    // print-only static copy reflects the typed value
-    expect(screen.getAllByText('Maria Santos').length).toBeGreaterThan(0);
+    const printArea = container.querySelector('.print-only');
+    const columns = printArea?.querySelectorAll('.signature-blocks');
+    expect(columns?.length).toBe(1);
+    const rowBlock = columns?.[0];
+    expect(rowBlock?.className).toContain('flex');
+    expect(rowBlock?.className).not.toContain('flex-col');
+    expect(rowBlock?.children.length).toBe(4);
+    const text = rowBlock?.textContent ?? '';
+    const order = ['Prepared by', 'Checked by', 'Recommended by', 'Approved by'];
+    const indexes = order.map((role) => text.indexOf(role));
+    expect(indexes.every((i) => i >= 0)).toBe(true);
+    expect([...indexes].sort((a, b) => a - b)).toEqual(indexes);
   });
 
   it('omits the notes section when notes are null', () => {
