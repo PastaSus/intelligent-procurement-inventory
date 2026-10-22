@@ -103,14 +103,15 @@ button:not(:disabled) {
   animation: slide-in 0.3s ease-out;
 }
 
-.pr-print-letter-single {
+.pr-print-letter-paged {
   display: flex;
   flex-direction: column;
-  min-height: 272mm;
+  min-height: 270mm;
 }
 
-.pr-print-letter-single .signature-blocks {
+.pr-print-letter-paged .signature-blocks {
   margin-top: auto;
+  break-inside: avoid;
 }
 
 @media print {

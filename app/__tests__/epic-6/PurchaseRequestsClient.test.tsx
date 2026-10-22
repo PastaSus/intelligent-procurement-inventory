@@ -239,6 +239,7 @@ describe('PurchaseRequestsClient', () => {
     const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
     const printSection = container.querySelector('.print-only');
+    expect(printSection?.querySelector('.pr-print-letter-paged')).not.toBeNull();
     const columns = printSection?.querySelectorAll('.signature-blocks');
     expect(columns?.length).toBe(1);
     const rowBlock = columns?.[0];

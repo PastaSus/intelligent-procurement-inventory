@@ -58,6 +58,7 @@ describe('PurchaseRequestPrint', () => {
     const { container } = render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
 
     const printArea = container.querySelector('.print-only');
+    expect(printArea?.querySelector('.pr-print-letter-paged')).not.toBeNull();
     const columns = printArea?.querySelectorAll('.signature-blocks');
     expect(columns?.length).toBe(1);
     const rowBlock = columns?.[0];
