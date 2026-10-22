@@ -45,8 +45,14 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
   return (
     <div className="pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto">
       <div className="text-center border-b-4 border-double border-black pb-4 mb-5">
-        <h1 className="text-3xl font-bold tracking-wide">Procurvin</h1>
-        <p className="text-xs tracking-[0.25em] uppercase mt-1">Laboratory Procurement &amp; Inventory System</p>
+        <img
+          src="/ccs-logo-upscaled.png"
+          alt="College of Computer Studies logo"
+          width={96}
+          height={96}
+          className="mx-auto mb-2 object-contain"
+        />
+        <h1 className="text-2xl font-bold tracking-wide">College of Computer Studies</h1>
       </div>
 
       <div className="text-center mb-5">
