@@ -28,6 +28,10 @@ describe('PurchaseRequestPrint', () => {
   it('renders the letter header, PR number, and items table', () => {
     render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
 
+    expect(screen.getAllByText('College of Computer Studies').length).toBeGreaterThan(0);
+    expect(screen.getAllByAltText('College of Computer Studies logo').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Procurvin')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Laboratory Procurement/i)).not.toBeInTheDocument();
     expect(screen.getAllByText('PURCHASE REQUEST').length).toBeGreaterThan(0);
     expect(screen.getAllByText('PR-20261008-ABCD').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Monitor').length).toBeGreaterThan(0);

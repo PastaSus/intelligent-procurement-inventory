@@ -213,6 +213,10 @@ describe('PurchaseRequestsClient', () => {
 
     const printSection = container.querySelector('.print-only');
     expect(printSection).not.toBeNull();
+    expect(printSection?.textContent).toContain('College of Computer Studies');
+    expect(printSection?.textContent).not.toContain('Procurvin');
+    expect(printSection?.textContent).not.toContain('Laboratory Procurement');
+    expect(printSection?.querySelector('img[alt="College of Computer Studies logo"]')).not.toBeNull();
     expect(printSection?.textContent).toContain('PURCHASE REQUESTS SUMMARY');
     expect(printSection?.textContent).toContain('PR-20260705-AAAA');
     expect(printSection?.textContent).toContain('PR-20260705-BBBB');
