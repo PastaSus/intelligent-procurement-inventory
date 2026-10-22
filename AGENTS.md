@@ -5,19 +5,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- END:nextjs-agent-rules -->
 
 <!-- BEGIN:test-sprint-status -->
-# Test Sprint — All Epics ATDD
+# Test Suite — All Epics
 
-Branch: `test/all-epics-atdd`
+Merged to `master` (PRs #57–#61).
 
-## Commit History
-1. `7af0f9e` — test design docs (architecture + 7 per-epic + ATDD checklist)
-2. `9229a86` — mocks/factories + 72 unit tests
-3. `be98ef3` — 84 server action integration tests
-4. `7cc9e0d` — 54 component/UI tests
-5. `305cbb1` — 20 Playwright E2E smoke tests
-
-## Test Suite (245 passing, 1 pre-existing failure)
-- 28 Vitest test files (27 pass, AIChat.test.tsx fails — pre-existing)
+## Test Suite (333 passing)
+- 36 Vitest test files, 333 unit/integration/component tests
 - 4 Playwright spec files with 20 E2E tests
 
 ## E2E Tests (requires seeded DB + running dev server)
@@ -25,6 +18,10 @@ Branch: `test/all-epics-atdd`
 pnpm seed && pnpm test:e2e
 ```
 
+## CI
+`.github/workflows/ci.yml` runs lint, unit tests, build, and Playwright E2E
+against a Postgres service on pushes and PRs to `master`.
+
 ## Remaining
-- CI quality gate (deferred)
+- Technician seed email change (blocked on professor confirmation)
 <!-- END:test-sprint-status -->
