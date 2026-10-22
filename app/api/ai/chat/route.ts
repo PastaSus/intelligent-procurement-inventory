@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLabContext, callGroq, validateApiKey } from '@/lib/ai/groq';
+import { getLabContext, callAi, validateApiKey } from '@/lib/ai';
 
-export const maxDuration = 10;
+export const maxDuration = 20;
 
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = process.env.GROQ_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const groqKey = process.env.GROQ_API_KEY;
 
-    if (!validateApiKey(apiKey)) {
+    if (!validateApiKey(geminiKey) && !validateApiKey(groqKey)) {
       return NextResponse.json(
         { error: 'AI service not configured. Please contact your administrator.' },
         { status: 503 }
@@ -25,7 +26,10 @@ export async function POST(request: NextRequest) {
     }
 
     const context = await getLabContext();
-    const response = await callGroq(message.trim(), context, apiKey);
+    const response = await callAi(message.trim(), context, {
+      gemini: geminiKey,
+      groq: groqKey,
+    });
 
     return NextResponse.json({ response });
   } catch (error) {
@@ -39,7 +43,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (errorMessage.includes('429') || errorMessage.includes('quota')) {
+    if (errorMessage.includes('503') || errorMessage.includes('UNAVAILABLE') || errorMessage.includes('overloaded')) {
+      return NextResponse.json(
+        { error: 'AI service is temporarily busy. Please try again.' },
+        { status: 503 }
+      );
+    }
+
+    if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
       return NextResponse.json(
         { error: 'AI service quota exceeded. Please try again later.' },
         { status: 429 }
