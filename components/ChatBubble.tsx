@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useSyncExternalStore } from "react";
 import { MessageCircle, X, Send, ArrowLeft, ArrowRight } from "lucide-react";
 
 interface Message {
@@ -13,23 +13,55 @@ type DockSide = "left" | "right";
 
 const DOCK_STORAGE_KEY = "ai-chat-bubble-side";
 
-function getInitialSide(): DockSide {
-  if (typeof window === "undefined") return "right";
+let dockSideListeners: Array<() => void> = [];
+let fallbackSide: DockSide = "right";
+
+function emitDockSideChange() {
+  dockSideListeners.forEach((listener) => listener());
+}
+
+function subscribeDockSide(listener: () => void) {
+  dockSideListeners.push(listener);
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === DOCK_STORAGE_KEY) listener();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    dockSideListeners = dockSideListeners.filter((l) => l !== listener);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function getDockSideSnapshot(): DockSide {
   try {
     return window.localStorage.getItem(DOCK_STORAGE_KEY) === "left"
       ? "left"
       : "right";
   } catch {
-    return "right";
+    return fallbackSide;
   }
+}
+
+function getDockSideServerSnapshot(): DockSide {
+  return "right";
 }
 
 export function ChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
-  // Always start on the server-rendered default; the stored side is applied
-  // in the mount effect below. Reading storage in the initializer causes a
-  // hydration mismatch whose stale server class React never patches.
-  const [side, setSide] = useState<DockSide>("right");
+  const side = useSyncExternalStore(
+    subscribeDockSide,
+    getDockSideSnapshot,
+    getDockSideServerSnapshot
+  );
+  const setSide = (next: DockSide) => {
+    fallbackSide = next;
+    try {
+      window.localStorage.setItem(DOCK_STORAGE_KEY, next);
+    } catch {
+      // Storage unavailable — side still applies for this session
+    }
+    emitDockSideChange();
+  };
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -41,7 +73,6 @@ export function ChatBubble() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const didMountPersist = useRef(false);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -49,27 +80,6 @@ export function ChatBubble() {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isOpen]);
-
-  // Re-sync after hydration: the server prerender always ships the default
-  // side, so the hydrated button class can be stale. Reading storage on
-  // mount forces a re-render that patches the positioning classes.
-  useEffect(() => {
-    setSide(getInitialSide());
-  }, []);
-
-  // Persist dock side so the bubble stays out of the user's way.
-  // Skips the mount run so a stale hydrated state can never clobber storage.
-  useEffect(() => {
-    if (!didMountPersist.current) {
-      didMountPersist.current = true;
-      return;
-    }
-    try {
-      window.localStorage.setItem(DOCK_STORAGE_KEY, side);
-    } catch {
-      // Storage unavailable — side still applies for this session
-    }
-  }, [side]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
