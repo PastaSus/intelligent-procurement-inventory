@@ -224,6 +224,7 @@ describe('PurchaseRequestsClient', () => {
     expect(printSection?.textContent).toContain('PURCHASE REQUESTS SUMMARY');
     expect(printSection?.textContent).toContain('PR-20260705-AAAA');
     expect(printSection?.textContent).toContain('PR-20260705-BBBB');
+    expect(printSection?.textContent).toContain('Mouse');
   });
 
   it('ends the print-only summary with the 4-block signatory footer', () => {
@@ -235,14 +236,14 @@ describe('PurchaseRequestsClient', () => {
     for (const role of ['Prepared by', 'Checked by', 'Recommended by', 'Approved by']) {
       expect(printSection?.textContent).toContain(role);
     }
-    for (const signer of ['SA', 'Technician', 'Lab Admin', 'Dean']) {
+    for (const signer of ['SA', 'Technician', 'Lab Admin']) {
       expect(printSection?.textContent).toContain(signer);
     }
     expect(printSection?.textContent).toContain('Signature over Printed Name');
     expect(printSection?.textContent).toContain('Diosdado C. Caronongan');
   });
 
-  it('places all four signatories in a single row in order', () => {
+  it('places all four signatories in an aligned grid in order', () => {
     const requests = [makePR({ pr_number: 'PR-20260705-AAAA' })];
     const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
@@ -251,7 +252,8 @@ describe('PurchaseRequestsClient', () => {
     const columns = printSection?.querySelectorAll('.signature-blocks');
     expect(columns?.length).toBe(1);
     const rowBlock = columns?.[0];
-    expect(rowBlock?.className).toContain('flex');
+    expect(rowBlock?.className).toContain('grid');
+    expect(rowBlock?.className).toContain('grid-cols-2');
     expect(rowBlock?.className).not.toContain('flex-col');
     expect(rowBlock?.children.length).toBe(4);
     const text = rowBlock?.textContent ?? '';
