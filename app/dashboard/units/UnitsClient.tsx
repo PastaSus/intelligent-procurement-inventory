@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
-import { Plus, Monitor, Search, X, ChevronLeft, ChevronRight, Pencil, Trash2, Building2, Cpu, ExternalLink } from 'lucide-react';
+import { Plus, Monitor, Search, X, ChevronLeft, ChevronRight, Pencil, Trash2, Building2, Cpu, ExternalLink, CheckCircle2, Wrench, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { AddUnitForm } from './components/AddUnitForm';
 import { EditUnitForm } from './components/EditUnitForm';
@@ -18,6 +18,42 @@ interface ComputerUnit {
   updated_at: Date;
   laboratory_room: { name: string };
   _count: { components: number };
+  components: { status: string }[];
+}
+
+function UnitHealthBadges({ unit }: { unit: ComputerUnit }) {
+  if (unit.components.length === 0) {
+    return <span className="text-xs text-muted-foreground">No components</span>;
+  }
+
+  const needsRepair = unit.components.filter(c => c.status === 'NEEDS_REPAIR').length;
+  const needsReplacement = unit.components.filter(c => c.status === 'NEEDS_REPLACEMENT').length;
+
+  if (needsRepair === 0 && needsReplacement === 0) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+        <CheckCircle2 className="h-3 w-3" />
+        All OK
+      </span>
+    );
+  }
+
+  return (
+    <>
+      {needsRepair > 0 && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+          <Wrench className="h-3 w-3" />
+          {needsRepair} repair
+        </span>
+      )}
+      {needsReplacement > 0 && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+          <AlertTriangle className="h-3 w-3" />
+          {needsReplacement} replace
+        </span>
+      )}
+    </>
+  );
 }
 
 interface Room {
@@ -227,6 +263,7 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
                   <th aria-sort={sortBy === 'unitName' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left p-3 text-sm font-medium">Unit Name</th>
                   <th aria-sort={sortBy === 'roomName' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left p-3 text-sm font-medium">Room</th>
                   <th aria-sort={sortBy === 'componentCount' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-center p-3 text-sm font-medium">Components</th>
+                  <th className="text-center p-3 text-sm font-medium">Component Status</th>
                   <th aria-sort={sortBy === 'updated_at' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-center p-3 text-sm font-medium">Updated</th>
                   <th className="text-center w-[100px] p-3 text-sm font-medium">Actions</th>
                 </tr>
@@ -251,6 +288,15 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
                         <Cpu className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-medium">{unit._count.components}</span>
                       </div>
+                    </td>
+                    <td className="p-3 text-center">
+                      <Link
+                        href={`/dashboard/units/${unit.id}`}
+                        className="inline-flex flex-wrap items-center justify-center gap-1"
+                        title="View components"
+                      >
+                        <UnitHealthBadges unit={unit} />
+                      </Link>
                     </td>
                     <td className="p-3 text-center text-sm text-muted-foreground">{formatDate(unit.updated_at)}</td>
                     <td className="p-3 text-center w-[130px]">

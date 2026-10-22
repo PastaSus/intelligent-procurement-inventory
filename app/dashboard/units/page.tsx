@@ -31,6 +31,7 @@ export default async function UnitsPage({ searchParams }: { searchParams: Promis
       updated_at: true,
       laboratory_room: { select: { name: true } },
       _count: { select: { components: true } },
+      components: { select: { status: true } },
     },
     skip,
     take: pageSize,
