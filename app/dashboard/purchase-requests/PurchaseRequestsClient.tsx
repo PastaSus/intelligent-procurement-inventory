@@ -119,7 +119,9 @@ function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
                 <td className="py-2 pr-2 font-mono">{req.pr_number}</td>
                 <td className="py-2 pr-2">{new Date(req.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                 <td className="py-2 pr-2">{req.status}</td>
-                <td className="py-2 pr-2 text-center">{req.items.length}</td>
+                <td className="py-2 pr-2">
+                  {req.items.length > 0 ? req.items.map((i) => i.item_name).join(', ') : '-'}
+                </td>
                 <td className="py-2 pr-2 text-center">{totalQty}</td>
                 <td className="py-2 text-right tabular-nums">{totalCost > 0 ? formatPeso(totalCost) : '-'}</td>
               </tr>
