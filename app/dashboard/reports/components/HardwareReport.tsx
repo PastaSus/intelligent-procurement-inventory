@@ -33,13 +33,20 @@ interface RoomOption {
   name: string;
 }
 
+interface UnitOption {
+  id: string;
+  unit_name: string;
+  laboratory_room: { id: string; name: string };
+}
+
 interface HardwareReportProps {
   initialRooms: ReportRoom[];
   roomOptions: RoomOption[];
+  unitOptions: UnitOption[];
 }
 
 const COMPONENT_TYPES = [
-  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD',
+  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'STORAGE',
   'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
 ] as const;
 
@@ -51,19 +58,22 @@ const statusStyles: Record<string, string> = {
   NEEDS_REPLACEMENT: 'bg-red-100 text-red-800',
 };
 
-export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProps) {
+export function HardwareReport({ initialRooms, roomOptions, unitOptions }: HardwareReportProps) {
   const [rooms, setRooms] = useState(initialRooms);
   const [roomOpts, setRoomOpts] = useState(roomOptions);
+  const [unitOpts, setUnitOpts] = useState(unitOptions);
   const [roomId, setRoomId] = useState('all');
+  const [unitId, setUnitId] = useState('all');
   const [status, setStatus] = useState('all');
   const [componentType, setComponentType] = useState('all');
   const [isPending, startTransition] = useTransition();
   const [generatedAt, setGeneratedAt] = useState(() => new Date());
   const [filterError, setFilterError] = useState<string | null>(null);
 
-  function applyFilters(next?: { roomId?: string; status?: string; componentType?: string }) {
+  function applyFilters(next?: { roomId?: string; unitId?: string; status?: string; componentType?: string }) {
     const f = {
       roomId: next?.roomId ?? roomId,
+      unitId: next?.unitId ?? unitId,
       status: next?.status ?? status,
       componentType: next?.componentType ?? componentType,
     };
@@ -71,12 +81,14 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
     startTransition(async () => {
       const result = await getHardwareReport({
         ...(f.roomId !== 'all' && { roomId: f.roomId }),
+        ...(f.unitId !== 'all' && { unitId: f.unitId }),
         ...(f.status !== 'all' && { status: f.status }),
         ...(f.componentType !== 'all' && { componentType: f.componentType }),
       });
       if (result.success && result.data) {
         setRooms(result.data.rooms);
         setRoomOpts(result.data.roomOptions);
+        setUnitOpts(result.data.unitOptions);
         setGeneratedAt(new Date());
       } else {
         setFilterError(result.error || 'Failed to apply filters');
@@ -94,6 +106,17 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
     0
   );
 
+  function handleSelectRoom(nextRoomId: string) {
+    setRoomId(nextRoomId);
+    setUnitId('all');
+    applyFilters({ roomId: nextRoomId, unitId: 'all' });
+  }
+
+  function handleSelectUnit(nextUnitId: string) {
+    setUnitId(nextUnitId);
+    applyFilters({ unitId: nextUnitId });
+  }
+
   function handleDrillStatus(nextStatus: string) {
     setStatus(nextStatus);
     applyFilters({ status: nextStatus });
@@ -104,12 +127,14 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
     applyFilters({ componentType: nextType });
   }
 
-  function handleResetFilters() {
-    setRoomId('all');
-    setStatus('all');
-    setComponentType('all');
-    applyFilters({ roomId: 'all', status: 'all', componentType: 'all' });
-  }
+  const activeRoomName = roomId === 'all'
+    ? 'All rooms'
+    : roomOpts.find(r => r.id === roomId)?.name ?? 'Selected room';
+  const activeUnitName = unitId === 'all'
+    ? 'All units'
+    : unitOpts.find(u => u.id === unitId)?.unit_name ?? 'Selected unit';
+  const activeStatusLabel = status === 'all' ? 'All statuses' : status.replace(/_/g, ' ');
+  const activeTypeLabel = componentType === 'all' ? 'All types' : componentType;
 
   return (
     <div className="space-y-6 hardware-report">
@@ -133,21 +158,19 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
           Generated {generatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           {' '}· {visibleRooms.length} rooms · {totalUnits} units · {totalComponents} components
         </p>
+        <p className="text-sm">
+          Filters: {activeRoomName} · {activeUnitName} · {activeStatusLabel} · {activeTypeLabel}
+        </p>
       </div>
 
-      <ReportSummary
-        rooms={visibleRooms}
-        activeStatus={status}
-        activeType={componentType}
-        onSelectStatus={handleDrillStatus}
-        onSelectType={handleDrillType}
-        onReset={handleResetFilters}
-      />
+      <div className="report-no-print">
+        <ReportSummary rooms={visibleRooms} />
+      </div>
 
       <div className="flex flex-wrap gap-3 report-no-print">
         <div className="w-48">
-          <Select value={roomId} onValueChange={v => { setRoomId(v); applyFilters({ roomId: v }); }}>
-            <SelectTrigger className="w-full">
+          <Select value={roomId} onValueChange={handleSelectRoom}>
+            <SelectTrigger className="w-full" aria-label="Filter by room">
               <SelectValue placeholder="All rooms" />
             </SelectTrigger>
             <SelectContent>
@@ -158,9 +181,24 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
             </SelectContent>
           </Select>
         </div>
+        <div className="w-56">
+          <Select value={unitId} onValueChange={handleSelectUnit}>
+            <SelectTrigger className="w-full" aria-label="Filter by unit">
+              <SelectValue placeholder="All units" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All units</SelectItem>
+              {unitOpts.map(u => (
+                <SelectItem key={u.id} value={u.id}>
+                  {roomId === 'all' ? `${u.unit_name} (${u.laboratory_room.name})` : u.unit_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="w-48">
-          <Select value={status} onValueChange={v => { setStatus(v); applyFilters({ status: v }); }}>
-            <SelectTrigger className="w-full">
+          <Select value={status} onValueChange={handleDrillStatus}>
+            <SelectTrigger className="w-full" aria-label="Filter by status">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -172,8 +210,8 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
           </Select>
         </div>
         <div className="w-48">
-          <Select value={componentType} onValueChange={v => { setComponentType(v); applyFilters({ componentType: v }); }}>
-            <SelectTrigger className="w-full">
+          <Select value={componentType} onValueChange={handleDrillType}>
+            <SelectTrigger className="w-full" aria-label="Filter by type">
               <SelectValue placeholder="All types" />
             </SelectTrigger>
             <SelectContent>

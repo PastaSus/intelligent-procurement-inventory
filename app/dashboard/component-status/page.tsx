@@ -1,6 +1,13 @@
 import { prisma } from '@/lib/prisma';
-import { Cpu, Wrench, AlertTriangle, CheckCircle, Building2, Monitor } from 'lucide-react';
+import { Cpu, Wrench, AlertTriangle, CheckCircle, Building2, Monitor, X } from 'lucide-react';
 import Link from 'next/link';
+import {
+  filterIssueComponents,
+  groupIssueComponentsByRoom,
+  issueStatusLabel,
+  parseComponentType,
+  parseIssueStatus,
+} from '@/lib/component-health';
 
 function StatCard({ icon: Icon, label, value, variant }: { icon: React.ElementType; label: string; value: number; variant: 'green' | 'yellow' | 'red' | 'blue' }) {
   const variantStyles = {
@@ -39,7 +46,16 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export default async function ComponentStatusPage() {
+type ComponentStatusSearchParams = {
+  type?: string;
+  status?: string;
+};
+
+export default async function ComponentStatusPage({ searchParams }: { searchParams: Promise<ComponentStatusSearchParams> }) {
+  const params = await searchParams;
+  const selectedType = parseComponentType(params.type);
+  const selectedStatus = parseIssueStatus(params.status);
+
   const [
     totalComponents,
     componentsByStatus,
@@ -94,6 +110,7 @@ export default async function ComponentStatusPage() {
       include: {
         computer_unit: {
           select: {
+            id: true,
             unit_name: true,
             laboratory_room: { select: { name: true, id: true } },
           },
@@ -120,6 +137,11 @@ export default async function ComponentStatusPage() {
     )
   ).sort((a, b) => b[1].total - a[1].total);
 
+  const filteredComponents = filterIssueComponents(componentsWithIssues, selectedType, selectedStatus);
+  const filteredRooms = groupIssueComponentsByRoom(filteredComponents);
+  const filterActive = Boolean(selectedType || selectedStatus);
+  const filterStatusLabel = selectedStatus ? issueStatusLabel(selectedStatus) : 'All issues';
+
   return (
     <div className="space-y-8">
       <div>
@@ -144,20 +166,31 @@ export default async function ComponentStatusPage() {
           ) : (
             <div className="divide-y">
               {typeBreakdown.map(([type, counts]) => (
-                <div key={type} className="p-4 flex items-center justify-between hover:bg-muted/30">
+                <div
+                  key={type}
+                  className={`p-4 flex items-center justify-between hover:bg-muted/30 ${selectedType === type ? 'bg-muted/40' : ''}`}
+                >
                   <div>
                     <p className="font-medium">{type}</p>
                     <p className="text-sm text-muted-foreground">{counts.total} total</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {counts.repair > 0 && (
-                      <Link href={`/dashboard/units`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors">
+                      <Link
+                        href={`/dashboard/component-status?type=${type}&status=NEEDS_REPAIR#component-filter`}
+                        aria-label={`Show ${counts.repair} ${type} component${counts.repair !== 1 ? 's' : ''} needing repair`}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors"
+                      >
                         <Wrench className="h-3 w-3" />
                         {counts.repair} repair
                       </Link>
                     )}
                     {counts.replacement > 0 && (
-                      <Link href={`/dashboard/units`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors">
+                      <Link
+                        href={`/dashboard/component-status?type=${type}&status=NEEDS_REPLACEMENT#component-filter`}
+                        aria-label={`Show ${counts.replacement} ${type} component${counts.replacement !== 1 ? 's' : ''} needing replacement`}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
+                      >
                         <AlertTriangle className="h-3 w-3" />
                         {counts.replacement} replace
                       </Link>
@@ -174,59 +207,130 @@ export default async function ComponentStatusPage() {
           )}
         </div>
 
-        <div className="bg-card rounded-lg border">
-          <div className="p-4 border-b">
-            <h3 className="font-semibold">By Laboratory Room</h3>
-          </div>
-          {roomsWithIssues.length === 0 ? (
-            <div className="p-6 text-center text-muted-foreground text-sm">
-              <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
-              <p>All rooms have healthy components.</p>
+        {filterActive ? (
+          <div id="component-filter" className="bg-card rounded-lg border border-primary/40">
+            <div className="p-4 border-b flex items-start justify-between gap-3">
+              <div>
+                <h3 className="font-semibold">
+                  {selectedType ? `${selectedType} · ${filterStatusLabel}` : filterStatusLabel}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {filteredComponents.length} component{filteredComponents.length !== 1 ? 's' : ''} across{' '}
+                  {filteredRooms.length} room{filteredRooms.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <Link
+                href="/dashboard/component-status"
+                className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-3 w-3" />
+                Clear filter
+              </Link>
             </div>
-          ) : (
-            <div className="divide-y">
-              {roomsWithIssues.map((room) => {
-                const totalIssues = room.units.reduce(
-                  (sum, u) => sum + u.components.length, 0
-                );
-                const unitsWithIssues = room.units.filter(u =>
-                  u.components.some(c => c.status === 'NEEDS_REPAIR' || c.status === 'NEEDS_REPLACEMENT')
-                );
+            {filteredComponents.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground text-sm">
+                No components match this filter.
+              </div>
+            ) : (
+              <div className="divide-y">
+                {filteredRooms.map((room) => {
+                  const roomCount = room.units.reduce((sum, unit) => sum + unit.components.length, 0);
 
-                return (
-                  <div key={room.id} className="p-4 hover:bg-muted/30">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{room.name}</span>
+                  return (
+                    <div key={room.roomId} className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{room.roomName}</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {roomCount} component{roomCount !== 1 ? 's' : ''}
+                        </span>
                       </div>
-                      <span className="text-sm text-muted-foreground">{totalIssues} issue{totalIssues !== 1 ? 's' : ''}</span>
+                      <div className="space-y-2">
+                        {room.units.map((unit) => (
+                          <div key={unit.unitId} className="rounded-md border p-3">
+                            <Link
+                              href={`/dashboard/units/${unit.unitId}`}
+                              className="inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
+                            >
+                              <Monitor className="h-3.5 w-3.5 text-muted-foreground" />
+                              {unit.unitName}
+                            </Link>
+                            <ul className="mt-2 space-y-1">
+                              {unit.components.map((component) => (
+                                <li key={component.id} className="flex items-center justify-between gap-2 text-xs">
+                                  <span className="font-mono text-muted-foreground">
+                                    {component.type} · {component.serial_number}
+                                  </span>
+                                  <StatusBadge status={component.status} />
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {unitsWithIssues.map((unit) => {
-                        const repairCount = unit.components.filter(c => c.status === 'NEEDS_REPAIR').length;
-                        const replaceCount = unit.components.filter(c => c.status === 'NEEDS_REPLACEMENT').length;
-
-                        return (
-                          <Link
-                            key={unit.id}
-                            href={`/dashboard/units/${unit.id}`}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium hover:bg-muted transition-colors"
-                          >
-                            <Monitor className="h-3 w-3" />
-                            {unit.unit_name}
-                            {repairCount > 0 && <Wrench className="h-3 w-3 text-yellow-600" />}
-                            {replaceCount > 0 && <AlertTriangle className="h-3 w-3 text-red-600" />}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-card rounded-lg border">
+            <div className="p-4 border-b">
+              <h3 className="font-semibold">By Laboratory Room</h3>
             </div>
-          )}
-        </div>
+            {roomsWithIssues.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground text-sm">
+                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                <p>All rooms have healthy components.</p>
+              </div>
+            ) : (
+              <div className="divide-y">
+                {roomsWithIssues.map((room) => {
+                  const totalIssues = room.units.reduce(
+                    (sum, u) => sum + u.components.length, 0
+                  );
+                  const unitsWithIssues = room.units.filter(u =>
+                    u.components.some(c => c.status === 'NEEDS_REPAIR' || c.status === 'NEEDS_REPLACEMENT')
+                  );
+
+                  return (
+                    <div key={room.id} className="p-4 hover:bg-muted/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{room.name}</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">{totalIssues} issue{totalIssues !== 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {unitsWithIssues.map((unit) => {
+                          const repairCount = unit.components.filter(c => c.status === 'NEEDS_REPAIR').length;
+                          const replaceCount = unit.components.filter(c => c.status === 'NEEDS_REPLACEMENT').length;
+
+                          return (
+                            <Link
+                              key={unit.id}
+                              href={`/dashboard/units/${unit.id}`}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium hover:bg-muted transition-colors"
+                            >
+                              <Monitor className="h-3 w-3" />
+                              {unit.unit_name}
+                              {repairCount > 0 && <Wrench className="h-3 w-3 text-yellow-600" />}
+                              {replaceCount > 0 && <AlertTriangle className="h-3 w-3 text-red-600" />}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="bg-card rounded-lg border">

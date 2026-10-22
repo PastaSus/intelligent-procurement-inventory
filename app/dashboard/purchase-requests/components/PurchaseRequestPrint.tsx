@@ -121,6 +121,8 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
 }
 
 export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintProps) {
+  const canPrint = request.status === 'APPROVED' || request.status === 'FULFILLED';
+
   return (
     <>
       <div className="report-no-print fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
@@ -128,7 +130,12 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
           <div className="flex items-center justify-between p-4 border-b">
             <h3 className="text-lg font-semibold">Print Preview — {request.pr_number}</h3>
             <div className="flex items-center gap-2">
-              <Button onClick={printDocument} className="gap-2">
+              <Button
+                onClick={printDocument}
+                className="gap-2"
+                disabled={!canPrint}
+                title={canPrint ? 'Print request letter' : 'Only approved requests can be printed'}
+              >
                 <Printer className="h-4 w-4" />
                 Print
               </Button>
@@ -144,9 +151,11 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
         </div>
       </div>
 
-      <div className="print-only hidden">
-        <LetterBody request={request} />
-      </div>
+      {canPrint && (
+        <div className="print-only hidden">
+          <LetterBody request={request} />
+        </div>
+      )}
     </>
   );
 }

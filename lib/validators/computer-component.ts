@@ -23,6 +23,25 @@ export const relocateComponentSchema = z.object({
   targetUnitId: z.string().trim().min(1, 'Target unit is required').max(50, 'Target unit ID too long'),
 });
 
+export const batchUpdateComponentsSchema = z
+  .object({
+    componentIds: z
+      .array(z.string().min(1))
+      .min(1, 'Select at least one component')
+      .max(500, 'Select at most 500 components at a time'),
+    status: ComponentStatusEnum.optional(),
+    specifications: z
+      .string()
+      .trim()
+      .min(1, 'Specifications cannot be empty')
+      .max(500, 'Specifications too long')
+      .optional(),
+  })
+  .refine((data) => data.status !== undefined || data.specifications !== undefined, {
+    message: 'Choose a status or enter specifications to update',
+  });
+
 export type CreateComponent = z.infer<typeof createComponentSchema>;
 export type UpdateComponent = z.infer<typeof updateComponentSchema>;
 export type RelocateComponent = z.infer<typeof relocateComponentSchema>;
+export type BatchUpdateComponents = z.infer<typeof batchUpdateComponentsSchema>;

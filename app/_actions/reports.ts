@@ -6,6 +6,7 @@ import type { ComponentStatus, ComponentType } from '@prisma/client';
 
 export interface ReportFilters {
   roomId?: string;
+  unitId?: string;
   status?: string;
   componentType?: string;
 }
@@ -19,7 +20,7 @@ export async function getHardwareReport(filters: ReportFilters = {}) {
 
     const VALID_STATUSES: ComponentStatus[] = ['FUNCTIONAL', 'NEEDS_REPAIR', 'NEEDS_REPLACEMENT'];
     const VALID_TYPES: ComponentType[] = [
-      'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD',
+      'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'STORAGE',
       'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
     ];
     if (filters.status && !VALID_STATUSES.includes(filters.status as ComponentStatus)) {
@@ -29,7 +30,7 @@ export async function getHardwareReport(filters: ReportFilters = {}) {
       return { success: false, error: 'Invalid component type filter' };
     }
 
-    const [rooms, roomOptions] = await Promise.all([
+    const [rooms, roomOptions, unitOptions] = await Promise.all([
       prisma.laboratoryRoom.findMany({
       where: {
         deleted: false,
@@ -40,7 +41,10 @@ export async function getHardwareReport(filters: ReportFilters = {}) {
         id: true,
         name: true,
         units: {
-          where: { deleted: false },
+          where: {
+            deleted: false,
+            ...(filters.unitId && { id: filters.unitId }),
+          },
           orderBy: { unit_name: 'asc' },
           select: {
             id: true,
@@ -68,9 +72,21 @@ export async function getHardwareReport(filters: ReportFilters = {}) {
         orderBy: { name: 'asc' },
         select: { id: true, name: true },
       }),
+      prisma.computerUnit.findMany({
+        where: {
+          deleted: false,
+          ...(filters.roomId && { laboratory_room_id: filters.roomId }),
+        },
+        orderBy: { unit_name: 'asc' },
+        select: {
+          id: true,
+          unit_name: true,
+          laboratory_room: { select: { id: true, name: true } },
+        },
+      }),
     ]);
 
-    return { success: true, data: { rooms, roomOptions } };
+    return { success: true, data: { rooms, roomOptions, unitOptions } };
   } catch (error) {
     console.error('Get hardware report error:', error);
     return { success: false, error: 'Failed to load hardware report' };

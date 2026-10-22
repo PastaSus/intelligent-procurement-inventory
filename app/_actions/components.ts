@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { createComponentSchema, updateComponentSchema, relocateComponentSchema } from '@/lib/validators/computer-component';
+import { createComponentSchema, updateComponentSchema, relocateComponentSchema, batchUpdateComponentsSchema } from '@/lib/validators/computer-component';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -149,6 +149,68 @@ export async function updateComponent(formData: FormData) {
   }
 }
 
+export async function batchUpdateComponents(formData: FormData) {
+  try {
+    const session = await getSession();
+    if (!session?.userId) {
+      return { success: false, error: 'You must be logged in' };
+    }
+
+    const componentIds = [
+      ...new Set(formData.getAll('componentIds').map((id) => String(id))),
+    ];
+    const rawData = {
+      componentIds,
+      status: (formData.get('status') as string) || undefined,
+      specifications: (formData.get('specifications') as string) || undefined,
+    };
+    const result = batchUpdateComponentsSchema.safeParse(rawData);
+    if (!result.success) {
+      return { success: false, error: result.error.issues[0].message };
+    }
+
+    const existing = await prisma.computerComponent.findMany({
+      where: {
+        id: { in: result.data.componentIds },
+        computer_unit: { deleted: false },
+      },
+      select: { computer_unit_id: true },
+    });
+    if (existing.length !== result.data.componentIds.length) {
+      return {
+        success: false,
+        error: 'Some selected components no longer exist. Refresh and try again.',
+      };
+    }
+
+    const updated = await prisma.computerComponent.updateMany({
+      where: { id: { in: result.data.componentIds } },
+      data: {
+        ...(result.data.status && { status: result.data.status }),
+        ...(result.data.specifications && { specifications: result.data.specifications }),
+        updated_by: session.userId,
+      },
+    });
+
+    const unitIds = [...new Set(existing.map((component) => component.computer_unit_id))];
+    for (const unitId of unitIds) {
+      revalidatePath(`/dashboard/units/${unitId}`);
+    }
+    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/units');
+    revalidatePath('/dashboard/units/batch-update');
+    revalidatePath('/dashboard/component-status');
+
+    return {
+      success: true,
+      data: { count: updated.count, units: unitIds.length },
+    };
+  } catch (error) {
+    console.error('Batch update components error:', error);
+    return { success: false, error: 'Failed to update components' };
+  }
+}
+
 export async function deleteComponent(formData: FormData) {
   try {
     const session = await getSession();
@@ -180,7 +242,7 @@ export async function deleteComponent(formData: FormData) {
 }
 
 const COMPONENT_TYPES = [
-  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'HDD',
+  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'STORAGE',
   'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
 ] as const;
 

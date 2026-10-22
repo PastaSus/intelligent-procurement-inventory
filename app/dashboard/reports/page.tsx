@@ -19,6 +19,7 @@ export default async function ReportsPage() {
     <HardwareReport
       initialRooms={result.data.rooms}
       roomOptions={result.data.roomOptions}
+      unitOptions={result.data.unitOptions}
     />
   );
 }

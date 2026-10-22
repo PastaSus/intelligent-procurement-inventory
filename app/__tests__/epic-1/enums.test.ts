@@ -4,7 +4,7 @@ const ComponentType = {
   MOTHERBOARD: 'MOTHERBOARD',
   PROCESSOR: 'PROCESSOR',
   MEMORY: 'MEMORY',
-  HDD: 'HDD',
+  STORAGE: 'STORAGE',
   MONITOR: 'MONITOR',
   KEYBOARD: 'KEYBOARD',
   MOUSE: 'MOUSE',
@@ -42,7 +42,7 @@ describe('Enums', () => {
       expect(ComponentType.MOTHERBOARD).toBe('MOTHERBOARD');
       expect(ComponentType.PROCESSOR).toBe('PROCESSOR');
       expect(ComponentType.MEMORY).toBe('MEMORY');
-      expect(ComponentType.HDD).toBe('HDD');
+      expect(ComponentType.STORAGE).toBe('STORAGE');
       expect(ComponentType.MONITOR).toBe('MONITOR');
       expect(ComponentType.KEYBOARD).toBe('KEYBOARD');
       expect(ComponentType.MOUSE).toBe('MOUSE');
