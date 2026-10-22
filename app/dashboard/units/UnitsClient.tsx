@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
-import { Plus, Monitor, Search, X, ChevronLeft, ChevronRight, Pencil, Trash2, Building2, Cpu, ExternalLink, CheckCircle2, Wrench, AlertTriangle } from 'lucide-react';
+import { Plus, Monitor, Search, X, ChevronLeft, ChevronRight, Pencil, Trash2, Building2, Cpu, ExternalLink, CheckCircle2, Wrench, AlertTriangle, ListPlus, ListChecks } from 'lucide-react';
 import Link from 'next/link';
 import { AddUnitForm } from './components/AddUnitForm';
+import { BatchAddUnitsForm } from './components/BatchAddUnitsForm';
 import { EditUnitForm } from './components/EditUnitForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { deleteComputerUnit } from '@/app/_actions/units';
+import { deleteComputerUnit, deleteComputerUnitsBatch } from '@/app/_actions/units';
 
 interface ComputerUnit {
   id: string;
@@ -73,8 +74,11 @@ interface UnitsClientProps {
 export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, rooms, isAdmin = true }: UnitsClientProps) {
   const [units] = useState(initialUnits);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBatchFormOpen, setIsBatchFormOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<ComputerUnit | null>(null);
   const [deletingUnit, setDeletingUnit] = useState<ComputerUnit | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBatchDeleteOpen, setIsBatchDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState('all');
@@ -83,6 +87,7 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
 
   const handleSuccess = () => {
     setIsFormOpen(false);
+    setIsBatchFormOpen(false);
     setEditingUnit(null);
     setTimeout(() => {
       window.location.href = '/dashboard/units';
@@ -104,6 +109,26 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
         }, 300);
       } else {
         alert(result.error || 'Failed to delete unit');
+      }
+    });
+  };
+
+  const handleBatchDelete = () => {
+    if (selectedIds.size === 0) return;
+
+    const formData = new FormData();
+    selectedIds.forEach((id) => formData.append('ids', id));
+
+    startTransition(async () => {
+      const result = await deleteComputerUnitsBatch(formData);
+      if (result.success) {
+        setSelectedIds(new Set());
+        setIsBatchDeleteOpen(false);
+        setTimeout(() => {
+          window.location.href = '/dashboard/units';
+        }, 300);
+      } else {
+        alert(result.error || 'Failed to delete units');
       }
     });
   };
@@ -147,6 +172,42 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
+  const filteredIds = useMemo(() => filteredItems.map((unit) => unit.id), [filteredItems]);
+  const selectedUnits = useMemo(
+    () => units.filter((unit) => selectedIds.has(unit.id)),
+    [units, selectedIds]
+  );
+  const selectedComponentCount = selectedUnits.reduce(
+    (sum, unit) => sum + unit._count.components,
+    0
+  );
+  const allFilteredSelected = filteredIds.length > 0 && filteredIds.every((id) => selectedIds.has(id));
+  const someFilteredSelected = filteredIds.some((id) => selectedIds.has(id));
+
+  function toggleUnit(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function toggleAllFiltered() {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (allFilteredSelected) {
+        filteredIds.forEach((id) => next.delete(id));
+      } else {
+        filteredIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }
+
   function formatDate(date: Date) {
     const d = new Date(date);
     const now = new Date();
@@ -167,10 +228,22 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
           <h2 className="text-3xl font-bold">Computer Units</h2>
           <p className="text-muted-foreground">Manage individual computer machines</p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Unit
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/units/batch-update" className="gap-2">
+              <ListChecks className="h-4 w-4" />
+              Batch Update
+            </Link>
+          </Button>
+          <Button variant="outline" onClick={() => setIsBatchFormOpen(true)} className="gap-2">
+            <ListPlus className="h-4 w-4" />
+            Batch Add
+          </Button>
+          <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Unit
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-4 items-center">
@@ -180,7 +253,7 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
             type="text"
             placeholder="Search by unit name or room..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setSelectedIds(new Set()); }}
             className="pl-10"
           />
           {search && (
@@ -195,7 +268,7 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Room</span>
-          <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
+          <Select value={selectedRoomId} onValueChange={(value) => { setSelectedRoomId(value); setSelectedIds(new Set()); }}>
             <SelectTrigger className="w-[170px]" aria-label="Filter by room">
               <SelectValue placeholder="All Rooms" />
             </SelectTrigger>
@@ -247,6 +320,18 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
             <span className="text-muted-foreground">|</span>
             <span className="text-sm text-muted-foreground">Showing {filteredItems.length}</span>
           </div>
+          {isAdmin && selectedIds.size > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setIsBatchDeleteOpen(true)}
+              disabled={isPending}
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete {selectedIds.size} Selected
+            </Button>
+          )}
         </div>
 
         {filteredItems.length === 0 ? (
@@ -260,6 +345,20 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
+                  {isAdmin && (
+                    <th className="w-[44px] p-3">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-input accent-primary"
+                        aria-label="Select all filtered units on this page"
+                        checked={allFilteredSelected}
+                        ref={(el) => {
+                          if (el) el.indeterminate = someFilteredSelected && !allFilteredSelected;
+                        }}
+                        onChange={toggleAllFiltered}
+                      />
+                    </th>
+                  )}
                   <th aria-sort={sortBy === 'unitName' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left p-3 text-sm font-medium">Unit Name</th>
                   <th aria-sort={sortBy === 'roomName' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left p-3 text-sm font-medium">Room</th>
                   <th aria-sort={sortBy === 'componentCount' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-center p-3 text-sm font-medium">Components</th>
@@ -271,6 +370,17 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
               <tbody>
                 {filteredItems.map((unit) => (
                   <tr key={unit.id} className="border-b last:border-b-0 hover:bg-muted/30" tabIndex={0}>
+                    {isAdmin && (
+                      <td className="p-3">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-input accent-primary"
+                          aria-label={`Select ${unit.unit_name}`}
+                          checked={selectedIds.has(unit.id)}
+                          onChange={() => toggleUnit(unit.id)}
+                        />
+                      </td>
+                    )}
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Monitor className="h-4 w-4 text-muted-foreground" />
@@ -354,8 +464,47 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
         <AddUnitForm onClose={() => setIsFormOpen(false)} onSuccess={handleSuccess} rooms={rooms} />
       )}
 
+      {isBatchFormOpen && (
+        <BatchAddUnitsForm onClose={() => setIsBatchFormOpen(false)} onSuccess={handleSuccess} rooms={rooms} />
+      )}
+
       {editingUnit && (
         <EditUnitForm unit={editingUnit} onClose={() => setEditingUnit(null)} onSuccess={handleSuccess} rooms={rooms} />
+      )}
+
+      {isBatchDeleteOpen && isAdmin && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg border p-6 max-w-md w-full mx-4 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-full">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold">
+                Delete {selectedIds.size} Unit{selectedIds.size !== 1 ? 's' : ''}
+              </h3>
+            </div>
+            <p className="text-muted-foreground mb-2">
+              Are you sure you want to delete {selectedIds.size} selected unit{selectedIds.size !== 1 ? 's' : ''}?
+            </p>
+            {selectedComponentCount > 0 && (
+              <p className="text-sm text-amber-600 mb-2">
+                This will also permanently delete {selectedComponentCount} component
+                {selectedComponentCount !== 1 ? 's' : ''}.
+              </p>
+            )}
+            <p className="text-sm text-muted-foreground mb-4">This action cannot be undone.</p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setIsBatchDeleteOpen(false)} disabled={isPending}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleBatchDelete} disabled={isPending}>
+                {isPending
+                  ? 'Deleting...'
+                  : `Delete ${selectedIds.size} Unit${selectedIds.size !== 1 ? 's' : ''}`}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {deletingUnit && isAdmin && (

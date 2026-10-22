@@ -1,7 +1,8 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { createComputerUnitSchema, updateComputerUnitSchema } from '@/lib/validators/computer-unit';
+import { createComputerUnitSchema, createComputerUnitsBatchSchema, deleteComputerUnitsBatchSchema, updateComputerUnitSchema } from '@/lib/validators/computer-unit';
+import { buildUnitNames } from '@/lib/unit-batch';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -49,6 +50,84 @@ export async function createComputerUnit(formData: FormData) {
   } catch (error) {
     console.error('Create computer unit error:', error);
     return { success: false, error: 'Failed to create computer unit' };
+  }
+}
+
+export async function createComputerUnitsBatch(formData: FormData) {
+  try {
+    const session = await getSession();
+    if (!session?.userId) {
+      return { success: false, error: 'You must be logged in' };
+    }
+
+    const rawData = {
+      prefix: (formData.get('prefix') as string) ?? '',
+      startNumber: formData.get('startNumber'),
+      count: formData.get('count'),
+      laboratoryRoomId: (formData.get('laboratoryRoomId') as string) ?? '',
+    };
+    const result = createComputerUnitsBatchSchema.safeParse(rawData);
+    if (!result.success) {
+      return { success: false, error: result.error.issues[0].message };
+    }
+
+    const room = await prisma.laboratoryRoom.findUnique({
+      where: { id: result.data.laboratoryRoomId },
+    });
+    if (!room || room.deleted) {
+      return { success: false, error: 'Selected laboratory room not found' };
+    }
+
+    const prefix = result.data.prefix.toUpperCase();
+    const names = buildUnitNames({
+      prefix,
+      startNumber: result.data.startNumber,
+      count: result.data.count,
+    });
+
+    const existing = await prisma.computerUnit.findMany({
+      where: {
+        unit_name: { in: names },
+        laboratory_room_id: result.data.laboratoryRoomId,
+      },
+      select: { unit_name: true, deleted: true },
+    });
+    if (existing.length > 0) {
+      const preview = existing
+        .slice(0, 5)
+        .map((unit) => unit.unit_name)
+        .join(', ');
+      const extra = existing.length > 5 ? ` and ${existing.length - 5} more` : '';
+      const deletedNote = existing.some((unit) => unit.deleted)
+        ? ' (including deleted units)'
+        : '';
+      return {
+        success: false,
+        error: `These units already exist in ${room.name}${deletedNote}: ${preview}${extra}`,
+      };
+    }
+
+    const created = await prisma.computerUnit.createMany({
+      data: names.map((unit_name) => ({
+        unit_name,
+        laboratory_room_id: result.data.laboratoryRoomId,
+        created_by: session.userId,
+        updated_by: session.userId,
+      })),
+    });
+
+    revalidatePath('/dashboard/units');
+    return {
+      success: true,
+      data: {
+        count: created.count,
+        first: names[0],
+        last: names[names.length - 1],
+      },
+    };
+  } catch (error) {
+    console.error('Batch create computer units error:', error);
+    return { success: false, error: 'Failed to create computer units' };
   }
 }
 
@@ -152,6 +231,54 @@ export async function deleteComputerUnit(formData: FormData) {
   } catch (error) {
     console.error('Delete computer unit error:', error);
     return { success: false, error: 'Failed to delete computer unit' };
+  }
+}
+
+export async function deleteComputerUnitsBatch(formData: FormData) {
+  try {
+    const session = await getSession();
+    if (!session?.userId) {
+      return { success: false, error: 'You must be logged in' };
+    }
+    if (session.role !== 'ADMIN') {
+      return { success: false, error: 'Only administrators can delete computer units' };
+    }
+
+    const ids = Array.from(
+      new Set(
+        formData
+          .getAll('ids')
+          .map((id) => String(id).trim())
+          .filter(Boolean)
+      )
+    );
+    const result = deleteComputerUnitsBatchSchema.safeParse({ ids });
+    if (!result.success) {
+      return { success: false, error: result.error.issues[0].message };
+    }
+
+    const existing = await prisma.computerUnit.findMany({
+      where: { id: { in: result.data.ids }, deleted: false },
+      include: { _count: { select: { components: true } } },
+    });
+    if (existing.length === 0) {
+      return { success: false, error: 'No matching computer units found' };
+    }
+
+    const deleted = await prisma.computerUnit.deleteMany({
+      where: { id: { in: existing.map((unit) => unit.id) } },
+    });
+
+    revalidatePath('/dashboard/units');
+    revalidatePath('/dashboard/component-status');
+    return {
+      success: true,
+      count: deleted.count,
+      componentCount: existing.reduce((sum, unit) => sum + unit._count.components, 0),
+    };
+  } catch (error) {
+    console.error('Batch delete computer units error:', error);
+    return { success: false, error: 'Failed to delete computer units' };
   }
 }
 
