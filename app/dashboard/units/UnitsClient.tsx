@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
-import { Plus, Monitor, Search, X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Pencil, Trash2, Building2, Cpu, ExternalLink } from 'lucide-react';
+import { Plus, Monitor, Search, X, ChevronLeft, ChevronRight, Pencil, Trash2, Building2, Cpu, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { AddUnitForm } from './components/AddUnitForm';
 import { EditUnitForm } from './components/EditUnitForm';
@@ -111,28 +111,6 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  function handleSort(column: typeof sortBy) {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('asc');
-    }
-  }
-
-  function SortHeader({ column, label }: { column: typeof sortBy; label: string }) {
-    const isActive = sortBy === column;
-    return (
-      <button
-        onClick={() => handleSort(column)}
-        className="flex items-center gap-1 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-      >
-        <span>{label}</span>
-        {isActive && (sortOrder === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-      </button>
-    );
-  }
-
   function formatDate(date: Date) {
     const d = new Date(date);
     const now = new Date();
@@ -179,17 +157,48 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
           )}
         </div>
 
-        <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Rooms" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Rooms</SelectItem>
-            {rooms.map(room => (
-              <SelectItem key={room.id} value={room.id}>{room.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Room</span>
+          <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
+            <SelectTrigger className="w-[170px]" aria-label="Filter by room">
+              <SelectValue placeholder="All Rooms" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Rooms</SelectItem>
+              {rooms.map(room => (
+                <SelectItem key={room.id} value={room.id}>{room.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Sort by</span>
+          <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+            <SelectTrigger className="w-[160px]" aria-label="Sort by">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="unitName">Unit Name</SelectItem>
+              <SelectItem value="roomName">Room</SelectItem>
+              <SelectItem value="componentCount">Components</SelectItem>
+              <SelectItem value="updated_at">Updated</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Order</span>
+          <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
+            <SelectTrigger className="w-[150px]" aria-label="Sort order">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Ascending</SelectItem>
+              <SelectItem value="desc">Descending</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="bg-card rounded-lg border">
@@ -215,10 +224,10 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 text-sm font-medium"><SortHeader column="unitName" label="Unit Name" /></th>
-                  <th className="text-left p-3 text-sm font-medium"><SortHeader column="roomName" label="Room" /></th>
-                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="componentCount" label="Components" /></th>
-                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="updated_at" label="Updated" /></th>
+                  <th aria-sort={sortBy === 'unitName' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left p-3 text-sm font-medium">Unit Name</th>
+                  <th aria-sort={sortBy === 'roomName' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left p-3 text-sm font-medium">Room</th>
+                  <th aria-sort={sortBy === 'componentCount' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-center p-3 text-sm font-medium">Components</th>
+                  <th aria-sort={sortBy === 'updated_at' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-center p-3 text-sm font-medium">Updated</th>
                   <th className="text-center w-[100px] p-3 text-sm font-medium">Actions</th>
                 </tr>
               </thead>
