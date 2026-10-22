@@ -142,13 +142,40 @@ function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
   );
 }
 
+type PRSortColumn = 'pr_number' | 'status' | 'total' | 'updated_at';
+
+function SortHeader({
+  column,
+  label,
+  sortBy,
+  sortOrder,
+  onSort,
+}: {
+  column: PRSortColumn;
+  label: string;
+  sortBy: PRSortColumn;
+  sortOrder: 'asc' | 'desc';
+  onSort: (column: PRSortColumn) => void;
+}) {
+  const isActive = sortBy === column;
+  return (
+    <button
+      onClick={() => onSort(column)}
+      className="flex items-center gap-1 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+    >
+      <span>{label}</span>
+      {isActive && (sortOrder === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+    </button>
+  );
+}
+
 export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = [] }: PurchaseRequestsClientProps) {
   const [requests, setRequests] = useState(initialRequests);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState<'pr_number' | 'status' | 'total' | 'updated_at'>('updated_at');
+  const [sortBy, setSortBy] = useState<PRSortColumn>('updated_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [rejectingRequest, setRejectingRequest] = useState<PurchaseRequest | null>(null);
   const [printingRequest, setPrintingRequest] = useState<PurchaseRequest | null>(null);
@@ -223,26 +250,13 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
     [filteredItems],
   );
 
-  function handleSort(column: typeof sortBy) {
+  function handleSort(column: PRSortColumn) {
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(column);
       setSortOrder('asc');
     }
-  }
-
-  function SortHeader({ column, label }: { column: typeof sortBy; label: string }) {
-    const isActive = sortBy === column;
-    return (
-      <button
-        onClick={() => handleSort(column)}
-        className="flex items-center gap-1 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-      >
-        <span>{label}</span>
-        {isActive && (sortOrder === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-      </button>
-    );
   }
 
   function formatDate(date: Date) {
@@ -344,12 +358,12 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 text-sm font-medium"><SortHeader column="pr_number" label="PR Number" /></th>
+                  <th className="text-left p-3 text-sm font-medium"><SortHeader column="pr_number" label="PR Number" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
                   <th className="text-left p-3 text-sm font-medium">Items</th>
                   <th className="text-center p-3 text-sm font-medium">Qty</th>
-                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="status" label="Status" /></th>
+                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="status" label="Status" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
                   <th className="text-right p-3 text-sm font-medium">Total</th>
-                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="updated_at" label="Updated" /></th>
+                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="updated_at" label="Updated" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
                   <th className="text-center w-[180px] p-3 text-sm font-medium">Actions</th>
                 </tr>
               </thead>
