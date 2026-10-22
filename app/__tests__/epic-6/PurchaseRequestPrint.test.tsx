@@ -30,6 +30,7 @@ describe('PurchaseRequestPrint', () => {
 
     expect(screen.getAllByText('College of Computer Studies').length).toBeGreaterThan(0);
     expect(screen.getAllByAltText('College of Computer Studies logo').length).toBeGreaterThan(0);
+    expect(screen.getAllByAltText('University of Luzon logo').length).toBeGreaterThan(0);
     expect(screen.queryByText('Procurvin')).not.toBeInTheDocument();
     expect(screen.queryByText(/Laboratory Procurement/i)).not.toBeInTheDocument();
     expect(screen.getAllByText('PURCHASE REQUEST').length).toBeGreaterThan(0);

@@ -217,6 +217,10 @@ describe('PurchaseRequestsClient', () => {
     expect(printSection?.textContent).not.toContain('Procurvin');
     expect(printSection?.textContent).not.toContain('Laboratory Procurement');
     expect(printSection?.querySelector('img[alt="College of Computer Studies logo"]')).not.toBeNull();
+    expect(printSection?.querySelector('img[alt="University of Luzon logo"]')).not.toBeNull();
+    const logos = printSection?.querySelectorAll('img');
+    expect(logos?.[0]?.getAttribute('alt')).toBe('University of Luzon logo');
+    expect(logos?.[1]?.getAttribute('alt')).toBe('College of Computer Studies logo');
     expect(printSection?.textContent).toContain('PURCHASE REQUESTS SUMMARY');
     expect(printSection?.textContent).toContain('PR-20260705-AAAA');
     expect(printSection?.textContent).toContain('PR-20260705-BBBB');
