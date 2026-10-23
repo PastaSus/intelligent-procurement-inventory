@@ -1,6 +1,5 @@
 'use client';
 
-import { SignatoryBlocks } from '@/app/dashboard/purchase-requests/components/SignatoryBlocks';
 import {
   getDetailedRows,
   getReportTotals,
@@ -133,8 +132,6 @@ export function HardwareReportPrint({
       {detailedRows.length === 0 && unitRows.length === 0 && (
         <p className="text-sm mb-8">No records match the selected filters.</p>
       )}
-
-      <SignatoryBlocks />
     </div>
   );
 }

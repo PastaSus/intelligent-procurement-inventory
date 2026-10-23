@@ -290,7 +290,7 @@ describe('HardwareReport', () => {
     expect(screenTable).toHaveTextContent('NEEDS REPLACEMENT');
   });
 
-  it('renders the print-only formal document with letterhead, metadata, table, and signatories', () => {
+  it('renders the print-only formal document with letterhead, metadata, and table', () => {
     const { container } = render(<HardwareReport initialRooms={initialRooms} roomOptions={roomOptions} />);
 
     const printArea = container.querySelector('.print-only');
@@ -315,11 +315,11 @@ describe('HardwareReport', () => {
     expect(printHeader?.className).not.toContain('border-b-2');
   });
 
-  it('includes signatory blocks in the print document', () => {
+  it('does not include signatory blocks in the report print document', () => {
     const { container } = render(<HardwareReport initialRooms={initialRooms} roomOptions={roomOptions} />);
 
     const printArea = container.querySelector('.print-only');
-    expect(printArea?.querySelector('.signature-blocks')).not.toBeNull();
+    expect(printArea?.querySelector('.signature-blocks')).toBeNull();
   });
 
   it('shows empty state when no components match filters', () => {
