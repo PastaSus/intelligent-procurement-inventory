@@ -270,13 +270,17 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
         )}
 
         {missingTypes.length > 0 && (
-          <div className="p-4 border-t bg-muted/20">
+          <div className="flex flex-col gap-2 border-t bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
               Missing types: {missingTypes.join(', ')}
-              {' '}<button onClick={handleBulkAdd} disabled={isPending} className="text-primary hover:underline font-medium">
-                Auto-populate all
-              </button>
             </p>
+            <button
+              onClick={handleBulkAdd}
+              disabled={isPending}
+              className="self-start font-medium text-primary hover:underline sm:self-auto"
+            >
+              Auto-populate all
+            </button>
           </div>
         )}
       </div>
