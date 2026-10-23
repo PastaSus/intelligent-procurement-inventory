@@ -397,20 +397,34 @@ export function UnitsClient({ initialUnits, totalCount, currentPage, pageSize, r
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Monitor className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-mono font-medium">{unit.unit_name}</span>
+                        <Link
+                          href={`/dashboard/units/${unit.id}`}
+                          className="font-mono font-medium hover:text-primary hover:underline"
+                        >
+                          {unit.unit_name}
+                        </Link>
                       </div>
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1.5">
                         <Building2 className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{unit.laboratory_room.name}</span>
+                        <Link
+                          href={`/dashboard/units?room_id=${encodeURIComponent(unit.laboratory_room_id)}`}
+                          className="text-sm hover:text-primary hover:underline"
+                        >
+                          {unit.laboratory_room.name}
+                        </Link>
                       </div>
                     </td>
                     <td className="p-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
+                      <Link
+                        href={`/dashboard/units/${unit.id}`}
+                        className="flex items-center justify-center gap-1.5 hover:text-primary"
+                        title="View components"
+                      >
                         <Cpu className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-medium">{unit._count.components}</span>
-                      </div>
+                      </Link>
                     </td>
                     <td className="p-3 text-center">
                       <Link

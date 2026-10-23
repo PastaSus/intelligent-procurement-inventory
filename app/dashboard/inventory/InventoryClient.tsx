@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
+import Link from "next/link";
 import {
   Plus,
   Package,
@@ -11,6 +12,7 @@ import {
   ChevronRight,
   Pencil,
   Trash2,
+  FileText,
 } from "lucide-react";
 import { AddProductForm } from "./components/AddProductForm";
 import { EditProductForm } from "./components/EditProductForm";
@@ -44,6 +46,7 @@ interface InventoryClientProps {
   currentPage: number;
   pageSize: number;
   isAdmin: boolean;
+  initialComponentType?: string;
 }
 
 type InventorySortColumn = "sku" | "name" | "quantity" | "component_type" | "updated_at";
@@ -63,6 +66,7 @@ export function InventoryClient({
   currentPage,
   pageSize,
   isAdmin,
+  initialComponentType = "all",
 }: InventoryClientProps) {
   const [items] = useState(initialItems);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -70,7 +74,7 @@ export function InventoryClient({
   const [deletingItem, setDeletingItem] = useState<InventoryItem | null>(null);
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
-  const [selectedComponentType, setSelectedComponentType] = useState("all");
+  const [selectedComponentType, setSelectedComponentType] = useState(initialComponentType);
   const [stockStatus, setStockStatus] = useState<
     "all" | "low" | "critical" | "normal"
   >("all");
@@ -192,12 +196,20 @@ export function InventoryClient({
             Manage replacement parts inventory
           </p>
         </div>
-        {isAdmin && (
-          <Button onClick={() => setIsFormOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Part
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/reports/spare-parts" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Replacement Report
+            </Link>
           </Button>
-        )}
+          {isAdmin && (
+            <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Part
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-4 items-center">
@@ -350,7 +362,17 @@ export function InventoryClient({
                         </div>
                       </td>
                       <td className="p-3 text-sm">
-                        {item.component_type || "-"}
+                        {item.component_type ? (
+                          <Link
+                            href={`/dashboard/component-status?type=${encodeURIComponent(item.component_type)}#component-filter`}
+                            className="hover:text-primary hover:underline"
+                            title={`View ${item.component_type} issues`}
+                          >
+                            {item.component_type}
+                          </Link>
+                        ) : (
+                          "-"
+                        )}
                       </td>
                       <td className="p-3 text-center text-sm font-medium">
                         {item.quantity}

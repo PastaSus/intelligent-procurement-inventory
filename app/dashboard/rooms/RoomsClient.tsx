@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
+import Link from 'next/link';
 import { Plus, Building2, Search, X, ChevronLeft, ChevronRight, Pencil, Trash2, Monitor } from 'lucide-react';
 import { AddRoomForm } from './components/AddRoomForm';
 import { EditRoomForm } from './components/EditRoomForm';
@@ -204,14 +205,23 @@ export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize, i
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{room.name}</span>
+                        <Link
+                          href={`/dashboard/units?room_id=${encodeURIComponent(room.id)}`}
+                          className="font-medium hover:text-primary hover:underline"
+                        >
+                          {room.name}
+                        </Link>
                       </div>
                     </td>
                     <td className="p-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
+                      <Link
+                        href={`/dashboard/units?room_id=${encodeURIComponent(room.id)}`}
+                        className="flex items-center justify-center gap-1.5 hover:text-primary"
+                        title={`View units in ${room.name}`}
+                      >
                         <Monitor className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-medium">{room._count.units}</span>
-                      </div>
+                      </Link>
                     </td>
                     <td className="p-3 text-center text-sm text-muted-foreground">{formatDate(room.updated_at)}</td>
                     <td className="p-3 text-center w-[100px]">
