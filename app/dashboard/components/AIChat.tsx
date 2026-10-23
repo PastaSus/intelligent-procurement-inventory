@@ -16,7 +16,7 @@ const STORAGE_KEY = "ai-chat-messages";
 const initialMessage: Message = {
   role: "assistant",
   content:
-    "Hi! I can help you with lab asset insights. What would you like to know?",
+    "Hi! What would you like to check in the lab? I can look up rooms, units, components, stock, software, or purchase requests.",
   timestamp: new Date().toISOString(),
 };
 
@@ -59,11 +59,16 @@ export function AIChat() {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
+    const content = input.trim();
     const userMessage: Message = {
       role: "user",
-      content: input,
+      content,
       timestamp: new Date().toISOString(),
     };
+    const history = messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    }));
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
@@ -73,7 +78,9 @@ export function AIChat() {
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({
+          messages: [...history, { role: "user", content }],
+        }),
       });
 
       if (!response.ok) {

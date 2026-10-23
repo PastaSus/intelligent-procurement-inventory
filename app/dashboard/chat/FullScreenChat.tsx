@@ -36,7 +36,7 @@ function createInitialConversation(): Conversation {
         id: "1",
         role: "assistant",
         content:
-          "Hi! I can help you with lab asset insights. What would you like to know?",
+          "Hi! What would you like to check in the lab? I can look up rooms, units, components, stock, software, or purchase requests.",
         timestamp: new Date(),
       },
     ],
@@ -73,12 +73,17 @@ export function FullScreenChat() {
   const handleSend = async () => {
     if (!input.trim() || isLoading || !currentConversation) return;
 
+    const content = input.trim();
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input,
+      content,
       timestamp: new Date(),
     };
+    const history = currentConversation.messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    }));
 
     const updatedConversation = {
       ...currentConversation,
@@ -93,7 +98,9 @@ export function FullScreenChat() {
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({
+          messages: [...history, { role: "user", content }],
+        }),
       });
 
       if (!response.ok) {
@@ -227,9 +234,9 @@ export function FullScreenChat() {
         {
           id: "1",
           role: "assistant",
-          content:
-            "Hi! I can help you with inventory insights. What would you like to know?",
-          timestamp: new Date(),
+            content:
+              "Hi! What would you like to check in the lab? I can look up rooms, units, components, stock, software, or purchase requests.",
+            timestamp: new Date(),
         },
       ],
       createdAt: new Date(),
@@ -424,10 +431,10 @@ export function FullScreenChat() {
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  "What needs repair?",
-                  "Show spare parts stock",
-                  "Total unit count",
-                  "Pending requests",
+                  "Which rooms have the most issues?",
+                  "List units in Room 301",
+                  "Show low-stock inventory",
+                  "What purchase requests are pending?",
                 ].map((prompt) => (
                   <button
                     key={prompt}
