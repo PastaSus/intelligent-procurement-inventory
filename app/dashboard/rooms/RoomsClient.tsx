@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
-import { Plus, Building2, Search, X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Pencil, Trash2, Monitor } from 'lucide-react';
+import { Plus, Building2, Search, X, ChevronLeft, ChevronRight, Pencil, Trash2, Monitor } from 'lucide-react';
 import { AddRoomForm } from './components/AddRoomForm';
 import { EditRoomForm } from './components/EditRoomForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { deleteLabRoom } from '@/app/_actions/rooms';
 
 interface LabRoom {
@@ -26,30 +27,11 @@ interface RoomsClientProps {
 
 type RoomSortColumn = 'name' | 'unitCount' | 'updated_at';
 
-function SortHeader({
-  column,
-  label,
-  sortBy,
-  sortOrder,
-  onSort,
-}: {
-  column: RoomSortColumn;
-  label: string;
-  sortBy: RoomSortColumn;
-  sortOrder: 'asc' | 'desc';
-  onSort: (column: RoomSortColumn) => void;
-}) {
-  const isActive = sortBy === column;
-  return (
-    <button
-      onClick={() => onSort(column)}
-      className="flex items-center gap-1 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-    >
-      <span>{label}</span>
-      {isActive && (sortOrder === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-    </button>
-  );
-}
+const sortColumns: { value: RoomSortColumn; label: string }[] = [
+  { value: 'name', label: 'Room Name' },
+  { value: 'unitCount', label: 'Computer Units' },
+  { value: 'updated_at', label: 'Updated' },
+];
 
 export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize, isAdmin = true }: RoomsClientProps) {
   const [rooms] = useState(initialRooms);
@@ -119,15 +101,6 @@ export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize, i
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  function handleSort(column: RoomSortColumn) {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('asc');
-    }
-  }
-
   function formatDate(date: Date) {
     const d = new Date(date);
     const now = new Date();
@@ -173,6 +146,27 @@ export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize, i
             </button>
           )}
         </div>
+
+        <Select value={sortBy} onValueChange={(value) => setSortBy(value as RoomSortColumn)}>
+          <SelectTrigger className="w-[160px]" aria-label="Sort by">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {sortColumns.map((column) => (
+              <SelectItem key={column.value} value={column.value}>{column.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
+          <SelectTrigger className="w-[150px]" aria-label="Sort order">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="asc">Ascending</SelectItem>
+            <SelectItem value="desc">Descending</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="bg-card rounded-lg border">
@@ -198,9 +192,9 @@ export function RoomsClient({ initialRooms, totalCount, currentPage, pageSize, i
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 text-sm font-medium"><SortHeader column="name" label="Room Name" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
-                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="unitCount" label="Computer Units" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
-                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="updated_at" label="Updated" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
+                  <th className="text-left p-3 text-sm font-medium">Room Name</th>
+                  <th className="text-center p-3 text-sm font-medium">Computer Units</th>
+                  <th className="text-center p-3 text-sm font-medium">Updated</th>
                   <th className="text-center w-[100px] p-3 text-sm font-medium">Actions</th>
                 </tr>
               </thead>

@@ -8,6 +8,7 @@ import {
   parseComponentType,
   parseIssueStatus,
 } from '@/lib/component-health';
+import { ComponentStatusFilters } from './ComponentStatusFilters';
 
 function StatCard({ icon: Icon, label, value, variant }: { icon: React.ElementType; label: string; value: number; variant: 'green' | 'yellow' | 'red' | 'blue' }) {
   const variantStyles = {
@@ -149,6 +150,8 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
         <p className="text-muted-foreground">Overview of all computer components across all rooms</p>
       </div>
 
+      <ComponentStatusFilters selectedType={selectedType} selectedStatus={selectedStatus} />
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard icon={Cpu} label="Total Components" value={totalComponents} variant="blue" />
         <StatCard icon={CheckCircle} label="Functional" value={functional} variant="green" />
@@ -176,24 +179,16 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
                   </div>
                   <div className="flex items-center gap-2">
                     {counts.repair > 0 && (
-                      <Link
-                        href={`/dashboard/component-status?type=${type}&status=NEEDS_REPAIR#component-filter`}
-                        aria-label={`Show ${counts.repair} ${type} component${counts.repair !== 1 ? 's' : ''} needing repair`}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors"
-                      >
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                         <Wrench className="h-3 w-3" />
                         {counts.repair} repair
-                      </Link>
+                      </span>
                     )}
                     {counts.replacement > 0 && (
-                      <Link
-                        href={`/dashboard/component-status?type=${type}&status=NEEDS_REPLACEMENT#component-filter`}
-                        aria-label={`Show ${counts.replacement} ${type} component${counts.replacement !== 1 ? 's' : ''} needing replacement`}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
-                      >
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                         <AlertTriangle className="h-3 w-3" />
                         {counts.replacement} replace
-                      </Link>
+                      </span>
                     )}
                     {counts.repair === 0 && counts.replacement === 0 && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
