@@ -221,6 +221,42 @@ export async function deleteComponent(formData: FormData) {
   }
 }
 
+export async function deleteAllComponents(formData: FormData) {
+  try {
+    const session = await getSession();
+    if (!session?.userId) {
+      return { success: false, error: 'You must be logged in' };
+    }
+    if (session.role !== 'ADMIN') {
+      return { success: false, error: 'Only administrators can delete components' };
+    }
+
+    const computerUnitId = formData.get('computerUnitId') as string;
+    if (!computerUnitId) {
+      return { success: false, error: 'Computer unit ID is required' };
+    }
+
+    const unit = await prisma.computerUnit.findUnique({ where: { id: computerUnitId } });
+    if (!unit || unit.deleted) {
+      return { success: false, error: 'Computer unit not found' };
+    }
+
+    const deleted = await prisma.computerComponent.deleteMany({
+      where: { computer_unit_id: computerUnitId },
+    });
+
+    revalidatePath(`/dashboard/units/${computerUnitId}`);
+    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/units');
+    revalidatePath('/dashboard/units/batch-update');
+    revalidatePath('/dashboard/component-status');
+    return { success: true, data: { count: deleted.count } };
+  } catch (error) {
+    console.error('Delete all components error:', error);
+    return { success: false, error: 'Failed to delete components' };
+  }
+}
+
 const COMPONENT_TYPES = [
   'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'STORAGE',
   'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
