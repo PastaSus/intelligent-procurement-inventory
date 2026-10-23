@@ -71,7 +71,6 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
 
       <div className="flex justify-between gap-4 text-sm border-y-2 border-black py-2 px-1 mb-6">
         <p><span className="font-semibold">PR Number:</span> <span className="font-mono">{request.pr_number}</span></p>
-        <p><span className="font-semibold">Status:</span> {request.status}</p>
         <p><span className="font-semibold">Date:</span> {dateStr}</p>
       </div>
 
