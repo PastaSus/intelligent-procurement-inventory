@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLabContext, callAi, validateApiKey } from '@/lib/ai';
+import { getSession } from '@/lib/auth';
+import { chatWithAi, validateApiKey } from '@/lib/ai';
+import { normalizeChatMessages } from '@/lib/ai/messages';
 
-export const maxDuration = 20;
+export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session?.userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const geminiKey = process.env.GEMINI_API_KEY;
     const groqKey = process.env.GROQ_API_KEY;
 
@@ -16,17 +23,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { message } = body;
+    const messages = normalizeChatMessages(body);
 
-    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+    if (messages.length === 0) {
       return NextResponse.json(
         { error: 'Message is required' },
         { status: 400 }
       );
     }
 
-    const context = await getLabContext();
-    const response = await callAi(message.trim(), context, {
+    if (messages[messages.length - 1].role !== 'user') {
+      return NextResponse.json(
+        { error: 'The last message must be from the user' },
+        { status: 400 }
+      );
+    }
+
+    const response = await chatWithAi(messages, {
       gemini: geminiKey,
       groq: groqKey,
     });
