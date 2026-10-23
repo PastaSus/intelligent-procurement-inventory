@@ -142,7 +142,6 @@ async function main() {
   };
 
   type LR2Peripheral = { type: ComponentType; spec: string };
-  let lr2Serial = 1;
   const lr2ComponentData = [];
   for (const unit of lr2Units) {
     const peripherals: LR2Peripheral[] = [
@@ -151,15 +150,12 @@ async function main() {
       { type: 'MONITOR', spec: lr2MonitorOverrides[unit.unit_name] ?? 'Generic 18.5" LCD' },
     ];
     for (const p of peripherals) {
-      const serial = `${unit.unit_name}-${p.type}-LR2-${String(lr2Serial).padStart(3, '0')}`;
       lr2ComponentData.push({
         computer_unit_id: unit.id,
         type: p.type,
-        serial_number: serial,
         specifications: p.spec,
         status: 'FUNCTIONAL' as const,
       });
-      lr2Serial++;
     }
   }
   await prisma.computerComponent.createMany({ data: lr2ComponentData });
@@ -174,19 +170,15 @@ async function main() {
     { type: 'MOUSE', spec: 'Inplay STX390 Rainbow LED Mouse' },
   ];
 
-  let mm3Serial = 1;
   const mm3ComponentData = [];
   for (const unit of mm3Units) {
     for (const cs of mm3ComponentSpecs) {
-      const serial = `${unit.unit_name}-${cs.type}-MM3-${String(mm3Serial).padStart(4, '0')}`;
       mm3ComponentData.push({
         computer_unit_id: unit.id,
         type: cs.type,
-        serial_number: serial,
         specifications: cs.spec,
         status: 'FUNCTIONAL' as const,
       });
-      mm3Serial++;
     }
   }
   await prisma.computerComponent.createMany({ data: mm3ComponentData });
@@ -213,20 +205,16 @@ async function main() {
     ];
   };
 
-  let lr4Serial = 1;
   const lr4ComponentData = [];
   for (const unit of lr4Units) {
     const isBroken = lr4BrokenUnitNames.includes(unit.unit_name);
     for (const cs of lr4SpecsFor(unit.unit_name)) {
-      const serial = `${unit.unit_name}-${cs.type}-LR4-${String(lr4Serial).padStart(4, '0')}`;
       lr4ComponentData.push({
         computer_unit_id: unit.id,
         type: cs.type,
-        serial_number: serial,
         specifications: cs.spec,
         status: isBroken ? ('NEEDS_REPLACEMENT' as const) : ('FUNCTIONAL' as const),
       });
-      lr4Serial++;
     }
   }
   await prisma.computerComponent.createMany({ data: lr4ComponentData });

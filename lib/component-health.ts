@@ -19,7 +19,6 @@ export type IssueStatus = (typeof ISSUE_STATUSES)[number];
 export interface IssueComponent {
   id: string;
   type: string;
-  serial_number: string;
   status: string;
   computer_unit: {
     id: string;

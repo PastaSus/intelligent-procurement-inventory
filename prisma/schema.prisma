@@ -70,7 +70,6 @@ model ComputerComponent {
   id               String           @id @default(cuid())
   computer_unit_id String
   type             ComponentType
-  serial_number    String           @unique
   specifications   String
   status           ComponentStatus  @default(FUNCTIONAL)
   created_at       DateTime         @default(now())

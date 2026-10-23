@@ -256,7 +256,7 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
                               {unit.components.map((component) => (
                                 <li key={component.id} className="flex items-center justify-between gap-2 text-xs">
                                   <span className="font-mono text-muted-foreground">
-                                    {component.type} · {component.serial_number}
+                                    {component.type}
                                   </span>
                                   <StatusBadge status={component.status} />
                                 </li>
@@ -337,7 +337,6 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left p-3 text-sm font-medium">Type</th>
-                <th className="text-left p-3 text-sm font-medium">Serial</th>
                 <th className="text-left p-3 text-sm font-medium">Unit</th>
                 <th className="text-left p-3 text-sm font-medium">Room</th>
                 <th className="text-center p-3 text-sm font-medium">Status</th>
@@ -346,7 +345,7 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
             <tbody>
               {componentsWithIssues.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-6 text-center text-muted-foreground text-sm">
+                  <td colSpan={4} className="p-6 text-center text-muted-foreground text-sm">
                     All components are functional.
                   </td>
                 </tr>
@@ -354,7 +353,6 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
                 componentsWithIssues.map((comp) => (
                   <tr key={comp.id} className="border-b last:border-b-0 hover:bg-muted/30" tabIndex={0}>
                     <td className="p-3 text-sm font-medium">{comp.type}</td>
-                    <td className="p-3 text-sm font-mono">{comp.serial_number}</td>
                     <td className="p-3 text-sm">{comp.computer_unit.unit_name}</td>
                     <td className="p-3 text-sm">{comp.computer_unit.laboratory_room.name}</td>
                     <td className="p-3 text-center">

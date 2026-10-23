@@ -11,7 +11,6 @@ import { X, ShoppingCart, Package } from 'lucide-react';
 interface Component {
   id: string;
   type: string;
-  serial_number: string;
   specifications: string;
   status: string;
 }
@@ -124,11 +123,6 @@ export function EditComponentForm({ component, onClose, onSuccess, componentType
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div>
-              <label htmlFor="serialNumber" className="block text-sm font-medium mb-1">Serial Number <span className="text-destructive">*</span></label>
-              <Input id="serialNumber" name="serialNumber" defaultValue={component.serial_number} required disabled={isPending} />
             </div>
 
             <div>

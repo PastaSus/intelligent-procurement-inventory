@@ -66,7 +66,6 @@
 | id | String (cuid) | Primary key |
 | computer_unit_id | String | Foreign key to ComputerUnit |
 | type | Enum (ComponentType) | Type of component |
-| serial_number | String | Unique per-component serial number |
 | specifications | String | Hardware specs (e.g., "Intel Core i5 4460") |
 | status | Enum (ComponentStatus) | Functional status |
 | created_at | DateTime | Creation timestamp |

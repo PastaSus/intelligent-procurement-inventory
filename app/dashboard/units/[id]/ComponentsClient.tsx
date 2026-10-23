@@ -24,7 +24,6 @@ interface Component {
   id: string;
   computer_unit_id: string;
   type: string;
-  serial_number: string;
   specifications: string;
   status: string;
   created_at: Date;
@@ -209,7 +208,6 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-3 text-sm font-medium">Type</th>
-                  <th className="text-left p-3 text-sm font-medium">Serial Number</th>
                   <th className="text-left p-3 text-sm font-medium">Specifications</th>
                   <th className="text-center p-3 text-sm font-medium">Status</th>
                   <th className="text-center w-[100px] p-3 text-sm font-medium">Actions</th>
@@ -220,13 +218,6 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
                   <tr key={type} className={`border-b last:border-b-0 hover:bg-muted/30 ${!component ? 'opacity-40' : ''}`} tabIndex={0}>
                     <td className="p-3">
                       <span className="font-medium">{type}</span>
-                    </td>
-                    <td className="p-3">
-                      {component ? (
-                        <span className="font-mono text-sm">{component.serial_number}</span>
-                      ) : (
-                        <span className="text-sm italic text-muted-foreground">Not registered</span>
-                      )}
                     </td>
                     <td className="p-3 text-sm">
                       {component?.specifications || '-'}
@@ -373,7 +364,7 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
               <h3 className="text-lg font-semibold">Remove Component</h3>
             </div>
             <p className="text-muted-foreground mb-6">
-              Permanently remove <strong className="text-foreground">{deletingComponent.type}</strong> (serial: {deletingComponent.serial_number})?
+              Permanently remove <strong className="text-foreground">{deletingComponent.type}</strong>?
             </p>
             <div className="flex gap-3 justify-end">
               <Button variant="outline" onClick={() => setDeletingComponent(null)} disabled={isPending}>Cancel</Button>
