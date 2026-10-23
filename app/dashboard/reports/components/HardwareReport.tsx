@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
+import Link from 'next/link';
 import { getHardwareReport } from '@/app/_actions/reports';
 import { ReportSummary } from './ReportSummary';
 import { HardwareReportPrint } from './HardwareReportPrint';
@@ -15,7 +16,7 @@ import {
 } from './report-rows';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Printer, Cpu } from 'lucide-react';
+import { Printer, Cpu, Package } from 'lucide-react';
 import { printDocument } from '@/lib/print';
 
 interface RoomOption {
@@ -106,10 +107,18 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
               {' '}· {totals.rooms} rooms · {totals.units} units · {totals.components} components
             </p>
           </div>
-          <Button onClick={printDocument} className="gap-2">
-            <Printer className="h-4 w-4" />
-            Print
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/reports/spare-parts" className="gap-2">
+                <Package className="h-4 w-4" />
+                Spare Parts Report
+              </Link>
+            </Button>
+            <Button onClick={printDocument} className="gap-2">
+              <Printer className="h-4 w-4" />
+              Print
+            </Button>
+          </div>
         </div>
 
         <ReportSummary rooms={visibleRooms} onReset={handleResetFilters} />
