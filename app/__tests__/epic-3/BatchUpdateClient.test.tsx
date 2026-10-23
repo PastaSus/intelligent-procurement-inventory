@@ -10,7 +10,6 @@ vi.mock('@/app/_actions/components', () => ({ batchUpdateComponents: vi.fn() }))
 interface TestComponent {
   id: string;
   type: string;
-  serial_number: string;
   specifications: string;
   status: string;
   computer_unit: {
@@ -24,7 +23,6 @@ function makeComponent(overrides: Partial<TestComponent> = {}): TestComponent {
   return {
     id: 'comp-1',
     type: 'MONITOR',
-    serial_number: 'SN-001',
     specifications: '18.5" LED',
     status: 'FUNCTIONAL',
     computer_unit: {
@@ -54,7 +52,6 @@ describe('BatchUpdateClient', () => {
     makeComponent({
       id: 'comp-2',
       type: 'KEYBOARD',
-      serial_number: 'SN-002',
       specifications: 'Standard keyboard',
       status: 'NEEDS_REPAIR',
       computer_unit: {
@@ -66,7 +63,6 @@ describe('BatchUpdateClient', () => {
     makeComponent({
       id: 'comp-3',
       type: 'MOUSE',
-      serial_number: 'SN-003',
       specifications: 'Optical mouse',
       computer_unit: {
         id: 'unit-3',

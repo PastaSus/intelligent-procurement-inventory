@@ -153,7 +153,7 @@ describe('PurchaseRequestsClient', () => {
 
     expect(screen.getByText(/showing 2/i)).toBeInTheDocument();
 
-    const statusSelect = screen.getByRole('combobox');
+    const statusSelect = screen.getByRole('combobox', { name: /filter by status/i });
     await user.click(statusSelect);
     const approvedOption = screen.getByRole('option', { name: 'APPROVED' });
     await user.click(approvedOption);

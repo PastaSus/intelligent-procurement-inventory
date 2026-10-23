@@ -36,7 +36,7 @@ export function ChatMessage({ role, content, timestamp }: ChatMessageProps) {
               : 'bg-muted text-foreground rounded-bl-none'
           }`}
         >
-          <p className="text-sm break-words">{content}</p>
+          <p className="text-sm break-words whitespace-pre-wrap">{content}</p>
         </div>
         <time className="text-xs text-muted-foreground">
           {timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}

@@ -19,7 +19,6 @@ import { useToast } from '@/lib/toast-context';
 interface BatchComponent {
   id: string;
   type: string;
-  serial_number: string;
   specifications: string;
   status: string;
   computer_unit: {
@@ -105,7 +104,6 @@ export function BatchUpdateClient({ initialComponents, componentTypes }: BatchUp
           component.computer_unit.unit_name,
           component.computer_unit.laboratory_room.name,
           component.type,
-          component.serial_number,
           component.specifications,
         ].join(' ').toLowerCase();
         if (!haystack.includes(query)) {
@@ -231,7 +229,7 @@ export function BatchUpdateClient({ initialComponents, componentTypes }: BatchUp
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search by unit, room, type, or serial..."
+              placeholder="Search by unit, room, type, or specifications..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="pl-10"
@@ -375,7 +373,6 @@ export function BatchUpdateClient({ initialComponents, componentTypes }: BatchUp
                   <th className="text-left p-3 text-sm font-medium">Unit</th>
                   <th className="text-left p-3 text-sm font-medium">Room</th>
                   <th className="text-left p-3 text-sm font-medium">Type</th>
-                  <th className="text-left p-3 text-sm font-medium">Serial Number</th>
                   <th className="text-left p-3 text-sm font-medium">Specifications</th>
                   <th className="text-center p-3 text-sm font-medium">Status</th>
                 </tr>
@@ -409,7 +406,6 @@ export function BatchUpdateClient({ initialComponents, componentTypes }: BatchUp
                         {component.computer_unit.laboratory_room.name}
                       </td>
                       <td className="p-3 text-sm font-medium">{component.type}</td>
-                      <td className="p-3 font-mono text-sm">{component.serial_number}</td>
                       <td className="p-3 text-sm max-w-[260px] truncate" title={component.specifications}>
                         {component.specifications}
                       </td>

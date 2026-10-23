@@ -7,8 +7,6 @@ import {
   AlertTriangle,
   Search,
   X,
-  ChevronUp,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Pencil,
@@ -48,35 +46,15 @@ interface InventoryClientProps {
   isAdmin: boolean;
 }
 
-function SortHeader({
-  column,
-  label,
-  sortBy,
-  sortOrder,
-  onSort,
-}: {
-  column: "sku" | "name" | "quantity" | "component_type" | "updated_at";
-  label: string;
-  sortBy: string;
-  sortOrder: "asc" | "desc";
-  onSort: (column: "sku" | "name" | "quantity" | "component_type" | "updated_at") => void;
-}) {
-  const isActive = sortBy === column;
-  return (
-    <button
-      onClick={() => onSort(column)}
-      className="flex items-center gap-1 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-    >
-      <span>{label}</span>
-      {isActive &&
-        (sortOrder === "asc" ? (
-          <ChevronUp className="h-3 w-3" />
-        ) : (
-          <ChevronDown className="h-3 w-3" />
-        ))}
-    </button>
-  );
-}
+type InventorySortColumn = "sku" | "name" | "quantity" | "component_type" | "updated_at";
+
+const sortColumns: { value: InventorySortColumn; label: string }[] = [
+  { value: "updated_at", label: "Updated" },
+  { value: "sku", label: "SKU" },
+  { value: "name", label: "Name" },
+  { value: "component_type", label: "Component" },
+  { value: "quantity", label: "Qty" },
+];
 
 export function InventoryClient({
   initialItems,
@@ -96,9 +74,7 @@ export function InventoryClient({
   const [stockStatus, setStockStatus] = useState<
     "all" | "low" | "critical" | "normal"
   >("all");
-  const [sortBy, setSortBy] = useState<
-    "sku" | "name" | "quantity" | "component_type" | "updated_at"
-  >("updated_at");
+  const [sortBy, setSortBy] = useState<InventorySortColumn>("updated_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const handleSuccess = () => {
@@ -190,15 +166,6 @@ export function InventoryClient({
   const criticalCount = items.filter((item) => item.quantity === 0).length;
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  function handleSort(column: typeof sortBy) {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column);
-      setSortOrder("asc");
-    }
-  }
-
   function formatDate(date: Date) {
     const d = new Date(date);
     const now = new Date();
@@ -257,7 +224,7 @@ export function InventoryClient({
           value={selectedComponentType}
           onValueChange={setSelectedComponentType}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px]" aria-label="Filter by component type">
             <SelectValue placeholder="All Component Types" />
           </SelectTrigger>
           <SelectContent>
@@ -274,7 +241,7 @@ export function InventoryClient({
           value={stockStatus}
           onValueChange={(v) => setStockStatus(v as typeof stockStatus)}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px]" aria-label="Filter by stock status">
             <SelectValue placeholder="All Stock Status" />
           </SelectTrigger>
           <SelectContent>
@@ -282,6 +249,27 @@ export function InventoryClient({
             <SelectItem value="low">Low Stock</SelectItem>
             <SelectItem value="critical">Critical (0)</SelectItem>
             <SelectItem value="normal">Normal</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={sortBy} onValueChange={(value) => setSortBy(value as InventorySortColumn)}>
+          <SelectTrigger className="w-[160px]" aria-label="Sort by">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {sortColumns.map((column) => (
+              <SelectItem key={column.value} value={column.value}>{column.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as "asc" | "desc")}>
+          <SelectTrigger className="w-[150px]" aria-label="Sort order">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="asc">Ascending</SelectItem>
+            <SelectItem value="desc">Descending</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -325,27 +313,13 @@ export function InventoryClient({
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 text-sm font-medium">
-                    <SortHeader column="sku" label="SKU" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                  </th>
-                  <th className="text-left p-3 text-sm font-medium">
-                    <SortHeader column="name" label="Name" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                  </th>
-                  <th className="text-left p-3 text-sm font-medium">
-                    <SortHeader column="component_type" label="Component" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                  </th>
-                  <th className="text-center p-3 text-sm font-medium">
-                    <SortHeader column="quantity" label="Qty" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                  </th>
-                  <th className="text-center p-3 text-sm font-medium">
-                    Reorder
-                  </th>
-                  <th className="text-center p-3 text-sm font-medium">
-                    Status
-                  </th>
-                  <th className="text-center p-3 text-sm font-medium">
-                    <SortHeader column="updated_at" label="Updated" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                  </th>
+                  <th className="text-left p-3 text-sm font-medium">SKU</th>
+                  <th className="text-left p-3 text-sm font-medium">Name</th>
+                  <th className="text-left p-3 text-sm font-medium">Component</th>
+                  <th className="text-center p-3 text-sm font-medium">Qty</th>
+                  <th className="text-center p-3 text-sm font-medium">Reorder</th>
+                  <th className="text-center p-3 text-sm font-medium">Status</th>
+                  <th className="text-center p-3 text-sm font-medium">Updated</th>
                   {isAdmin && (
                     <th className="text-center w-[100px] p-3 text-sm font-medium">
                       Actions

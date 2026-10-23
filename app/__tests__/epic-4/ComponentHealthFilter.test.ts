@@ -12,7 +12,6 @@ function makeComponent(overrides: Partial<IssueComponent> & { type?: string; sta
   return {
     id: overrides.id ?? 'comp-1',
     type: overrides.type ?? 'MOUSE',
-    serial_number: overrides.serial_number ?? 'SN-1',
     status: overrides.status ?? 'NEEDS_REPLACEMENT',
     computer_unit: overrides.computer_unit ?? {
       id: 'unit-1',

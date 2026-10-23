@@ -39,7 +39,6 @@ describe('createComponent', () => {
     const fd = new FormData();
     fd.set('computerUnitId', 'unit-1');
     fd.set('type', 'KEYBOARD');
-    fd.set('serialNumber', 'SN-001');
     fd.set('specifications', 'Standard keyboard');
     const result = await createComponent(fd);
 
@@ -51,7 +50,6 @@ describe('createComponent', () => {
     const fd = new FormData();
     fd.set('computerUnitId', 'unit-1');
     fd.set('type', 'INVALID_TYPE');
-    fd.set('serialNumber', 'SN-001');
     fd.set('specifications', 'Test');
     const result = await createComponent(fd);
 
@@ -65,7 +63,6 @@ describe('createComponent', () => {
     const fd = new FormData();
     fd.set('computerUnitId', 'unit-1');
     fd.set('type', 'KEYBOARD');
-    fd.set('serialNumber', 'SN-001');
     fd.set('specifications', 'Standard keyboard');
     const result = await createComponent(fd);
 
@@ -73,31 +70,15 @@ describe('createComponent', () => {
     expect(result.error).toContain('not found');
   });
 
-  it('returns error for duplicate serial number', async () => {
-    vi.mocked(prisma.computerUnit.findUnique).mockResolvedValue(createUnit({ id: 'unit-1' }));
-    vi.mocked(prisma.computerComponent.findUnique).mockResolvedValue(factoryComponent({ serial_number: 'SN-001' }));
-
-    const fd = new FormData();
-    fd.set('computerUnitId', 'unit-1');
-    fd.set('type', 'KEYBOARD');
-    fd.set('serialNumber', 'SN-001');
-    fd.set('specifications', 'Standard keyboard');
-    const result = await createComponent(fd);
-
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('already exists');
-  });
-
   it('creates component successfully', async () => {
     vi.mocked(prisma.computerUnit.findUnique).mockResolvedValue(createUnit({ id: 'unit-1' }));
     vi.mocked(prisma.computerComponent.findUnique).mockResolvedValue(null);
-    const newComp = factoryComponent({ computer_unit_id: 'unit-1', type: 'KEYBOARD', serial_number: 'SN-001', specifications: 'Standard keyboard' });
+    const newComp = factoryComponent({ computer_unit_id: 'unit-1', type: 'KEYBOARD', specifications: 'Standard keyboard' });
     vi.mocked(prisma.computerComponent.create).mockResolvedValue(newComp);
 
     const fd = new FormData();
     fd.set('computerUnitId', 'unit-1');
     fd.set('type', 'KEYBOARD');
-    fd.set('serialNumber', 'SN-001');
     fd.set('specifications', 'Standard keyboard');
     const result = await createComponent(fd);
 
@@ -290,7 +271,7 @@ describe('bulkAddComponents', () => {
     const unit = createUnit({ id: 'unit-1', unit_name: 'U-001' });
     vi.mocked(prisma.computerUnit.findUnique).mockResolvedValue(unit);
     vi.mocked(prisma.computerComponent.findMany).mockResolvedValue([]);
-    const createdComponents = ALL_TYPES.map(t => factoryComponent({ computer_unit_id: 'unit-1', type: t, serial_number: `${unit.unit_name}-${t}-PENDING` }));
+    const createdComponents = ALL_TYPES.map(t => factoryComponent({ computer_unit_id: 'unit-1', type: t }));
     vi.mocked(prisma.computerComponent.create).mockResolvedValue(createdComponents[0]);
 
     const fd = new FormData();

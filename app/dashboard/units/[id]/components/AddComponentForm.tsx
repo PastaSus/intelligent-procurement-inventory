@@ -73,11 +73,6 @@ export function AddComponentForm({ computerUnitId, onClose, onSuccess, component
           </div>
 
           <div>
-            <label htmlFor="serialNumber" className="block text-sm font-medium mb-1">Serial Number <span className="text-destructive">*</span></label>
-            <Input id="serialNumber" name="serialNumber" placeholder="e.g., SN-12345-ABCDE" required disabled={isPending} />
-          </div>
-
-          <div>
             <label htmlFor="specifications" className="block text-sm font-medium mb-1">Specifications <span className="text-destructive">*</span></label>
             <Input id="specifications" name="specifications" placeholder="e.g., Intel Core i5 4460" required disabled={isPending} />
           </div>

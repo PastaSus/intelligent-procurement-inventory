@@ -65,7 +65,6 @@ export interface ComputerComponent {
   id: string;
   computer_unit_id: string;
   type: 'MOTHERBOARD' | 'PROCESSOR' | 'MEMORY' | 'STORAGE' | 'MONITOR' | 'KEYBOARD' | 'MOUSE' | 'AVR' | 'OPTICAL_DRIVE';
-  serial_number: string;
   specifications: string;
   status: 'FUNCTIONAL' | 'NEEDS_REPAIR' | 'NEEDS_REPLACEMENT';
   created_at: Date;
@@ -79,7 +78,6 @@ export function createComponent(overrides?: Partial<ComputerComponent>): Compute
     id: nextVal('comp'),
     computer_unit_id: nextVal('unit'),
     type: 'KEYBOARD',
-    serial_number: `SN-${nextVal('SN')}`,
     specifications: 'Standard',
     status: 'FUNCTIONAL',
     created_at: new Date(),

@@ -16,7 +16,6 @@ interface Unit {
 interface Component {
   id: string;
   type: string;
-  serial_number: string;
 }
 
 interface RelocateComponentModalProps {
@@ -76,7 +75,6 @@ export function RelocateComponentModal({ component, currentUnitId, allUnits, onC
 
         <div className="mb-4 p-3 bg-muted/50 rounded-lg">
           <p className="text-sm font-medium">{component.type}</p>
-          <p className="text-xs text-muted-foreground font-mono">{component.serial_number}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

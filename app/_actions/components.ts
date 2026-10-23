@@ -17,7 +17,6 @@ export async function createComponent(formData: FormData) {
     const rawData = {
       computerUnitId: formData.get('computerUnitId') as string,
       type: formData.get('type') as string,
-      serialNumber: formData.get('serialNumber') as string,
       specifications: formData.get('specifications') as string,
       status: (formData.get('status') as string) || 'FUNCTIONAL',
     };
@@ -33,18 +32,10 @@ export async function createComponent(formData: FormData) {
       return { success: false, error: 'Computer unit not found' };
     }
 
-    const existing = await prisma.computerComponent.findUnique({
-      where: { serial_number: result.data.serialNumber },
-    });
-    if (existing) {
-      return { success: false, error: 'A component with this serial number already exists' };
-    }
-
     const component = await prisma.computerComponent.create({
       data: {
         computer_unit_id: result.data.computerUnitId,
         type: result.data.type,
-        serial_number: result.data.serialNumber,
         specifications: result.data.specifications,
         status: result.data.status,
         created_by: session.userId,
@@ -75,7 +66,6 @@ export async function updateComponent(formData: FormData) {
     const rawData = {
       id,
       type: formData.get('type') as string || undefined,
-      serialNumber: formData.get('serialNumber') as string || undefined,
       specifications: formData.get('specifications') as string || undefined,
       status: formData.get('status') as string || undefined,
     };
@@ -87,15 +77,6 @@ export async function updateComponent(formData: FormData) {
     const existing = await prisma.computerComponent.findUnique({ where: { id } });
     if (!existing) {
       return { success: false, error: 'Component not found' };
-    }
-
-    if (result.data.serialNumber && result.data.serialNumber !== existing.serial_number) {
-      const duplicate = await prisma.computerComponent.findUnique({
-        where: { serial_number: result.data.serialNumber },
-      });
-      if (duplicate) {
-        return { success: false, error: 'Another component with this serial number already exists' };
-      }
     }
 
     const wasStatusChange = result.data.status && result.data.status !== existing.status;
@@ -134,7 +115,6 @@ export async function updateComponent(formData: FormData) {
       where: { id },
       data: {
         ...(result.data.type && { type: result.data.type }),
-        ...(result.data.serialNumber && { serial_number: result.data.serialNumber }),
         ...(result.data.specifications && { specifications: result.data.specifications }),
         ...(result.data.status && { status: result.data.status }),
         updated_by: session.userId,
@@ -281,7 +261,6 @@ export async function bulkAddComponents(formData: FormData) {
           data: {
             computer_unit_id: computerUnitId,
             type,
-            serial_number: `${unit.unit_name}-${type}-PENDING`,
             specifications: 'TBD',
             status: 'FUNCTIONAL',
             created_by: session.userId,

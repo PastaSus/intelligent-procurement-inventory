@@ -54,7 +54,6 @@ export async function getHardwareReport(filters: ReportFilters = {}) {
               select: {
                 id: true,
                 type: true,
-                serial_number: true,
                 specifications: true,
                 status: true,
               },

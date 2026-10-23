@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useTransition, useCallback } from 'react';
-import { ShoppingCart, Plus, Search, X, ChevronUp, ChevronDown, Pencil, CheckCircle, XCircle, Package, Ban, Send, ExternalLink, Printer } from 'lucide-react';
+import { ShoppingCart, Plus, Search, X, CheckCircle, XCircle, Package, Send, Printer } from 'lucide-react';
 import { formatPeso } from '@/lib/format';
 import { printDocument } from '@/lib/print';
 import { CreateRequestForm } from './components/CreateRequestForm';
@@ -105,7 +105,6 @@ function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
           <tr className="border-b-2 border-black">
             <th className="text-left py-2 pr-2">PR Number</th>
             <th className="text-left py-2 pr-2">Date</th>
-            <th className="text-left py-2 pr-2">Status</th>
             <th className="text-center py-2 pr-2">Items</th>
             <th className="text-center py-2 pr-2">Qty</th>
             <th className="text-right py-2">Total</th>
@@ -119,7 +118,6 @@ function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
               <tr key={req.id} className="border-b border-gray-300">
                 <td className="py-2 pr-2 font-mono">{req.pr_number}</td>
                 <td className="py-2 pr-2">{new Date(req.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                <td className="py-2 pr-2">{req.status}</td>
                 <td className="py-2 pr-2">
                   {req.items.length > 0 ? req.items.map((i) => i.item_name).join(', ') : '-'}
                 </td>
@@ -131,7 +129,7 @@ function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
         </tbody>
         <tfoot>
           <tr>
-            <td colSpan={5} className="py-2 pr-2 text-right font-bold">GRAND TOTAL</td>
+            <td colSpan={4} className="py-2 pr-2 text-right font-bold">GRAND TOTAL</td>
             <td className="py-2 text-right font-bold tabular-nums">{formatPeso(grandTotal)}</td>
           </tr>
         </tfoot>
@@ -144,33 +142,15 @@ function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
 
 type PRSortColumn = 'pr_number' | 'status' | 'total' | 'updated_at';
 
-function SortHeader({
-  column,
-  label,
-  sortBy,
-  sortOrder,
-  onSort,
-}: {
-  column: PRSortColumn;
-  label: string;
-  sortBy: PRSortColumn;
-  sortOrder: 'asc' | 'desc';
-  onSort: (column: PRSortColumn) => void;
-}) {
-  const isActive = sortBy === column;
-  return (
-    <button
-      onClick={() => onSort(column)}
-      className="flex items-center gap-1 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-    >
-      <span>{label}</span>
-      {isActive && (sortOrder === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-    </button>
-  );
-}
+const sortColumns: { value: PRSortColumn; label: string }[] = [
+  { value: 'updated_at', label: 'Updated' },
+  { value: 'pr_number', label: 'PR Number' },
+  { value: 'status', label: 'Status' },
+  { value: 'total', label: 'Total' },
+];
 
 export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = [] }: PurchaseRequestsClientProps) {
-  const [requests, setRequests] = useState(initialRequests);
+  const [requests] = useState(initialRequests);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
@@ -235,6 +215,9 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
         case 'status':
           comparison = a.status.localeCompare(b.status);
           break;
+        case 'total':
+          comparison = requestCost(a) - requestCost(b);
+          break;
         case 'updated_at':
           comparison = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
           break;
@@ -249,15 +232,6 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
     () => filteredItems.filter((req) => req.status === 'APPROVED' || req.status === 'FULFILLED'),
     [filteredItems],
   );
-
-  function handleSort(column: PRSortColumn) {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('asc');
-    }
-  }
 
   function formatDate(date: Date) {
     const d = new Date(date);
@@ -324,13 +298,34 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
         </div>
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px]" aria-label="Filter by status">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
             {statuses.map(s => (
               <SelectItem key={s} value={s}>{s === 'all' ? 'All Statuses' : s}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={sortBy} onValueChange={(value) => setSortBy(value as PRSortColumn)}>
+          <SelectTrigger className="w-[160px]" aria-label="Sort by">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {sortColumns.map((column) => (
+              <SelectItem key={column.value} value={column.value}>{column.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
+          <SelectTrigger className="w-[150px]" aria-label="Sort order">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="asc">Ascending</SelectItem>
+            <SelectItem value="desc">Descending</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -358,12 +353,12 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 text-sm font-medium"><SortHeader column="pr_number" label="PR Number" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
+                  <th className="text-left p-3 text-sm font-medium">PR Number</th>
                   <th className="text-left p-3 text-sm font-medium">Items</th>
                   <th className="text-center p-3 text-sm font-medium">Qty</th>
-                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="status" label="Status" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
+                  <th className="text-center p-3 text-sm font-medium">Status</th>
                   <th className="text-right p-3 text-sm font-medium">Total</th>
-                  <th className="text-center p-3 text-sm font-medium"><SortHeader column="updated_at" label="Updated" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
+                  <th className="text-center p-3 text-sm font-medium">Updated</th>
                   <th className="text-center w-[180px] p-3 text-sm font-medium">Actions</th>
                 </tr>
               </thead>

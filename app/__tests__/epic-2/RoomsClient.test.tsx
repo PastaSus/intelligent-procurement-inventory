@@ -78,7 +78,7 @@ describe('RoomsClient', () => {
     expect(screen.getByText(/showing 1/i)).toBeInTheDocument();
   });
 
-  it('sorts rooms by name when column header is clicked', async () => {
+  it('sorts rooms with the sort dropdowns', async () => {
     const user = userEvent.setup();
     const rooms = [
       makeRoom({ name: 'Beta' }),
@@ -86,14 +86,14 @@ describe('RoomsClient', () => {
     ];
     render(<RoomsClient initialRooms={rooms} totalCount={2} currentPage={1} pageSize={10} />);
 
-    const rows = screen.getAllByRole('row');
-    const cells = rows.map(r => r.textContent);
+    expect(screen.getByRole('combobox', { name: /sort by/i })).toBeInTheDocument();
 
-    const nameHeader = screen.getByText('Room Name');
-    await user.click(nameHeader);
+    await user.click(screen.getByRole('combobox', { name: /sort order/i }));
+    await user.click(screen.getByRole('option', { name: 'Descending' }));
 
-    const rowsAfter = screen.getAllByRole('row');
-    expect(rowsAfter.length).toBe(3);
+    const dataRows = screen.getAllByRole('row').slice(1);
+    expect(dataRows[0]).toHaveTextContent('Beta');
+    expect(dataRows[1]).toHaveTextContent('Alpha');
   });
 
   it('shows delete confirmation dialog', async () => {
