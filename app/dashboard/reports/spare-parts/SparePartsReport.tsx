@@ -43,7 +43,7 @@ export function SparePartsReport({ rows, requestRows, totals, generatedAt }: Spa
       label: 'Net Shortage to Request',
       value: totals.netShortage,
       icon: AlertTriangle,
-      tone: 'text-destructive',
+      tone: 'text-foreground',
       href: '/dashboard/purchase-requests',
     },
   ];
@@ -181,7 +181,7 @@ export function SparePartsReport({ rows, requestRows, totals, generatedAt }: Spa
                   <th scope="col" className="p-4 text-left text-sm font-medium">Item</th>
                   <th scope="col" className="p-4 text-center text-sm font-medium">For Replacement</th>
                   <th scope="col" className="p-4 text-center text-sm font-medium">Spare Qty</th>
-                  <th scope="col" className="p-4 text-center text-sm font-medium text-destructive">Request Qty</th>
+                  <th scope="col" className="p-4 text-center text-sm font-medium">Request Qty</th>
                 </tr>
               </thead>
               <tbody>
@@ -197,14 +197,14 @@ export function SparePartsReport({ rows, requestRows, totals, generatedAt }: Spa
                     </td>
                     <td className="p-4 text-center text-sm tabular-nums">{row.forReplacement}</td>
                     <td className="p-4 text-center text-sm tabular-nums">{row.spareQty}</td>
-                    <td className="p-4 text-center text-sm font-bold tabular-nums text-destructive">{row.netShortage}</td>
+                    <td className="p-4 text-center text-sm font-bold tabular-nums">{row.netShortage}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-foreground/20 bg-muted/30">
                   <td className="p-4 text-sm font-semibold" colSpan={3}>Total Request Qty</td>
-                  <td className="p-4 text-center text-sm font-bold tabular-nums text-destructive">{totals.netShortage}</td>
+                  <td className="p-4 text-center text-sm font-bold tabular-nums">{totals.netShortage}</td>
                 </tr>
               </tfoot>
             </table>
