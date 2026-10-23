@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { printDocument } from '@/lib/print';
@@ -122,14 +123,33 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
 export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintProps) {
   const canPrint = request.status === 'APPROVED' || request.status === 'FULFILLED';
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
     <>
-      <div className="report-no-print fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
-        <div className="bg-card rounded-lg shadow-xl w-full max-w-3xl my-8">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="text-lg font-semibold">Print Preview — {request.pr_number}</h3>
-            <div className="flex items-center gap-2">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="purchase-request-print-title"
+        className="report-no-print fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) onClose();
+        }}
+      >
+        <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-card shadow-xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
+            <h3 id="purchase-request-print-title" className="min-w-0 flex-1 break-words text-lg font-semibold">
+              Print Preview — {request.pr_number}
+            </h3>
+            <div className="flex shrink-0 items-center gap-2">
               <Button
+                type="button"
                 onClick={printDocument}
                 className="gap-2"
                 disabled={!canPrint}
@@ -138,13 +158,13 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
                 <Printer className="h-4 w-4" />
                 Print
               </Button>
-              <Button variant="outline" onClick={onClose} className="gap-2">
+              <Button type="button" variant="outline" onClick={onClose} className="gap-2">
                 <X className="h-4 w-4" />
                 Close
               </Button>
             </div>
           </div>
-          <div className="p-4 bg-muted/30">
+          <div className="overflow-y-auto bg-muted/30 p-4">
             <LetterBody request={request} />
           </div>
         </div>
