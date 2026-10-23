@@ -1,32 +1,22 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { getHardwareReport } from '@/app/_actions/reports';
 import { ReportSummary } from './ReportSummary';
+import { HardwareReportPrint } from './HardwareReportPrint';
+import {
+  getDetailedRows,
+  getReportTotals,
+  getUnitRows,
+  getVisibleRooms,
+  isRoomEnd,
+  type ReportDetail,
+  type ReportRoom,
+} from './report-rows';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Printer, Cpu } from 'lucide-react';
 import { printDocument } from '@/lib/print';
-
-interface ReportComponent {
-  id: string;
-  type: string;
-  serial_number: string;
-  specifications: string;
-  status: string;
-}
-
-interface ReportUnit {
-  id: string;
-  unit_name: string;
-  components: ReportComponent[];
-}
-
-interface ReportRoom {
-  id: string;
-  name: string;
-  units: ReportUnit[];
-}
 
 interface RoomOption {
   id: string;
@@ -45,10 +35,10 @@ const COMPONENT_TYPES = [
 
 const STATUSES = ['FUNCTIONAL', 'NEEDS_REPAIR', 'NEEDS_REPLACEMENT'] as const;
 
-const statusStyles: Record<string, string> = {
-  FUNCTIONAL: 'bg-green-100 text-green-800',
-  NEEDS_REPAIR: 'bg-yellow-100 text-yellow-800',
-  NEEDS_REPLACEMENT: 'bg-red-100 text-red-800',
+const statusClasses: Record<string, string> = {
+  FUNCTIONAL: 'text-green-600',
+  NEEDS_REPAIR: 'text-yellow-600',
+  NEEDS_REPLACEMENT: 'text-red-600',
 };
 
 export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProps) {
@@ -57,6 +47,7 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
   const [roomId, setRoomId] = useState('all');
   const [status, setStatus] = useState('all');
   const [componentType, setComponentType] = useState('all');
+  const [detail, setDetail] = useState<ReportDetail>('detailed');
   const [isPending, startTransition] = useTransition();
   const [generatedAt, setGeneratedAt] = useState(() => new Date());
   const [filterError, setFilterError] = useState<string | null>(null);
@@ -84,15 +75,16 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
     });
   }
 
-  const visibleRooms = rooms
-    .map(r => ({ ...r, units: r.units.filter(u => u.components.length > 0) }))
-    .filter(r => r.units.length > 0);
+  const visibleRooms = useMemo(() => getVisibleRooms(rooms), [rooms]);
+  const totals = useMemo(() => getReportTotals(visibleRooms), [visibleRooms]);
+  const detailedRows = useMemo(() => getDetailedRows(visibleRooms), [visibleRooms]);
+  const unitRows = useMemo(() => getUnitRows(visibleRooms), [visibleRooms]);
 
-  const totalUnits = visibleRooms.reduce((sum, r) => sum + r.units.length, 0);
-  const totalComponents = visibleRooms.reduce(
-    (sum, r) => sum + r.units.reduce((uSum, u) => uSum + u.components.length, 0),
-    0
-  );
+  const roomLabel = roomId === 'all'
+    ? 'All rooms'
+    : roomOpts.find((room) => room.id === roomId)?.name ?? 'All rooms';
+  const statusLabel = status === 'all' ? 'All statuses' : status.replace(/_/g, ' ');
+  const typeLabel = componentType === 'all' ? 'All types' : componentType;
 
   function handleResetFilters() {
     setRoomId('all');
@@ -101,140 +93,187 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
     applyFilters({ roomId: 'all', status: 'all', componentType: 'all' });
   }
 
+  const hasRows = detail === 'detailed' ? detailedRows.length > 0 : unitRows.length > 0;
+
   return (
     <div className="space-y-6 hardware-report">
-      <div className="flex flex-col items-start gap-3 text-left sm:flex-row sm:items-center sm:justify-between report-no-print">
-        <div>
-          <h2 className="text-3xl font-bold">Hardware Inventory Report</h2>
-          <p className="text-muted-foreground">
-            Generated {generatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            {' '}· {visibleRooms.length} rooms · {totalUnits} units · {totalComponents} components
-          </p>
+      <div className="report-no-print space-y-6">
+        <div className="flex flex-col items-start gap-3 text-left sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-3xl font-bold">Hardware Inventory Report</h2>
+            <p className="text-muted-foreground">
+              Generated {generatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {' '}· {totals.rooms} rooms · {totals.units} units · {totals.components} components
+            </p>
+          </div>
+          <Button onClick={printDocument} className="gap-2">
+            <Printer className="h-4 w-4" />
+            Print
+          </Button>
         </div>
-        <Button onClick={printDocument} className="gap-2">
-          <Printer className="h-4 w-4" />
-          Print
-        </Button>
+
+        <ReportSummary rooms={visibleRooms} onReset={handleResetFilters} />
+
+        <div className="flex flex-wrap gap-3">
+          <div className="w-48">
+            <Select value={roomId} onValueChange={v => { setRoomId(v); applyFilters({ roomId: v }); }}>
+              <SelectTrigger className="w-full" aria-label="Filter by room">
+                <SelectValue placeholder="All rooms" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All rooms</SelectItem>
+                {roomOpts.map(r => (
+                  <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-48">
+            <Select value={status} onValueChange={v => { setStatus(v); applyFilters({ status: v }); }}>
+              <SelectTrigger className="w-full" aria-label="Filter by status">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {STATUSES.map(s => (
+                  <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-48">
+            <Select value={componentType} onValueChange={v => { setComponentType(v); applyFilters({ componentType: v }); }}>
+              <SelectTrigger className="w-full" aria-label="Filter by component type">
+                <SelectValue placeholder="All types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All types</SelectItem>
+                {COMPONENT_TYPES.map(t => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-48">
+            <Select value={detail} onValueChange={v => setDetail(v as ReportDetail)}>
+              <SelectTrigger className="w-full" aria-label="Report detail level">
+                <SelectValue placeholder="Detailed" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="detailed">Detailed</SelectItem>
+                <SelectItem value="non-detailed">Non-Detailed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {filterError && (
+          <p className="text-sm text-destructive">{filterError}</p>
+        )}
+
+        {isPending && (
+          <p className="text-sm text-muted-foreground">Loading report...</p>
+        )}
+
+        {!hasRows ? (
+          <div className="bg-card rounded-lg border p-8 text-center text-muted-foreground">
+            <Cpu className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No records match the selected filters.</p>
+          </div>
+        ) : (
+          <div className="bg-card rounded-lg border">
+            <div className="p-4 border-b">
+              <h3 className="font-semibold">
+                {detail === 'detailed' ? 'Component Details' : 'Unit Status Summary'}
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              {detail === 'detailed' ? (
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left px-4 py-2 text-sm font-medium">Room No.</th>
+                      <th className="text-left px-4 py-2 text-sm font-medium">Unit No.</th>
+                      <th className="text-left px-4 py-2 text-sm font-medium">Component</th>
+                      <th className="text-left px-4 py-2 text-sm font-medium">Specifications</th>
+                      <th className="text-center px-4 py-2 text-sm font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailedRows.map((row, index) => {
+                      const prev = detailedRows[index - 1];
+                      const showRoom = index === 0 || row.roomName !== prev.roomName;
+                      const showUnit = index === 0 || row.unitName !== prev.unitName;
+                      return (
+                        <tr
+                          key={row.id}
+                          className={isRoomEnd(detailedRows, index) ? 'border-b-4 border-black' : 'border-b border-gray-100 last:border-b-0'}
+                        >
+                          <td className="px-4 py-2 text-sm">
+                            {showRoom ? row.roomName : ''}
+                          </td>
+                          <td className="px-4 py-2 text-sm">
+                            {showUnit ? row.unitName : ''}
+                          </td>
+                          <td className="px-4 py-2 text-sm font-medium">{row.type}</td>
+                          <td className="px-4 py-2 text-sm">{row.specifications}</td>
+                          <td className="px-4 py-2 text-center">
+                            <span className={statusClasses[row.status] || ""}>{row.status.replace(/_/g, ' ')}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left px-4 py-2 text-sm font-medium">Room No.</th>
+                      <th className="text-left px-4 py-2 text-sm font-medium">Unit No.</th>
+                      <th className="text-center px-4 py-2 text-sm font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unitRows.map((row, index) => {
+                      const prev = unitRows[index - 1];
+                      const showRoom = index === 0 || row.roomName !== prev.roomName;
+                      const showUnit = index === 0 || row.unitName !== prev.unitName;
+                      return (
+                        <tr
+                          key={row.id}
+                          className={isRoomEnd(unitRows, index) ? 'border-b-4 border-black' : 'border-b border-gray-100 last:border-b-0'}
+                        >
+                          <td className="px-4 py-2 text-sm">
+                            {showRoom ? row.roomName : ''}
+                          </td>
+                          <td className="px-4 py-2 text-sm">
+                            {showUnit ? row.unitName : ''}
+                          </td>
+                          <td className="px-4 py-2 text-center">
+                            <span className={statusClasses[row.status] || ""}>{row.status.replace(/_/g, ' ')}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="print-only hidden">
-        <h1 className="text-2xl font-bold">Hardware Inventory Report</h1>
-        <p>
-          Generated {generatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-          {' '}· {visibleRooms.length} rooms · {totalUnits} units · {totalComponents} components
-        </p>
+        <HardwareReportPrint
+          rooms={visibleRooms}
+          detail={detail}
+          generatedAt={generatedAt}
+          roomLabel={roomLabel}
+          statusLabel={statusLabel}
+          typeLabel={typeLabel}
+        />
       </div>
-
-      <ReportSummary rooms={visibleRooms} onReset={handleResetFilters} />
-
-      <div className="flex flex-wrap gap-3 report-no-print">
-        <div className="w-48">
-          <Select value={roomId} onValueChange={v => { setRoomId(v); applyFilters({ roomId: v }); }}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All rooms" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All rooms</SelectItem>
-              {roomOpts.map(r => (
-                <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-48">
-          <Select value={status} onValueChange={v => { setStatus(v); applyFilters({ status: v }); }}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              {STATUSES.map(s => (
-                <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-48">
-          <Select value={componentType} onValueChange={v => { setComponentType(v); applyFilters({ componentType: v }); }}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              {COMPONENT_TYPES.map(t => (
-                <SelectItem key={t} value={t}>{t}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {filterError && (
-        <p className="text-sm text-destructive report-no-print">{filterError}</p>
-      )}
-
-      {isPending && (
-        <p className="text-sm text-muted-foreground report-no-print">Loading report...</p>
-      )}
-
-      {visibleRooms.length === 0 ? (
-        <div className="bg-card rounded-lg border p-8 text-center text-muted-foreground">
-          <Cpu className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>No records match the selected filters.</p>
-        </div>
-      ) : (
-        visibleRooms.map(room => (
-          <div key={room.id} className="bg-card rounded-lg border report-section">
-            <div className="p-4 border-b bg-muted/30">
-              <h3 className="font-semibold text-lg">{room.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                {room.units.length} unit{room.units.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-            {room.units.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">No units in this room.</p>
-            ) : (
-              room.units.map(unit => (
-                <div key={unit.id} className="border-b last:border-b-0">
-                  <div className="px-4 pt-3">
-                    <h4 className="font-medium">{unit.unit_name}</h4>
-                  </div>
-                  {unit.components.length === 0 ? (
-                    <p className="px-4 pb-3 text-sm text-muted-foreground">No components recorded.</p>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b bg-muted/50">
-                            <th className="text-left px-4 py-2 text-sm font-medium">Type</th>
-                            <th className="text-left px-4 py-2 text-sm font-medium">Serial Number</th>
-                            <th className="text-left px-4 py-2 text-sm font-medium">Specifications</th>
-                            <th className="text-center px-4 py-2 text-sm font-medium">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {unit.components.map(comp => (
-                            <tr key={comp.id} className="border-b last:border-b-0">
-                              <td className="px-4 py-2 font-medium">{comp.type}</td>
-                              <td className="px-4 py-2 font-mono text-sm">{comp.serial_number}</td>
-                              <td className="px-4 py-2 text-sm">{comp.specifications}</td>
-                              <td className="px-4 py-2 text-center">
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusStyles[comp.status] || ''}`}>
-                                  {comp.status.replace(/_/g, ' ')}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        ))
-      )}
     </div>
   );
 }
