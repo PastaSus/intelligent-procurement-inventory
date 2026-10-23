@@ -18,7 +18,10 @@ export function SignatoryBlocks() {
           <div className="h-12" aria-hidden="true" />
           <div className="border-t border-black pt-1 min-h-[1.25rem] break-words">
             {name ? (
-              <div className="text-sm font-semibold leading-tight">{name}</div>
+              <>
+                <div className="text-sm font-semibold leading-tight">{name}</div>
+                <div className="text-[10px]">{signer}</div>
+              </>
             ) : (
               <div className="text-sm font-semibold">{signer}</div>
             )}

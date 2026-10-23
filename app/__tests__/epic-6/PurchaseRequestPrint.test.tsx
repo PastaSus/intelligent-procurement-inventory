@@ -52,7 +52,7 @@ describe('PurchaseRequestPrint', () => {
     for (const role of ['Prepared by', 'Checked by', 'Recommended by', 'Approved by']) {
       expect(screen.getAllByText(role).length).toBeGreaterThan(0);
     }
-    for (const signer of ['SA', 'Technician', 'Lab Admin']) {
+    for (const signer of ['SA', 'Technician', 'Lab Admin', 'Dean']) {
       expect(screen.getAllByText(signer).length).toBeGreaterThan(0);
     }
     expect(screen.queryAllByRole('textbox')).toHaveLength(0);

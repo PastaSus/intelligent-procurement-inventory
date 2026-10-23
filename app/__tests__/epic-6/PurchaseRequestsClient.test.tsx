@@ -267,7 +267,7 @@ describe('PurchaseRequestsClient', () => {
     for (const role of ['Prepared by', 'Checked by', 'Recommended by', 'Approved by']) {
       expect(printSection?.textContent).toContain(role);
     }
-    for (const signer of ['SA', 'Technician', 'Lab Admin']) {
+    for (const signer of ['SA', 'Technician', 'Lab Admin', 'Dean']) {
       expect(printSection?.textContent).toContain(signer);
     }
     expect(printSection?.textContent).toContain('Signature over Printed Name');
