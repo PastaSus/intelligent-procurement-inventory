@@ -43,6 +43,10 @@ export default async function SparePartsPage({ searchParams }: { searchParams: P
     where: { deleted: false },
   });
 
+  const initialComponentType = params.component_type && COMPONENT_TYPES.includes(params.component_type as (typeof COMPONENT_TYPES)[number])
+    ? params.component_type
+    : 'all';
+
   return (
     <InventoryClient
       initialItems={items}
@@ -51,6 +55,7 @@ export default async function SparePartsPage({ searchParams }: { searchParams: P
       currentPage={page}
       pageSize={pageSize}
       isAdmin={session.role === 'ADMIN'}
+      initialComponentType={initialComponentType}
     />
   );
 }

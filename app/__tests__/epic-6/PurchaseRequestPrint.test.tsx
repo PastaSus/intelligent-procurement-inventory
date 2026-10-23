@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PurchaseRequestPrint } from '@/app/dashboard/purchase-requests/components/PurchaseRequestPrint';
 
@@ -52,7 +52,7 @@ describe('PurchaseRequestPrint', () => {
     for (const role of ['Prepared by', 'Checked by', 'Recommended by', 'Approved by']) {
       expect(screen.getAllByText(role).length).toBeGreaterThan(0);
     }
-    for (const signer of ['SA', 'Technician', 'Lab Admin']) {
+    for (const signer of ['SA', 'Technician', 'Lab Admin', 'Dean']) {
       expect(screen.getAllByText(signer).length).toBeGreaterThan(0);
     }
     expect(screen.queryAllByRole('textbox')).toHaveLength(0);
@@ -111,6 +111,23 @@ describe('PurchaseRequestPrint', () => {
     render(<PurchaseRequestPrint request={makeRequest()} onClose={onClose} />);
 
     await user.click(screen.getByRole('button', { name: /close/i }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes when Escape is pressed', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    render(<PurchaseRequestPrint request={makeRequest()} onClose={onClose} />);
+
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes when the backdrop is clicked', () => {
+    const onClose = vi.fn();
+    render(<PurchaseRequestPrint request={makeRequest()} onClose={onClose} />);
+
+    fireEvent.click(screen.getByRole('dialog'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

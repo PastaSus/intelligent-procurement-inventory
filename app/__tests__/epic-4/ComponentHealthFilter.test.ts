@@ -3,6 +3,7 @@ import {
   filterIssueComponents,
   groupIssueComponentsByRoom,
   issueStatusLabel,
+  parseComponentStatus,
   parseComponentType,
   parseIssueStatus,
   type IssueComponent,
@@ -36,7 +37,15 @@ describe('component health filters', () => {
     expect(parseIssueStatus(undefined)).toBeUndefined();
   });
 
-  it('labels issue statuses for display', () => {
+  it('parses all component statuses including functional', () => {
+    expect(parseComponentStatus('FUNCTIONAL')).toBe('FUNCTIONAL');
+    expect(parseComponentStatus('NEEDS_REPAIR')).toBe('NEEDS_REPAIR');
+    expect(parseComponentStatus('NEEDS_REPLACEMENT')).toBe('NEEDS_REPLACEMENT');
+    expect(parseComponentStatus('UNKNOWN')).toBeUndefined();
+  });
+
+  it('labels component statuses for display', () => {
+    expect(issueStatusLabel('FUNCTIONAL')).toBe('Functional');
     expect(issueStatusLabel('NEEDS_REPAIR')).toBe('Needs Repair');
     expect(issueStatusLabel('NEEDS_REPLACEMENT')).toBe('Needs Replacement');
   });
@@ -46,12 +55,14 @@ describe('component health filters', () => {
       makeComponent({ id: 'a', type: 'MOUSE', status: 'NEEDS_REPLACEMENT' }),
       makeComponent({ id: 'b', type: 'MOUSE', status: 'NEEDS_REPAIR' }),
       makeComponent({ id: 'c', type: 'KEYBOARD', status: 'NEEDS_REPLACEMENT' }),
+      makeComponent({ id: 'd', type: 'MOUSE', status: 'FUNCTIONAL' }),
     ];
 
-    expect(filterIssueComponents(components, 'MOUSE').map((c) => c.id)).toEqual(['a', 'b']);
+    expect(filterIssueComponents(components, 'MOUSE').map((c) => c.id)).toEqual(['a', 'b', 'd']);
     expect(filterIssueComponents(components, undefined, 'NEEDS_REPLACEMENT').map((c) => c.id)).toEqual(['a', 'c']);
     expect(filterIssueComponents(components, 'MOUSE', 'NEEDS_REPAIR').map((c) => c.id)).toEqual(['b']);
-    expect(filterIssueComponents(components).map((c) => c.id)).toEqual(['a', 'b', 'c']);
+    expect(filterIssueComponents(components, 'MOUSE', 'FUNCTIONAL').map((c) => c.id)).toEqual(['d']);
+    expect(filterIssueComponents(components).map((c) => c.id)).toEqual(['a', 'b', 'c', 'd']);
   });
 
   it('groups matching components by room, then unit', () => {

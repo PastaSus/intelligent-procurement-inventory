@@ -3,16 +3,16 @@
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
+  COMPONENT_STATUSES,
   COMPONENT_TYPES,
-  ISSUE_STATUSES,
   issueStatusLabel,
+  type ComponentStatusValue,
   type ComponentTypeValue,
-  type IssueStatus,
 } from '@/lib/component-health';
 
 interface ComponentStatusFiltersProps {
   selectedType?: ComponentTypeValue;
-  selectedStatus?: IssueStatus;
+  selectedStatus?: ComponentStatusValue;
 }
 
 export function ComponentStatusFilters({ selectedType, selectedStatus }: ComponentStatusFiltersProps) {
@@ -42,17 +42,17 @@ export function ComponentStatusFilters({ selectedType, selectedStatus }: Compone
         </SelectContent>
       </Select>
 
-      <Select value={selectedStatus ?? 'all'} onValueChange={(value) => applyFilter('status', value)}>
-        <SelectTrigger className="w-[200px]" aria-label="Filter by issue status">
-          <SelectValue placeholder="All Issues" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Issues</SelectItem>
-          {ISSUE_STATUSES.map((status) => (
-            <SelectItem key={status} value={status}>{issueStatusLabel(status)}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <Select value={selectedStatus ?? 'all'} onValueChange={(value) => applyFilter('status', value)}>
+          <SelectTrigger className="w-[200px]" aria-label="Filter by component status">
+            <SelectValue placeholder="All Issues" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Issues</SelectItem>
+            {COMPONENT_STATUSES.map((status) => (
+              <SelectItem key={status} value={status}>{issueStatusLabel(status)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
     </div>
   );
 }

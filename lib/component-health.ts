@@ -16,6 +16,10 @@ export const ISSUE_STATUSES = ['NEEDS_REPAIR', 'NEEDS_REPLACEMENT'] as const;
 
 export type IssueStatus = (typeof ISSUE_STATUSES)[number];
 
+export const COMPONENT_STATUSES = ['FUNCTIONAL', ...ISSUE_STATUSES] as const;
+
+export type ComponentStatusValue = (typeof COMPONENT_STATUSES)[number];
+
 export interface IssueComponent {
   id: string;
   type: string;
@@ -49,14 +53,21 @@ export function parseIssueStatus(value: unknown): IssueStatus | undefined {
   return value === 'NEEDS_REPAIR' || value === 'NEEDS_REPLACEMENT' ? value : undefined;
 }
 
-export function issueStatusLabel(status: IssueStatus): string {
+export function parseComponentStatus(value: unknown): ComponentStatusValue | undefined {
+  return typeof value === 'string' && (COMPONENT_STATUSES as readonly string[]).includes(value)
+    ? (value as ComponentStatusValue)
+    : undefined;
+}
+
+export function issueStatusLabel(status: ComponentStatusValue): string {
+  if (status === 'FUNCTIONAL') return 'Functional';
   return status === 'NEEDS_REPAIR' ? 'Needs Repair' : 'Needs Replacement';
 }
 
 export function filterIssueComponents(
   components: IssueComponent[],
   type?: ComponentTypeValue,
-  status?: IssueStatus
+  status?: ComponentStatusValue
 ): IssueComponent[] {
   return components.filter(
     (component) =>
