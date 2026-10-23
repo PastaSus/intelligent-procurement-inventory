@@ -1,16 +1,16 @@
 import { prisma } from '@/lib/prisma';
-import { Cpu, Wrench, AlertTriangle, CheckCircle, Building2, Monitor, X } from 'lucide-react';
+import { Cpu, Wrench, AlertTriangle, CheckCircle, Building2, Monitor, X, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import {
   filterIssueComponents,
   groupIssueComponentsByRoom,
   issueStatusLabel,
+  parseComponentStatus,
   parseComponentType,
-  parseIssueStatus,
 } from '@/lib/component-health';
 import { ComponentStatusFilters } from './ComponentStatusFilters';
 
-function StatCard({ icon: Icon, label, value, variant }: { icon: React.ElementType; label: string; value: number; variant: 'green' | 'yellow' | 'red' | 'blue' }) {
+function StatCard({ icon: Icon, label, value, variant, href }: { icon: React.ElementType; label: string; value: number; variant: 'green' | 'yellow' | 'red' | 'blue'; href: string }) {
   const variantStyles = {
     green: 'bg-green-100 text-green-700',
     yellow: 'bg-yellow-100 text-yellow-700',
@@ -19,7 +19,10 @@ function StatCard({ icon: Icon, label, value, variant }: { icon: React.ElementTy
   };
 
   return (
-    <div className="bg-card rounded-lg border p-6">
+    <Link
+      href={href}
+      className="block bg-card rounded-lg border p-6 transition-colors hover:border-primary/40 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
       <div className="flex items-center gap-4">
         <div className={`p-3 rounded-lg ${variantStyles[variant]}`}>
           <Icon className="h-8 w-8" aria-hidden="true" />
@@ -29,22 +32,38 @@ function StatCard({ icon: Icon, label, value, variant }: { icon: React.ElementTy
           <p className="text-2xl font-bold tabular-nums">{value}</p>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, href }: { status: string; href?: string }) {
   const styles: Record<string, string> = {
     FUNCTIONAL: 'bg-green-100 text-green-800',
     NEEDS_REPAIR: 'bg-yellow-100 text-yellow-800',
     NEEDS_REPLACEMENT: 'bg-red-100 text-red-800',
   };
+  const className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[status] || ''}`;
+  const label = status.replace(/_/g, ' ');
 
-  return (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[status] || ''}`}>
-      {status.replace(/_/g, ' ')}
-    </span>
-  );
+  if (href) {
+    return (
+      <Link href={href} className={`${className} hover:brightness-95 transition`}>
+        {label}
+      </Link>
+    );
+  }
+
+  return <span className={className}>{label}</span>;
+}
+
+function filterHref(type: string, status?: string): string {
+  const params = new URLSearchParams({ type });
+  if (status) params.set('status', status);
+  return `/dashboard/component-status?${params.toString()}#component-filter`;
+}
+
+function roomUnitsHref(roomId: string): string {
+  return `/dashboard/units?room_id=${encodeURIComponent(roomId)}`;
 }
 
 type ComponentStatusSearchParams = {
@@ -55,7 +74,7 @@ type ComponentStatusSearchParams = {
 export default async function ComponentStatusPage({ searchParams }: { searchParams: Promise<ComponentStatusSearchParams> }) {
   const params = await searchParams;
   const selectedType = parseComponentType(params.type);
-  const selectedStatus = parseIssueStatus(params.status);
+  const selectedStatus = parseComponentStatus(params.status);
 
   const [
     totalComponents,
@@ -118,7 +137,7 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
         },
       },
       where: {
-        status: { in: ['NEEDS_REPAIR', 'NEEDS_REPLACEMENT'] },
+        status: selectedStatus ?? { in: ['NEEDS_REPAIR', 'NEEDS_REPLACEMENT'] },
       },
     }),
   ]);
@@ -153,10 +172,10 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
       <ComponentStatusFilters selectedType={selectedType} selectedStatus={selectedStatus} />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard icon={Cpu} label="Total Components" value={totalComponents} variant="blue" />
-        <StatCard icon={CheckCircle} label="Functional" value={functional} variant="green" />
-        <StatCard icon={Wrench} label="Needs Repair" value={needsRepair} variant="yellow" />
-        <StatCard icon={AlertTriangle} label="Needs Replacement" value={needsReplacement} variant="red" />
+        <StatCard icon={Cpu} label="Total Components" value={totalComponents} variant="blue" href="/dashboard/component-status" />
+        <StatCard icon={CheckCircle} label="Functional" value={functional} variant="green" href="/dashboard/component-status?status=FUNCTIONAL#component-filter" />
+        <StatCard icon={Wrench} label="Needs Repair" value={needsRepair} variant="yellow" href="/dashboard/component-status?status=NEEDS_REPAIR#component-filter" />
+        <StatCard icon={AlertTriangle} label="Needs Replacement" value={needsReplacement} variant="red" href="/dashboard/component-status?status=NEEDS_REPLACEMENT#component-filter" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -171,24 +190,38 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
               {typeBreakdown.map(([type, counts]) => (
                 <div
                   key={type}
-                  className={`p-4 flex items-center justify-between hover:bg-muted/30 ${selectedType === type ? 'bg-muted/40' : ''}`}
+                  className={`p-4 flex items-center justify-between gap-3 hover:bg-muted/30 ${selectedType === type ? 'bg-muted/40' : ''}`}
                 >
-                  <div>
-                    <p className="font-medium">{type}</p>
-                    <p className="text-sm text-muted-foreground">{counts.total} total</p>
-                  </div>
-                  <div className="flex items-center gap-2">
+                  <Link
+                    href={filterHref(type)}
+                    className="group flex min-w-0 flex-1 items-center justify-between gap-3"
+                  >
+                    <div>
+                      <p className="font-medium transition-colors group-hover:text-primary">{type}</p>
+                      <p className="text-sm text-muted-foreground">{counts.total} total</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" aria-hidden="true" />
+                  </Link>
+                  <div className="flex shrink-0 items-center gap-2">
                     {counts.repair > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      <Link
+                        href={filterHref(type, 'NEEDS_REPAIR')}
+                        aria-label={`Show ${counts.repair} ${type} component${counts.repair !== 1 ? 's' : ''} needing repair`}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors"
+                      >
                         <Wrench className="h-3 w-3" />
                         {counts.repair} repair
-                      </span>
+                      </Link>
                     )}
                     {counts.replacement > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <Link
+                        href={filterHref(type, 'NEEDS_REPLACEMENT')}
+                        aria-label={`Show ${counts.replacement} ${type} component${counts.replacement !== 1 ? 's' : ''} needing replacement`}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
+                      >
                         <AlertTriangle className="h-3 w-3" />
                         {counts.replacement} replace
-                      </span>
+                      </Link>
                     )}
                     {counts.repair === 0 && counts.replacement === 0 && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -236,7 +269,9 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <Building2 className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{room.roomName}</span>
+                          <Link href={roomUnitsHref(room.roomId)} className="font-medium hover:text-primary hover:underline">
+                            {room.roomName}
+                          </Link>
                         </div>
                         <span className="text-sm text-muted-foreground">
                           {roomCount} component{roomCount !== 1 ? 's' : ''}
@@ -255,10 +290,16 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
                             <ul className="mt-2 space-y-1">
                               {unit.components.map((component) => (
                                 <li key={component.id} className="flex items-center justify-between gap-2 text-xs">
-                                  <span className="font-mono text-muted-foreground">
+                                  <Link
+                                    href={filterHref(component.type, component.status)}
+                                    className="font-mono text-muted-foreground hover:text-primary hover:underline"
+                                  >
                                     {component.type}
-                                  </span>
-                                  <StatusBadge status={component.status} />
+                                  </Link>
+                                  <StatusBadge
+                                    status={component.status}
+                                    href={filterHref(component.type, component.status)}
+                                  />
                                 </li>
                               ))}
                             </ul>
@@ -296,7 +337,9 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <Building2 className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{room.name}</span>
+                          <Link href={roomUnitsHref(room.id)} className="font-medium hover:text-primary hover:underline">
+                            {room.name}
+                          </Link>
                         </div>
                         <span className="text-sm text-muted-foreground">{totalIssues} issue{totalIssues !== 1 ? 's' : ''}</span>
                       </div>
@@ -352,11 +395,26 @@ export default async function ComponentStatusPage({ searchParams }: { searchPara
               ) : (
                 componentsWithIssues.map((comp) => (
                   <tr key={comp.id} className="border-b last:border-b-0 hover:bg-muted/30" tabIndex={0}>
-                    <td className="p-3 text-sm font-medium">{comp.type}</td>
-                    <td className="p-3 text-sm">{comp.computer_unit.unit_name}</td>
-                    <td className="p-3 text-sm">{comp.computer_unit.laboratory_room.name}</td>
+                    <td className="p-3 text-sm font-medium">
+                      <Link href={filterHref(comp.type)} className="hover:text-primary hover:underline">
+                        {comp.type}
+                      </Link>
+                    </td>
+                    <td className="p-3 text-sm">
+                      <Link href={`/dashboard/units/${comp.computer_unit.id}`} className="hover:text-primary hover:underline">
+                        {comp.computer_unit.unit_name}
+                      </Link>
+                    </td>
+                    <td className="p-3 text-sm">
+                      <Link href={roomUnitsHref(comp.computer_unit.laboratory_room.id)} className="hover:text-primary hover:underline">
+                        {comp.computer_unit.laboratory_room.name}
+                      </Link>
+                    </td>
                     <td className="p-3 text-center">
-                      <StatusBadge status={comp.status} />
+                      <StatusBadge
+                        status={comp.status}
+                        href={filterHref(comp.type, comp.status)}
+                      />
                     </td>
                   </tr>
                 ))
