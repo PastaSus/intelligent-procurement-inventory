@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '@/lib/prisma';
-import { createComponent, updateComponent, deleteComponent, bulkAddComponents, batchUpdateComponents } from '@/app/_actions/components';
+import { createComponent, updateComponent, deleteComponent, deleteAllComponents, bulkAddComponents, batchUpdateComponents } from '@/app/_actions/components';
 import { createUnit, createComponent as factoryComponent, createInventoryItem, resetCounter } from '@/app/__tests__/factories';
 
 vi.mock('@/lib/prisma');
@@ -219,6 +219,62 @@ describe('deleteComponent', () => {
 
     expect(result.success).toBe(true);
     expect(prisma.computerComponent.delete).toHaveBeenCalledWith({ where: { id: 'comp-1' } });
+  });
+});
+
+describe('deleteAllComponents', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    resetCounter();
+    await defaultSession();
+  });
+
+  it('returns error when not authenticated', async () => {
+    await noSession();
+
+    const fd = new FormData();
+    fd.set('computerUnitId', 'unit-1');
+    const result = await deleteAllComponents(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('logged in');
+  });
+
+  it('denies TECHNICIAN with zero DB change', async () => {
+    await techSession();
+
+    const fd = new FormData();
+    fd.set('computerUnitId', 'unit-1');
+    const result = await deleteAllComponents(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('administrators');
+    expect(prisma.computerComponent.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('returns error when unit not found', async () => {
+    vi.mocked(prisma.computerUnit.findUnique).mockResolvedValue(null);
+
+    const fd = new FormData();
+    fd.set('computerUnitId', 'unit-1');
+    const result = await deleteAllComponents(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('not found');
+  });
+
+  it('deletes every component attached to the unit', async () => {
+    vi.mocked(prisma.computerUnit.findUnique).mockResolvedValue(createUnit({ id: 'unit-1' }));
+    vi.mocked(prisma.computerComponent.deleteMany).mockResolvedValue({ count: 9 });
+
+    const fd = new FormData();
+    fd.set('computerUnitId', 'unit-1');
+    const result = await deleteAllComponents(fd);
+
+    expect(result).toEqual({ success: true, data: { count: 9 } });
+    expect(prisma.computerComponent.deleteMany).toHaveBeenCalledWith({
+      where: { computer_unit_id: 'unit-1' },
+    });
   });
 });
 

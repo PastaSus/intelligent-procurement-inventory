@@ -121,7 +121,7 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
 }
 
 export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintProps) {
-  const canPrint = request.status === 'APPROVED' || request.status === 'FULFILLED';
+  const canPrint = request.status === 'APPROVED';
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

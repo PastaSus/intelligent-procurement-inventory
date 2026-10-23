@@ -229,7 +229,7 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
   }, [requests, statusFilter, search, sortBy, sortOrder]);
 
   const printableRequests = useMemo(
-    () => filteredItems.filter((req) => req.status === 'APPROVED' || req.status === 'FULFILLED'),
+    () => filteredItems.filter((req) => req.status === 'APPROVED'),
     [filteredItems],
   );
 

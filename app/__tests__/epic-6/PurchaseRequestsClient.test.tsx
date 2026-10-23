@@ -209,6 +209,7 @@ describe('PurchaseRequestsClient', () => {
       makePR({ status: 'DRAFT' }),
       makePR({ status: 'REQUESTED' }),
       makePR({ status: 'REJECTED' }),
+      makePR({ status: 'FULFILLED' }),
     ];
     const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
@@ -216,7 +217,7 @@ describe('PurchaseRequestsClient', () => {
     expect(container.querySelector('.print-only')).toBeNull();
   });
 
-  it('only includes approved and fulfilled requests in the print list', () => {
+  it('only includes approved requests in the print list', () => {
     const requests = [
       makePR({ pr_number: 'PR-DRAFT', status: 'DRAFT' }),
       makePR({ pr_number: 'PR-REQUESTED', status: 'REQUESTED' }),
@@ -229,7 +230,7 @@ describe('PurchaseRequestsClient', () => {
     const printSection = container.querySelector('.print-only');
     expect(printSection).not.toBeNull();
     expect(printSection?.textContent).toContain('PR-APPROVED');
-    expect(printSection?.textContent).toContain('PR-FULFILLED');
+    expect(printSection?.textContent).not.toContain('PR-FULFILLED');
     expect(printSection?.textContent).not.toContain('PR-DRAFT');
     expect(printSection?.textContent).not.toContain('PR-REQUESTED');
     expect(printSection?.textContent).not.toContain('PR-REJECTED');

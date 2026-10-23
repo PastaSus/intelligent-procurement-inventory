@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 
 const laboratoryRoom = { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), findMany: vi.fn() };
 const computerUnit = { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), deleteMany: vi.fn(), findMany: vi.fn(), createMany: vi.fn() };
-const computerComponent = { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() };
+const computerComponent = { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), deleteMany: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() };
 const inventoryItem = { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn(), findMany: vi.fn() };
 const purchaseRequest = { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() };
 const requestItem = { findMany: vi.fn(), create: vi.fn() };

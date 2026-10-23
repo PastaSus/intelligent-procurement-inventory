@@ -92,10 +92,10 @@ describe('PurchaseRequestPrint', () => {
     expect(window.print).toHaveBeenCalledTimes(1);
   });
 
-  it('disables printing for requests that were not approved', async () => {
+  it.each(['REJECTED', 'FULFILLED'])('disables printing for %s requests', async (status) => {
     const user = userEvent.setup();
     const { container } = render(
-      <PurchaseRequestPrint request={makeRequest({ status: 'REJECTED' })} onClose={() => {}} />,
+      <PurchaseRequestPrint request={makeRequest({ status })} onClose={() => {}} />,
     );
 
     const printButton = screen.getByRole('button', { name: /^print$/i });

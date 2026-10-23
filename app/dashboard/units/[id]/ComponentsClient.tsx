@@ -10,7 +10,7 @@ import { AddSoftwareForm } from './components/AddSoftwareForm';
 import { EditSoftwareForm } from './components/EditSoftwareForm';
 import { SoftwareList, SoftwareItem } from './components/SoftwareList';
 import { Button } from '@/components/ui/button';
-import { deleteComponent, bulkAddComponents } from '@/app/_actions/components';
+import { deleteComponent, deleteAllComponents, bulkAddComponents } from '@/app/_actions/components';
 import { removeInstalledApplication } from '@/app/_actions/software';
 import { useToast } from '@/lib/toast-context';
 
@@ -66,6 +66,7 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
   const [isSoftwareFormOpen, setIsSoftwareFormOpen] = useState(false);
   const [editingComponent, setEditingComponent] = useState<Component | null>(null);
   const [deletingComponent, setDeletingComponent] = useState<Component | null>(null);
+  const [isRemovingAll, setIsRemovingAll] = useState(false);
   const [relocatingComponent, setRelocatingComponent] = useState<Component | null>(null);
   const [editingSoftware, setEditingSoftware] = useState<SoftwareItem | null>(null);
   const [removingSoftware, setRemovingSoftware] = useState<SoftwareItem | null>(null);
@@ -93,6 +94,22 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
         window.location.reload();
       } else {
         alert(result.error || 'Failed to delete component');
+      }
+    });
+  };
+
+  const handleRemoveAll = () => {
+    const formData = new FormData();
+    formData.set('computerUnitId', unit.id);
+
+    startTransition(async () => {
+      const result = await deleteAllComponents(formData);
+      if (result.success) {
+        addToast(`Removed ${result.data?.count ?? 0} component${result.data?.count === 1 ? '' : 's'}`, 'success');
+        setIsRemovingAll(false);
+        window.location.reload();
+      } else {
+        addToast(result.error || 'Failed to delete components', 'error');
       }
     });
   };
@@ -163,6 +180,17 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
             <Button variant="outline" onClick={handleBulkAdd} disabled={isPending} className="gap-2">
               <Sparkles className="h-4 w-4" />
               Auto-populate
+            </Button>
+          )}
+          {isAdmin && components.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => setIsRemovingAll(true)}
+              disabled={isPending}
+              className="gap-2 text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+              Remove All
             </Button>
           )}
           <Button onClick={() => setIsFormOpen(true)} className="gap-2">
@@ -374,6 +402,30 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
               <Button variant="outline" onClick={() => setDeletingComponent(null)} disabled={isPending}>Cancel</Button>
               <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
                 {isPending ? 'Removing...' : 'Remove'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isRemovingAll && isAdmin && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg border p-6 max-w-md w-full mx-4 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-full">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold">Remove All Components</h3>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              Permanently remove all <strong className="text-foreground">{components.length}</strong> component
+              {components.length === 1 ? '' : 's'} from <strong className="text-foreground">{unit.unit_name}</strong>?
+              This cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setIsRemovingAll(false)} disabled={isPending}>Cancel</Button>
+              <Button variant="destructive" onClick={handleRemoveAll} disabled={isPending}>
+                {isPending ? 'Removing...' : 'Remove All'}
               </Button>
             </div>
           </div>
