@@ -207,7 +207,7 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
                       return (
                         <tr
                           key={row.id}
-                          className={isRoomEnd(detailedRows, index) ? 'border-b-4 border-black' : 'border-b border-gray-100 last:border-b-0'}
+                          className={isRoomEnd(detailedRows, index) ? 'border-b-4 border-[#820503] print:border-black' : 'border-b border-gray-100 last:border-b-0'}
                         >
                           <td className="px-4 py-2 text-sm">
                             {showRoom ? row.roomName : ''}
@@ -242,7 +242,7 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
                       return (
                         <tr
                           key={row.id}
-                          className={isRoomEnd(unitRows, index) ? 'border-b-4 border-black' : 'border-b border-gray-100 last:border-b-0'}
+                          className={isRoomEnd(unitRows, index) ? 'border-b-4 border-[#820503] print:border-black' : 'border-b border-gray-100 last:border-b-0'}
                         >
                           <td className="px-4 py-2 text-sm">
                             {showRoom ? row.roomName : ''}

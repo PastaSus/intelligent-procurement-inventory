@@ -95,7 +95,7 @@ export function HardwareReportPrint({
             {detailedRows.map((row, index) => (
               <tr
                 key={row.id}
-                className={isRoomEnd(detailedRows, index) ? 'border-b-4 border-black align-top' : 'border-b border-gray-100 align-top'}
+                className={isRoomEnd(detailedRows, index) ? 'border-b-4 border-[#820503] print:border-black align-top' : 'border-b border-gray-100 align-top'}
               >
                 <td className="py-2 pr-2">{row.roomName}</td>
                 <td className="py-2 pr-2">{row.unitName}</td>
@@ -119,7 +119,7 @@ export function HardwareReportPrint({
             {unitRows.map((row, index) => (
               <tr
                 key={row.id}
-                className={isRoomEnd(unitRows, index) ? 'border-b-4 border-black' : 'border-b border-gray-100'}
+                className={isRoomEnd(unitRows, index) ? 'border-b-4 border-[#820503] print:border-black' : 'border-b border-gray-100'}
               >
                 <td className="py-2 pr-2">{row.roomName}</td>
                 <td className="py-2 pr-2">{row.unitName}</td>
