@@ -18,14 +18,20 @@ export function AddRoomForm({ onClose, onSuccess }: AddRoomFormProps) {
   const { addToast } = useToast();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [name, setName] = useState('');
+  const [prefixOverride, setPrefixOverride] = useState('');
   const [unitCount, setUnitCount] = useState('0');
 
-  const prefix = deriveUnitPrefix(name);
+  const derivedPrefix = deriveUnitPrefix(name);
+  const effectivePrefix = (prefixOverride.trim() || derivedPrefix).toUpperCase();
+  const prefixValid =
+    effectivePrefix.length > 0 &&
+    effectivePrefix.length <= 20 &&
+    /^[A-Za-z0-9_-]+$/.test(effectivePrefix);
   const count = Number(unitCount);
   const previewNames = useMemo(() => {
-    if (prefix.length === 0 || !Number.isInteger(count) || count < 1 || count > 100) return [];
-    return buildUnitNames({ prefix, startNumber: 1, count });
-  }, [prefix, count]);
+    if (!prefixValid || !Number.isInteger(count) || count < 1 || count > 100) return [];
+    return buildUnitNames({ prefix: effectivePrefix, startNumber: 1, count });
+  }, [prefixValid, effectivePrefix, count]);
 
   const previewSummary =
     previewNames.length <= 6
@@ -85,6 +91,25 @@ export function AddRoomForm({ onClose, onSuccess }: AddRoomFormProps) {
           </div>
 
           <div>
+            <label htmlFor="prefix" className="block text-sm font-medium mb-1">
+              Unit Prefix <span className="text-muted-foreground font-normal">(optional)</span>
+            </label>
+            <Input
+              id="prefix"
+              name="prefix"
+              value={prefixOverride}
+              onChange={(e) => setPrefixOverride(e.target.value.toUpperCase())}
+              placeholder={derivedPrefix || 'e.g. LR2'}
+              maxLength={20}
+              disabled={isPending}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Used for unit names. Leave blank to derive from the room name
+              {derivedPrefix ? ` (${derivedPrefix})` : ''}.
+            </p>
+          </div>
+
+          <div>
             <label htmlFor="unitCount" className="block text-sm font-medium mb-1">Number of PCs / Units</label>
             <Input
               id="unitCount"
@@ -97,7 +122,7 @@ export function AddRoomForm({ onClose, onSuccess }: AddRoomFormProps) {
               disabled={isPending}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Optional. Units are named from the room name (e.g. LR2 → LR201, LR202).
+              Optional. Units are named using the prefix above (e.g. LR2 → LR201, LR202).
             </p>
           </div>
 

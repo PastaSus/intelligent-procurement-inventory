@@ -105,6 +105,27 @@ describe('createLabRoom', () => {
     });
   });
 
+  it('uses a custom unit prefix when seeding units', async () => {
+    vi.mocked(prisma.laboratoryRoom.findUnique).mockResolvedValue(null);
+    const newRoom = createRoom({ name: 'Laboratory 127A' });
+    vi.mocked(prisma.laboratoryRoom.create).mockResolvedValue(newRoom);
+    vi.mocked(prisma.computerUnit.createMany).mockResolvedValue({ count: 2 });
+
+    const fd = new FormData();
+    fd.set('name', 'Laboratory 127A');
+    fd.set('prefix', 'LR1U');
+    fd.set('unitCount', '2');
+    const result = await createLabRoom(fd);
+
+    expect(result.success).toBe(true);
+    expect(prisma.computerUnit.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({ unit_name: 'LR1U01', laboratory_room_id: newRoom.id }),
+        expect.objectContaining({ unit_name: 'LR1U02', laboratory_room_id: newRoom.id }),
+      ],
+    });
+  });
+
   it('rejects an invalid unit count before creating anything', async () => {
     const fd = new FormData();
     fd.set('name', 'LR2');

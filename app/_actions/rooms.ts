@@ -15,6 +15,7 @@ export async function createLabRoom(formData: FormData) {
 
     const rawData = {
       name: formData.get('name') as string,
+      prefix: (formData.get('prefix') as string | null)?.trim() || undefined,
       unitCount: formData.get('unitCount') ?? undefined,
     };
     const result = createLabRoomSchema.safeParse(rawData);
@@ -29,10 +30,11 @@ export async function createLabRoom(formData: FormData) {
       return { success: false, error: 'A room with this name already exists' };
     }
 
+    const prefix = (result.data.prefix || deriveUnitPrefix(result.data.name)).toUpperCase();
     const unitNames =
       result.data.unitCount > 0
         ? buildUnitNames({
-            prefix: deriveUnitPrefix(result.data.name),
+            prefix,
             startNumber: 1,
             count: result.data.unitCount,
           })

@@ -114,3 +114,7 @@ context: []
 
 - Component, action, report, and license-key regression coverage.
   [`AddRoomForm.test.tsx:30`](../../app/__tests__/epic-2/AddRoomForm.test.tsx#L30)
+
+## Spec Change Log
+
+- 2026-10-24 (follow-up): Added an optional Unit Prefix override to room creation so long room names (e.g. "Laboratory 127A") can produce concise codes; blank still derives from the room name. No frozen intent changed.

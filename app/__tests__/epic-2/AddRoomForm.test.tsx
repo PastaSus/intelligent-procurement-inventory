@@ -41,6 +41,27 @@ describe('AddRoomForm', () => {
     expect(screen.getByText('LR201, LR202, LR203')).toBeInTheDocument();
   });
 
+  it('uses a custom unit prefix for the preview and submission', async () => {
+    const user = userEvent.setup();
+    render(<AddRoomForm onClose={onClose} onSuccess={onSuccess} />);
+
+    await user.type(screen.getByLabelText(/room name/i), 'Laboratory 127A');
+    await user.type(screen.getByLabelText(/unit prefix/i), 'LR1U');
+    const countInput = screen.getByLabelText(/number of pcs/i);
+    await user.clear(countInput);
+    await user.type(countInput, '2');
+
+    expect(screen.getByText('LR1U01, LR1U02')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /create room/i }));
+
+    await waitFor(() => {
+      expect(createLabRoom).toHaveBeenCalledTimes(1);
+    });
+    const formData = vi.mocked(createLabRoom).mock.calls[0][0] as FormData;
+    expect(formData.get('prefix')).toBe('LR1U');
+  });
+
   it('submits the requested unit count', async () => {
     const user = userEvent.setup();
     render(<AddRoomForm onClose={onClose} onSuccess={onSuccess} />);
