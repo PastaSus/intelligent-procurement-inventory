@@ -20,6 +20,7 @@ export default async function SparePartsReportPage() {
       rows={result.data.rows}
       requestRows={result.data.requestRows}
       totals={result.data.totals}
+      roomOptions={result.data.roomOptions}
       generatedAt={new Date()}
     />
   );
