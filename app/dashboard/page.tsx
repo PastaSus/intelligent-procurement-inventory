@@ -6,7 +6,7 @@ function StatCard({ icon: Icon, label, value, variant, href }: { icon: React.Ele
   const variantStyles = {
     primary: 'bg-primary/10 text-primary',
     warning: 'bg-red-100 text-red-600',
-    secondary: 'bg-secondary/10 text-secondary',
+    secondary: 'bg-secondary/15 text-foreground',
     info: 'bg-blue-100 text-blue-600',
   };
 
