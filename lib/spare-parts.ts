@@ -1,3 +1,10 @@
+import type { ComponentType } from '@prisma/client';
+
+export const COMPONENT_TYPE_ORDER: ComponentType[] = [
+  'MOTHERBOARD', 'PROCESSOR', 'MEMORY', 'STORAGE',
+  'MONITOR', 'KEYBOARD', 'MOUSE', 'AVR', 'OPTICAL_DRIVE',
+];
+
 export interface SparePartsCount {
   forReplacement: number;
   spareQty: number;
