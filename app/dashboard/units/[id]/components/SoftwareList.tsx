@@ -1,6 +1,7 @@
 'use client';
 
-import { MonitorSmartphone, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { MonitorSmartphone, Pencil, Trash2, Eye, EyeOff, Copy, Check } from 'lucide-react';
 
 export interface SoftwareItem {
   id: string;
@@ -25,6 +26,52 @@ const licenseStyles: Record<string, string> = {
   EDUCATIONAL: 'bg-yellow-100 text-yellow-800',
   NONE: 'bg-gray-100 text-gray-800',
 };
+
+function LicenseKeyCell({ licenseKey, canReveal }: { licenseKey: string | null; canReveal: boolean }) {
+  const [revealed, setRevealed] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  if (!licenseKey) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(licenseKey as string);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard access can be denied; leave the value visible instead.
+      setRevealed(true);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="font-mono text-xs">{revealed ? licenseKey : '••••••••'}</span>
+      {canReveal && (
+        <>
+          <button
+            onClick={() => setRevealed((value) => !value)}
+            className="p-1 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
+            title={revealed ? 'Hide license key' : 'Show license key'}
+            aria-label={revealed ? 'Hide license key' : 'Show license key'}
+          >
+            {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          </button>
+          <button
+            onClick={() => { void handleCopy(); }}
+            className="p-1 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
+            title="Copy license key"
+            aria-label="Copy license key"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
 
 function formatDate(date: Date) {
   const d = new Date(date);
@@ -59,6 +106,7 @@ export function SoftwareList({ software, onEdit, onRemove, isAdmin = true }: Sof
           <tr className="border-b bg-muted/50">
             <th className="text-left p-3 text-sm font-medium">Name</th>
             <th className="text-left p-3 text-sm font-medium">Version</th>
+            <th className="text-left p-3 text-sm font-medium">License Key</th>
             <th className="text-left p-3 text-sm font-medium">License Type</th>
             <th className="text-left p-3 text-sm font-medium">Install Date</th>
             <th className="text-center w-[100px] p-3 text-sm font-medium">Actions</th>
@@ -72,6 +120,9 @@ export function SoftwareList({ software, onEdit, onRemove, isAdmin = true }: Sof
               </td>
               <td className="p-3 text-sm">
                 {app.version || '-'}
+              </td>
+              <td className="p-3">
+                <LicenseKeyCell licenseKey={app.license_key} canReveal={isAdmin} />
               </td>
               <td className="p-3">
                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${licenseStyles[app.license_type] || licenseStyles.NONE}`}>

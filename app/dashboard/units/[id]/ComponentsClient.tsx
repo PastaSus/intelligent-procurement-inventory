@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Plus, ArrowLeft, Cpu, Wrench, AlertTriangle, Pencil, Trash2, Sparkles, MoveRight } from 'lucide-react';
+import { Plus, ArrowLeft, Cpu, Wrench, AlertTriangle, Pencil, Trash2, Sparkles, MoveRight, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { AddComponentForm } from './components/AddComponentForm';
 import { EditComponentForm } from './components/EditComponentForm';
@@ -17,6 +17,7 @@ import { useToast } from '@/lib/toast-context';
 interface UnitInfo {
   id: string;
   unit_name: string;
+  roomId: string;
   roomName: string;
 }
 
@@ -166,14 +167,21 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
       <div className="flex flex-col items-start gap-3 text-left sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Link
-            href="/dashboard/units"
+            href={`/dashboard/units?room_id=${encodeURIComponent(unit.roomId)}`}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Units
           </Link>
           <h2 className="text-3xl font-bold">{unit.unit_name}</h2>
-          <p className="text-muted-foreground">{unit.roomName}</p>
+          <Link
+            href={`/dashboard/units?room_id=${encodeURIComponent(unit.roomId)}`}
+            className="mt-1 inline-flex items-center gap-1.5 rounded-full border bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+            aria-label={`View ${unit.roomName} room units`}
+          >
+            <Building2 className="h-3.5 w-3.5" />
+            {unit.roomName}
+          </Link>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {missingTypes.length > 0 && (

@@ -15,3 +15,7 @@ export function buildUnitNames({
     `${prefix}${String(startNumber + index).padStart(padding, '0')}`,
   );
 }
+
+export function deriveUnitPrefix(roomName: string): string {
+  return roomName.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+}

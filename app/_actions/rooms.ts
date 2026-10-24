@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { createLabRoomSchema, updateLabRoomSchema } from '@/lib/validators/lab-room';
+import { buildUnitNames, deriveUnitPrefix } from '@/lib/unit-batch';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -12,7 +13,11 @@ export async function createLabRoom(formData: FormData) {
       return { success: false, error: 'You must be logged in' };
     }
 
-    const rawData = { name: formData.get('name') as string };
+    const rawData = {
+      name: formData.get('name') as string,
+      prefix: (formData.get('prefix') as string | null)?.trim() || undefined,
+      unitCount: formData.get('unitCount') ?? undefined,
+    };
     const result = createLabRoomSchema.safeParse(rawData);
     if (!result.success) {
       return { success: false, error: result.error.issues[0].message };
@@ -25,15 +30,41 @@ export async function createLabRoom(formData: FormData) {
       return { success: false, error: 'A room with this name already exists' };
     }
 
-    const room = await prisma.laboratoryRoom.create({
-      data: {
-        name: result.data.name,
-        created_by: session.userId,
-        updated_by: session.userId,
-      },
+    const prefix = (result.data.prefix || deriveUnitPrefix(result.data.name)).toUpperCase();
+    const unitNames =
+      result.data.unitCount > 0
+        ? buildUnitNames({
+            prefix,
+            startNumber: 1,
+            count: result.data.unitCount,
+          })
+        : [];
+
+    const room = await prisma.$transaction(async (tx) => {
+      const created = await tx.laboratoryRoom.create({
+        data: {
+          name: result.data.name,
+          created_by: session.userId,
+          updated_by: session.userId,
+        },
+      });
+
+      if (unitNames.length > 0) {
+        await tx.computerUnit.createMany({
+          data: unitNames.map((unit_name) => ({
+            unit_name,
+            laboratory_room_id: created.id,
+            created_by: session.userId,
+            updated_by: session.userId,
+          })),
+        });
+      }
+
+      return created;
     });
 
     revalidatePath('/dashboard/rooms');
+    revalidatePath('/dashboard/units');
     return { success: true, data: room };
   } catch (error) {
     console.error('Create lab room error:', error);

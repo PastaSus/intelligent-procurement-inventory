@@ -6,6 +6,7 @@ import { getHardwareReport } from '@/app/_actions/reports';
 import { ReportSummary } from './ReportSummary';
 import { HardwareReportPrint } from './HardwareReportPrint';
 import {
+  getDetailedRowClass,
   getDetailedRows,
   getReportTotals,
   getUnitRows,
@@ -166,11 +167,11 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
           <div className="w-48">
             <Select value={detail} onValueChange={v => setDetail(v as ReportDetail)}>
               <SelectTrigger className="w-full" aria-label="Report detail level">
-                <SelectValue placeholder="Detailed" />
+                <SelectValue placeholder="Per Unit" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="detailed">Detailed</SelectItem>
-                <SelectItem value="non-detailed">Non-Detailed</SelectItem>
+                <SelectItem value="detailed">Per Unit</SelectItem>
+                <SelectItem value="non-detailed">Summary</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -216,7 +217,9 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
                       return (
                         <tr
                           key={row.id}
-                          className={isRoomEnd(detailedRows, index) ? 'border-b-4 border-[#820503] print:border-black' : 'border-b border-gray-100 last:border-b-0'}
+                          className={getDetailedRowClass(detailedRows, index, {
+                            lastRowClass: 'border-b border-gray-100 last:border-b-0',
+                          })}
                         >
                           <td className="px-4 py-2 text-sm">
                             {showRoom ? row.roomName : ''}

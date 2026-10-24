@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  getDetailedRowClass,
   getDetailedRows,
   getReportTotals,
   getUnitRows,
@@ -67,7 +68,7 @@ export function HardwareReportPrint({
 
       <div className="flex flex-wrap justify-between gap-x-6 gap-y-1 text-sm border-y-2 border-black py-2 px-1 mb-3">
         <p><span className="font-semibold">Date:</span> {dateStr}</p>
-        <p><span className="font-semibold">View:</span> {detail === 'detailed' ? 'Detailed' : 'Non-Detailed'}</p>
+        <p><span className="font-semibold">View:</span> {detail === 'detailed' ? 'Per Unit' : 'Summary'}</p>
         <p><span className="font-semibold">Rooms:</span> {totals.rooms}</p>
         <p><span className="font-semibold">Units:</span> {totals.units}</p>
         <p><span className="font-semibold">Components:</span> {totals.components}</p>
@@ -94,7 +95,9 @@ export function HardwareReportPrint({
             {detailedRows.map((row, index) => (
               <tr
                 key={row.id}
-                className={isRoomEnd(detailedRows, index) ? 'border-b-4 border-[#820503] print:border-black align-top' : 'border-b border-gray-100 align-top'}
+                className={`${getDetailedRowClass(detailedRows, index, {
+                  lastRowClass: 'border-b border-gray-100',
+                })} align-top`}
               >
                 <td className="py-2 pr-2">{row.roomName}</td>
                 <td className="py-2 pr-2">{row.unitName}</td>
