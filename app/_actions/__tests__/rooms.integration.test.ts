@@ -81,6 +81,50 @@ describe('createLabRoom', () => {
         data: expect.objectContaining({ name: 'New Lab' }),
       })
     );
+    expect(prisma.computerUnit.createMany).not.toHaveBeenCalled();
+  });
+
+  it('seeds the requested number of units on room creation', async () => {
+    vi.mocked(prisma.laboratoryRoom.findUnique).mockResolvedValue(null);
+    const newRoom = createRoom({ name: 'LR2' });
+    vi.mocked(prisma.laboratoryRoom.create).mockResolvedValue(newRoom);
+    vi.mocked(prisma.computerUnit.createMany).mockResolvedValue({ count: 3 });
+
+    const fd = new FormData();
+    fd.set('name', 'LR2');
+    fd.set('unitCount', '3');
+    const result = await createLabRoom(fd);
+
+    expect(result.success).toBe(true);
+    expect(prisma.computerUnit.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({ unit_name: 'LR201', laboratory_room_id: newRoom.id }),
+        expect.objectContaining({ unit_name: 'LR202', laboratory_room_id: newRoom.id }),
+        expect.objectContaining({ unit_name: 'LR203', laboratory_room_id: newRoom.id }),
+      ],
+    });
+  });
+
+  it('rejects an invalid unit count before creating anything', async () => {
+    const fd = new FormData();
+    fd.set('name', 'LR2');
+    fd.set('unitCount', '101');
+    const result = await createLabRoom(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('100');
+    expect(prisma.laboratoryRoom.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects unit seeding when the room name has no unit prefix', async () => {
+    const fd = new FormData();
+    fd.set('name', '---');
+    fd.set('unitCount', '2');
+    const result = await createLabRoom(fd);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('letters or numbers');
+    expect(prisma.laboratoryRoom.create).not.toHaveBeenCalled();
   });
 });
 

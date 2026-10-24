@@ -80,3 +80,23 @@ export function isRoomEnd(rows: { roomName: string }[], index: number): boolean 
   const next = rows[index + 1];
   return Boolean(next) && next.roomName !== rows[index].roomName;
 }
+
+export function isUnitEnd(rows: { roomName: string; unitName: string }[], index: number): boolean {
+  const next = rows[index + 1];
+  if (!next) return false;
+  return next.roomName !== rows[index].roomName || next.unitName !== rows[index].unitName;
+}
+
+export function getDetailedRowClass(
+  rows: { roomName: string; unitName: string }[],
+  index: number,
+  options: { lastRowClass: string },
+): string {
+  if (isRoomEnd(rows, index)) {
+    return 'border-b-4 border-[#820503] print:border-black';
+  }
+  if (isUnitEnd(rows, index)) {
+    return 'border-b-2 border-gray-400';
+  }
+  return options.lastRowClass;
+}

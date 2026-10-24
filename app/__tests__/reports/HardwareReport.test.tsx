@@ -133,7 +133,7 @@ describe('HardwareReport', () => {
     expect(unit1Count).toBe(1);
   });
 
-  it('uses light row borders and a thick border after each room', () => {
+  it('separates units with a medium border and rooms with a thick border', () => {
     const rooms = [
       makeRoom({
         id: 'room-1',
@@ -171,10 +171,13 @@ describe('HardwareReport', () => {
     const screenTable = getScreenTable(container) as HTMLTableElement;
     const rows = Array.from(screenTable.querySelectorAll('tbody tr'));
 
-    // Rows inside a room use the lighter separator.
+    // Rows inside a unit use the lightest separator.
     expect(rows[0].className).toContain('border-gray-100');
     expect(rows[0].className).not.toContain('border-b-4');
-    expect(rows[1].className).toContain('border-gray-100');
+    expect(rows[0].className).not.toContain('border-b-2');
+    // The boundary between LR201 and LR203 gets a medium border.
+    expect(rows[1].className).toContain('border-b-2');
+    expect(rows[1].className).toContain('border-gray-400');
     expect(rows[1].className).not.toContain('border-b-4');
     // Only the boundary between rooms gets the thick border; the final row does not.
     expect(rows[2].className).toContain('border-b-4');

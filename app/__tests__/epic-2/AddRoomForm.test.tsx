@@ -23,8 +23,39 @@ describe('AddRoomForm', () => {
 
     expect(screen.getByText('Add Laboratory Room')).toBeInTheDocument();
     expect(screen.getByLabelText(/room name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/number of pcs/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create room/i })).toBeInTheDocument();
+  });
+
+  it('previews generated unit names from the room name and count', async () => {
+    const user = userEvent.setup();
+    render(<AddRoomForm onClose={onClose} onSuccess={onSuccess} />);
+
+    await user.type(screen.getByLabelText(/room name/i), 'LR2');
+    const countInput = screen.getByLabelText(/number of pcs/i);
+    await user.clear(countInput);
+    await user.type(countInput, '3');
+
+    expect(screen.getByText('Units to be created')).toBeInTheDocument();
+    expect(screen.getByText('LR201, LR202, LR203')).toBeInTheDocument();
+  });
+
+  it('submits the requested unit count', async () => {
+    const user = userEvent.setup();
+    render(<AddRoomForm onClose={onClose} onSuccess={onSuccess} />);
+
+    await user.type(screen.getByLabelText(/room name/i), 'LR2');
+    const countInput = screen.getByLabelText(/number of pcs/i);
+    await user.clear(countInput);
+    await user.type(countInput, '3');
+    await user.click(screen.getByRole('button', { name: /create room/i }));
+
+    await waitFor(() => {
+      expect(createLabRoom).toHaveBeenCalledTimes(1);
+    });
+    const formData = vi.mocked(createLabRoom).mock.calls[0][0] as FormData;
+    expect(formData.get('unitCount')).toBe('3');
   });
 
   it('calls onClose when Cancel is clicked', async () => {

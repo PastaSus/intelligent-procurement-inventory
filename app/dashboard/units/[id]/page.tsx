@@ -23,7 +23,7 @@ export default async function UnitDetailPage({ params }: PageProps) {
   const unit = await prisma.computerUnit.findUnique({
     where: { id },
     include: {
-      laboratory_room: { select: { name: true } },
+      laboratory_room: { select: { id: true, name: true } },
       components: { orderBy: { type: 'asc' } },
       installedApplications: { orderBy: { name: 'asc' } },
     },
@@ -36,7 +36,7 @@ export default async function UnitDetailPage({ params }: PageProps) {
   const allUnits = await prisma.computerUnit.findMany({
     where: { deleted: false },
     include: {
-      laboratory_room: { select: { name: true } },
+      laboratory_room: { select: { id: true, name: true } },
     },
     orderBy: { unit_name: 'asc' },
   });
@@ -44,6 +44,7 @@ export default async function UnitDetailPage({ params }: PageProps) {
   const allUnitsMapped = allUnits.map(u => ({
     id: u.id,
     unit_name: u.unit_name,
+    roomId: u.laboratory_room.id,
     roomName: u.laboratory_room.name,
   }));
 
@@ -52,6 +53,7 @@ export default async function UnitDetailPage({ params }: PageProps) {
       unit={{
         id: unit.id,
         unit_name: unit.unit_name,
+        roomId: unit.laboratory_room.id,
         roomName: unit.laboratory_room.name,
       }}
       initialComponents={unit.components}

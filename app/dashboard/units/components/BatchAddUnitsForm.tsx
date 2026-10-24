@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react';
 import { X } from 'lucide-react';
 import { createComputerUnitsBatch } from '@/app/_actions/units';
-import { buildUnitNames } from '@/lib/unit-batch';
+import { buildUnitNames, deriveUnitPrefix } from '@/lib/unit-batch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -56,7 +56,7 @@ export function BatchAddUnitsForm({ onClose, onSuccess, rooms }: BatchAddUnitsFo
     setError('');
     if (!prefix.trim()) {
       const room = rooms.find((candidate) => candidate.id === roomId);
-      const suggestion = room?.name.replace(/[^A-Za-z0-9]/g, '').toUpperCase() ?? '';
+      const suggestion = room ? deriveUnitPrefix(room.name) : '';
       if (suggestion) {
         setPrefix(suggestion);
       }
