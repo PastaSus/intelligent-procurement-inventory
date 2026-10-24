@@ -171,7 +171,7 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="detailed">Per Unit</SelectItem>
-                <SelectItem value="non-detailed">Non-Detailed</SelectItem>
+                <SelectItem value="non-detailed">Summary</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -167,7 +167,7 @@ export function ComponentsClient({ unit, initialComponents, initialSoftware, com
       <div className="flex flex-col items-start gap-3 text-left sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Link
-            href="/dashboard/units"
+            href={`/dashboard/units?room_id=${encodeURIComponent(unit.roomId)}`}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />

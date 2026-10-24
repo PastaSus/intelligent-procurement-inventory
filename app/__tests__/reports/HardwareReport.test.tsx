@@ -222,7 +222,7 @@ describe('HardwareReport', () => {
 
     const detailSelect = screen.getByRole('combobox', { name: /report detail level/i });
     await user.click(detailSelect);
-    await user.click(screen.getByRole('option', { name: /Non-Detailed/ }));
+    await user.click(screen.getByRole('option', { name: /Summary/ }));
 
     // Confirm the view switched
     expect(screen.getByText('Unit Status Summary')).toBeInTheDocument();
@@ -248,7 +248,7 @@ describe('HardwareReport', () => {
 
     const detailSelect = screen.getByRole('combobox', { name: /report detail level/i });
     await user.click(detailSelect);
-    await user.click(screen.getByRole('option', { name: /Non-Detailed/ }));
+    await user.click(screen.getByRole('option', { name: /Summary/ }));
 
     await screen.findByText('Unit Status Summary');
     const screenTable = getScreenTable(container);
@@ -277,7 +277,7 @@ describe('HardwareReport', () => {
 
     const detailSelect = screen.getByRole('combobox', { name: /report detail level/i });
     await user.click(detailSelect);
-    await user.click(screen.getByRole('option', { name: /Non-Detailed/ }));
+    await user.click(screen.getByRole('option', { name: /Summary/ }));
 
     // Use findBy with a longer timeout to ensure the view has switched
     await waitFor(() => {

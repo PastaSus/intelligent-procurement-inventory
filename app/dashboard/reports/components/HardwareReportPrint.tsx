@@ -68,7 +68,7 @@ export function HardwareReportPrint({
 
       <div className="flex flex-wrap justify-between gap-x-6 gap-y-1 text-sm border-y-2 border-black py-2 px-1 mb-3">
         <p><span className="font-semibold">Date:</span> {dateStr}</p>
-        <p><span className="font-semibold">View:</span> {detail === 'detailed' ? 'Per Unit' : 'Non-Detailed'}</p>
+        <p><span className="font-semibold">View:</span> {detail === 'detailed' ? 'Per Unit' : 'Summary'}</p>
         <p><span className="font-semibold">Rooms:</span> {totals.rooms}</p>
         <p><span className="font-semibold">Units:</span> {totals.units}</p>
         <p><span className="font-semibold">Components:</span> {totals.components}</p>
