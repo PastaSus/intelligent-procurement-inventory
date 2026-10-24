@@ -30,3 +30,11 @@
 ## Deferred from: review of shared signatory footer (2026-10-11)
 
 - window.print() with the letter modal open prints both print roots (list summary + single letter) with independent signatory states and no print scoping — pre-existing dual `.print-only` architecture, out of scope for the footer extraction.
+
+## Deferred from: quick-dev review of spare-parts report parity (2026-10-24)
+
+- Client state seeded from server props does not re-sync on `router.refresh()` — mirrors `HardwareReport`; report keeps the last fetched data until a filter triggers a refetch.
+- Report cross-links (summary cards, category counts) do not carry the active room/type filters into their destination views — existing behavior, destinations are global.
+- "Generated" timestamp after a filter refetch uses the client clock instead of the server action's timestamp — mirrors `HardwareReport`; consider returning `generatedAt` with the payload.
+- Print-media hiding/showing is verified only by class assertions, not an actual print-media rendering test — needs Playwright print emulation if desired.
+- Integration tests mock `groupBy` results without evaluating the `where` clause; they assert query shape plus returned values, not true filtering behavior.
