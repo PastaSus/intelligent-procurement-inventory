@@ -1,9 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PurchaseRequestsClient } from '@/app/dashboard/purchase-requests/PurchaseRequestsClient';
+import { exportNodeAsPdf, exportNodeAsPng } from '@/lib/print-export';
 
-vi.mock('@/lib/toast-context');
+const toastMocks = vi.hoisted(() => ({ addToast: vi.fn() }));
+
+vi.mock('@/lib/toast-context', () => ({
+  useToast: () => ({ addToast: toastMocks.addToast }),
+}));
+vi.mock('@/lib/print-export', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/print-export')>();
+  return {
+    ...actual,
+    exportNodeAsPdf: vi.fn(),
+    exportNodeAsPng: vi.fn(),
+  };
+});
 vi.mock('@/app/_actions/purchase-requests', () => ({
   submitPurchaseRequest: vi.fn(),
   approvePurchaseRequest: vi.fn(),
@@ -324,5 +337,75 @@ describe('PurchaseRequestsClient', () => {
     const { container } = render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
 
     expect(onScreenTable(container).getByText('₱300.00')).toBeInTheDocument();
+  });
+
+  describe('approved list downloads', () => {
+    it('renders download controls and disables them without approved requests', () => {
+      render(<PurchaseRequestsClient initialRequests={[makePR({ status: 'DRAFT' })]} isAdmin={true} />);
+
+      expect(
+        screen.getByRole('button', { name: /download approved requests as pdf/i }),
+      ).toBeDisabled();
+      expect(
+        screen.getByRole('button', { name: /download approved requests as image/i }),
+      ).toBeDisabled();
+    });
+
+    it('exports the approved requests list as a PDF', async () => {
+      const user = userEvent.setup();
+      vi.mocked(exportNodeAsPdf).mockResolvedValue(undefined);
+      const requests = [makePR({ pr_number: 'PR-20260705-ABCD', status: 'APPROVED' })];
+      render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+      await user.click(screen.getByRole('button', { name: /download approved requests as pdf/i }));
+
+      expect(exportNodeAsPdf).toHaveBeenCalledTimes(1);
+      const [node, filename] = vi.mocked(exportNodeAsPdf).mock.calls[0];
+      expect((node as HTMLElement).textContent).toContain('PR-20260705-ABCD');
+      expect(filename).toMatch(/^procurvin-approved-requests-\d{4}-\d{2}-\d{2}\.pdf$/);
+      expect(exportNodeAsPng).not.toHaveBeenCalled();
+    });
+
+    it('shows a preparing state while exporting the list', async () => {
+      const user = userEvent.setup();
+      let finishExport: (() => void) | undefined;
+      vi.mocked(exportNodeAsPng).mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            finishExport = resolve;
+          }),
+      );
+      const requests = [makePR({ status: 'APPROVED' })];
+      render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+      const pdfButton = screen.getByRole('button', { name: /download approved requests as pdf/i });
+      await user.click(screen.getByRole('button', { name: /download approved requests as image/i }));
+
+      expect(await screen.findByText('Preparing…')).toBeInTheDocument();
+      expect(pdfButton).toBeDisabled();
+
+      finishExport?.();
+      await waitFor(() =>
+        expect(
+          screen.getByRole('button', { name: /download approved requests as image/i }),
+        ).toHaveTextContent('Download Image'),
+      );
+    });
+
+    it('shows an error toast when the list export fails', async () => {
+      const user = userEvent.setup();
+      vi.mocked(exportNodeAsPdf).mockRejectedValue(new Error('render failed'));
+      const requests = [makePR({ status: 'APPROVED' })];
+      render(<PurchaseRequestsClient initialRequests={requests} isAdmin={true} />);
+
+      await user.click(screen.getByRole('button', { name: /download approved requests as pdf/i }));
+
+      await waitFor(() =>
+        expect(toastMocks.addToast).toHaveBeenCalledWith(
+          'Could not generate the file. Please try again.',
+          'error',
+        ),
+      );
+    });
   });
 });

@@ -1,7 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PurchaseRequestPrint } from '@/app/dashboard/purchase-requests/components/PurchaseRequestPrint';
+import { exportNodeAsPdf, exportNodeAsPng } from '@/lib/print-export';
+
+const toastMocks = vi.hoisted(() => ({ addToast: vi.fn() }));
+
+vi.mock('@/lib/toast-context', () => ({
+  useToast: () => ({ addToast: toastMocks.addToast }),
+}));
+
+vi.mock('@/lib/print-export', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/print-export')>();
+  return {
+    ...actual,
+    exportNodeAsPdf: vi.fn(),
+    exportNodeAsPng: vi.fn(),
+  };
+});
 
 function makeRequest(overrides: { notes?: string | null; status?: string } = {}) {
   return {
@@ -129,5 +145,88 @@ describe('PurchaseRequestPrint', () => {
 
     fireEvent.click(screen.getByRole('dialog'));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  describe('document downloads', () => {
+    it('shows download controls for approved requests', () => {
+      render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
+
+      expect(
+        screen.getByRole('button', { name: /download pr-20261008-abcd as pdf/i }),
+      ).toBeEnabled();
+      expect(
+        screen.getByRole('button', { name: /download pr-20261008-abcd as image/i }),
+      ).toBeEnabled();
+    });
+
+    it.each(['REJECTED', 'FULFILLED'])('disables downloads for %s requests', (status) => {
+      render(<PurchaseRequestPrint request={makeRequest({ status })} onClose={() => {}} />);
+
+      expect(
+        screen.getByRole('button', { name: /download pr-20261008-abcd as pdf/i }),
+      ).toBeDisabled();
+      expect(
+        screen.getByRole('button', { name: /download pr-20261008-abcd as image/i }),
+      ).toBeDisabled();
+    });
+
+    it('exports the previewed letter as a PDF', async () => {
+      const user = userEvent.setup();
+      vi.mocked(exportNodeAsPdf).mockResolvedValue(undefined);
+      render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
+
+      await user.click(screen.getByRole('button', { name: /download pr-20261008-abcd as pdf/i }));
+
+      expect(exportNodeAsPdf).toHaveBeenCalledTimes(1);
+      const [node, filename] = vi.mocked(exportNodeAsPdf).mock.calls[0];
+      expect((node as HTMLElement).className).toContain('pr-print-letter');
+      expect(node).toHaveTextContent('PURCHASE REQUEST');
+      expect(filename).toBe('PR-20261008-ABCD.pdf');
+      expect(exportNodeAsPng).not.toHaveBeenCalled();
+    });
+
+    it('shows a preparing state and blocks both exports while working', async () => {
+      const user = userEvent.setup();
+      let finishExport: (() => void) | undefined;
+      vi.mocked(exportNodeAsPng).mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            finishExport = resolve;
+          }),
+      );
+      render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
+
+      const pdfButton = screen.getByRole('button', { name: /download pr-20261008-abcd as pdf/i });
+      const imageButton = screen.getByRole('button', { name: /download pr-20261008-abcd as image/i });
+
+      await user.click(imageButton);
+
+      expect(await screen.findByText('Preparing…')).toBeInTheDocument();
+      expect(imageButton).toBeDisabled();
+      expect(pdfButton).toBeDisabled();
+
+      finishExport?.();
+
+      await waitFor(() => expect(imageButton).toHaveTextContent('Download Image'));
+      expect(imageButton).toBeEnabled();
+    });
+
+    it('shows an error toast when an export fails', async () => {
+      const user = userEvent.setup();
+      vi.mocked(exportNodeAsPdf).mockRejectedValue(new Error('render failed'));
+      render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
+
+      await user.click(screen.getByRole('button', { name: /download pr-20261008-abcd as pdf/i }));
+
+      await waitFor(() =>
+        expect(toastMocks.addToast).toHaveBeenCalledWith(
+          'Could not generate the file. Please try again.',
+          'error',
+        ),
+      );
+      expect(
+        screen.getByRole('button', { name: /download pr-20261008-abcd as pdf/i }),
+      ).toBeEnabled();
+    });
   });
 });

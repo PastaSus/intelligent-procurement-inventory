@@ -3,6 +3,7 @@ allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
   bcrypt: true
+  core-js: false
   esbuild: false
   msw: true
   prisma: true
