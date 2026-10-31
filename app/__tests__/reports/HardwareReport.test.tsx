@@ -3,6 +3,18 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HardwareReport } from '@/app/dashboard/reports/components/HardwareReport';
 
+const toastMocks = vi.hoisted(() => ({ addToast: vi.fn() }));
+vi.mock('@/lib/toast-context', () => ({ useToast: vi.fn(() => toastMocks) }));
+
+vi.mock('@/lib/print-export', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/print-export')>();
+  return {
+    ...actual,
+    exportNodeAsPdf: vi.fn(),
+    exportNodeAsPng: vi.fn(),
+  };
+});
+
 vi.mock('@/app/_actions/reports', () => ({
   getHardwareReport: vi.fn(),
 }));

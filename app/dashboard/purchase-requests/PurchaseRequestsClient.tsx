@@ -1,9 +1,17 @@
 'use client';
 
-import { useState, useMemo, useTransition, useCallback } from 'react';
-import { ShoppingCart, Plus, Search, X, CheckCircle, XCircle, Package, Send, Printer } from 'lucide-react';
+import { useState, useMemo, useTransition, useCallback, useRef } from 'react';
+import { ShoppingCart, Plus, Search, X, CheckCircle, XCircle, Package, Send, Printer, FileDown, ImageDown, Loader2 } from 'lucide-react';
 import { formatPeso } from '@/lib/format';
 import { printDocument } from '@/lib/print';
+import {
+  A4,
+  approvedRequestsFileName,
+  exportNodeAsPdf,
+  exportNodeAsPng,
+  type DocumentExtension,
+} from '@/lib/print-export';
+import { useToast } from '@/lib/toast-context';
 import { CreateRequestForm } from './components/CreateRequestForm';
 import type { StockPart } from './components/CreateRequestForm';
 import { RejectRequestDialog } from './components/RejectRequestDialog';
@@ -65,7 +73,7 @@ function requestCost(req: PurchaseRequest): number {
   }, 0);
 }
 
-function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
+function PrintRequestListContent({ requests }: { requests: PurchaseRequest[] }) {
   const grandTotal = requests.reduce((sum, r) => sum + requestCost(r), 0);
   const dateStr = new Date().toLocaleDateString('en-US', {
     month: 'long',
@@ -74,7 +82,7 @@ function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
   });
 
   return (
-    <div className="pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto">
+    <>
       <div className="border-b-4 border-double border-black pb-4 mb-5">
         <div className="flex items-center justify-between gap-4">
           <img
@@ -136,6 +144,14 @@ function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
       </table>
 
       <SignatoryBlocks />
+    </>
+  );
+}
+
+function PrintRequestList({ requests }: { requests: PurchaseRequest[] }) {
+  return (
+    <div className="pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto">
+      <PrintRequestListContent requests={requests} />
     </div>
   );
 }
@@ -159,11 +175,36 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [rejectingRequest, setRejectingRequest] = useState<PurchaseRequest | null>(null);
   const [printingRequest, setPrintingRequest] = useState<PurchaseRequest | null>(null);
+  const [pendingListExport, setPendingListExport] = useState<DocumentExtension | null>(null);
+  const listExportRef = useRef<HTMLDivElement>(null);
+  const { addToast } = useToast();
 
   const handleSuccess = useCallback(() => {
     setIsFormOpen(false);
     window.location.reload();
   }, []);
+
+  const handleListExport = useCallback(
+    async (extension: DocumentExtension) => {
+      const node = listExportRef.current;
+      if (!node || pendingListExport) return;
+
+      setPendingListExport(extension);
+      try {
+        const filename = approvedRequestsFileName(new Date(), extension);
+        if (extension === 'pdf') {
+          await exportNodeAsPdf(node, filename);
+        } else {
+          await exportNodeAsPng(node, filename);
+        }
+      } catch {
+        addToast('Could not generate the file. Please try again.', 'error');
+      } finally {
+        setPendingListExport(null);
+      }
+    },
+    [addToast, pendingListExport],
+  );
 
   const handleAction = useCallback(async (action: string, request: PurchaseRequest) => {
     const formData = new FormData();
@@ -255,7 +296,45 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
           <h2 className="text-3xl font-bold">Purchase Requests</h2>
           <p className="text-muted-foreground">Track and manage internal procurement</p>
         </div>
-        <div className="flex items-center gap-2 report-no-print">
+        <div className="flex flex-wrap items-center justify-end gap-2 report-no-print">
+          <Button
+            variant="outline"
+            onClick={() => void handleListExport('pdf')}
+            className="gap-2"
+            disabled={printableRequests.length === 0 || pendingListExport !== null}
+            aria-label="Download approved requests as PDF"
+            title={
+              printableRequests.length === 0
+                ? 'No approved requests to download'
+                : 'Download the approved requests list as a PDF'
+            }
+          >
+            {pendingListExport === 'pdf' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileDown className="h-4 w-4" />
+            )}
+            {pendingListExport === 'pdf' ? 'Preparing…' : 'Download PDF'}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => void handleListExport('png')}
+            className="gap-2"
+            disabled={printableRequests.length === 0 || pendingListExport !== null}
+            aria-label="Download approved requests as image"
+            title={
+              printableRequests.length === 0
+                ? 'No approved requests to download'
+                : 'Download the approved requests list as an image'
+            }
+          >
+            {pendingListExport === 'png' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ImageDown className="h-4 w-4" />
+            )}
+            {pendingListExport === 'png' ? 'Preparing…' : 'Download Image'}
+          </Button>
           <Button
             variant="outline"
             onClick={printDocument}
@@ -463,6 +542,26 @@ export function PurchaseRequestsClient({ initialRequests, isAdmin, stockParts = 
       {printableRequests.length > 0 && (
         <div className="print-only hidden">
           <PrintRequestList requests={printableRequests} />
+        </div>
+      )}
+
+      {printableRequests.length > 0 && (
+        <div
+          aria-hidden="true"
+          style={{ position: 'fixed', left: -10000, top: 0, pointerEvents: 'none' }}
+        >
+          <div
+            ref={listExportRef}
+            className="pr-print-letter pr-print-letter-paged bg-white text-black"
+            style={{
+              width: A4.widthPx,
+              minHeight: A4.heightPx,
+              padding: A4.marginPx,
+              boxSizing: 'border-box',
+            }}
+          >
+            <PrintRequestListContent requests={printableRequests} />
+          </div>
         </div>
       )}
 

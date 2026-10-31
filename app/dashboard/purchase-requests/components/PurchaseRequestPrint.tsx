@@ -1,10 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
-import { Printer, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { FileDown, ImageDown, Loader2, Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { printDocument } from '@/lib/print';
 import { formatPeso } from '@/lib/format';
+import {
+  A4,
+  exportNodeAsPdf,
+  exportNodeAsPng,
+  requestDocumentFileName,
+  type DocumentExtension,
+} from '@/lib/print-export';
+import { useToast } from '@/lib/toast-context';
 import { SignatoryBlocks } from './SignatoryBlocks';
 
 interface PrintRequestItem {
@@ -30,13 +38,15 @@ interface PurchaseRequestPrintProps {
   onClose: () => void;
 }
 
+const PREVIEW_PADDING = 16;
+
 function itemTotal(item: PrintRequestItem): number {
   if (item.total) return parseFloat(item.total);
   const price = item.unit_price ? parseFloat(item.unit_price) : 0;
   return price * item.quantity;
 }
 
-function LetterBody({ request }: { request: PrintPurchaseRequest }) {
+function LetterContent({ request }: { request: PrintPurchaseRequest }) {
   const grandTotal = request.items.reduce((sum, i) => sum + itemTotal(i), 0);
   const dateStr = new Date(request.updated_at).toLocaleDateString('en-US', {
     month: 'long',
@@ -45,7 +55,7 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
   });
 
   return (
-    <div className="pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto">
+    <>
       <div className="border-b-4 border-double border-black pb-4 mb-5">
         <div className="flex items-center justify-between gap-4">
           <img
@@ -116,12 +126,26 @@ function LetterBody({ request }: { request: PrintPurchaseRequest }) {
       )}
 
       <SignatoryBlocks />
+    </>
+  );
+}
+
+function LetterBody({ request }: { request: PrintPurchaseRequest }) {
+  return (
+    <div className="pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto">
+      <LetterContent request={request} />
     </div>
   );
 }
 
 export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintProps) {
   const canPrint = request.status === 'APPROVED';
+  const { addToast } = useToast();
+  const paperRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [paperHeight, setPaperHeight] = useState<number>(A4.heightPx);
+  const [pendingExport, setPendingExport] = useState<DocumentExtension | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -130,6 +154,57 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    const paper = paperRef.current;
+    if (!frame || !paper) return;
+
+    const measure = () => {
+      const available = frame.clientWidth - PREVIEW_PADDING * 2;
+      setScale(available > 0 ? Math.min(1, available / A4.widthPx) : 1);
+      if (paper.offsetHeight > 0) setPaperHeight(paper.offsetHeight);
+    };
+
+    measure();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', measure);
+      return () => window.removeEventListener('resize', measure);
+    }
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(frame);
+    observer.observe(paper);
+    return () => observer.disconnect();
+  }, []);
+
+  const handleExport = useCallback(
+    async (extension: DocumentExtension) => {
+      const node = paperRef.current;
+      if (!node || pendingExport) return;
+
+      setPendingExport(extension);
+      try {
+        const filename = requestDocumentFileName(request.pr_number, extension);
+        if (extension === 'pdf') {
+          await exportNodeAsPdf(node, filename);
+        } else {
+          await exportNodeAsPng(node, filename);
+        }
+      } catch {
+        addToast('Could not generate the file. Please try again.', 'error');
+      } finally {
+        setPendingExport(null);
+      }
+    },
+    [addToast, pendingExport, request.pr_number],
+  );
+
+  const exportDisabled = !canPrint || pendingExport !== null;
+  const exportTitle = canPrint
+    ? 'Download this request letter'
+    : 'Only approved requests can be downloaded';
 
   return (
     <>
@@ -147,7 +222,39 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
             <h3 id="purchase-request-print-title" className="min-w-0 flex-1 break-words text-lg font-semibold">
               Print Preview — {request.pr_number}
             </h3>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void handleExport('pdf')}
+                disabled={exportDisabled}
+                className="gap-2"
+                aria-label={`Download ${request.pr_number} as PDF`}
+                title={exportTitle}
+              >
+                {pendingExport === 'pdf' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileDown className="h-4 w-4" />
+                )}
+                {pendingExport === 'pdf' ? 'Preparing…' : 'Download PDF'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void handleExport('png')}
+                disabled={exportDisabled}
+                className="gap-2"
+                aria-label={`Download ${request.pr_number} as image`}
+                title={exportTitle}
+              >
+                {pendingExport === 'png' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ImageDown className="h-4 w-4" />
+                )}
+                {pendingExport === 'png' ? 'Preparing…' : 'Download Image'}
+              </Button>
               <Button
                 type="button"
                 onClick={printDocument}
@@ -164,8 +271,26 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
               </Button>
             </div>
           </div>
-          <div className="overflow-y-auto bg-muted/30 p-4">
-            <LetterBody request={request} />
+          <div ref={frameRef} className="overflow-y-auto bg-muted/30 p-4">
+            <div
+              className="mx-auto"
+              style={{ width: A4.widthPx * scale, height: paperHeight * scale }}
+            >
+              <div style={{ width: A4.widthPx, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+                <div
+                  ref={paperRef}
+                  className="pr-print-letter pr-print-letter-paged bg-white text-black shadow-sm"
+                  style={{
+                    width: A4.widthPx,
+                    minHeight: A4.heightPx,
+                    padding: A4.marginPx,
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <LetterContent request={request} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
