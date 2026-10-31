@@ -3,7 +3,57 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+// Accounts that older versions of this script created with hard-coded values.
+// They are removed on seed so reseeding with new credentials does not leave
+// duplicate admins/technicians behind.
+const LEGACY_PLACEHOLDER_EMAILS = [
+  'admin@example.com',
+  'staff@example.com',
+  'tech@example.com',
+];
+
+interface SeedConfig {
+  adminEmail: string;
+  adminPassword: string;
+  techEmail: string;
+  techPassword: string;
+}
+
+function readSeedConfig(): SeedConfig {
+  if (process.env.ALLOW_SEED !== 'true') {
+    console.error(
+      'Refusing to seed: seeding deletes lab data. Set ALLOW_SEED=true to confirm you are ' +
+        'targeting a throwaway/demo database.',
+    );
+    process.exit(1);
+  }
+
+  const required = [
+    'SEED_ADMIN_EMAIL',
+    'SEED_ADMIN_PASSWORD',
+    'SEED_TECH_EMAIL',
+    'SEED_TECH_PASSWORD',
+  ] as const;
+  const missing = required.filter((name) => !process.env[name]?.trim());
+
+  if (missing.length > 0) {
+    console.error(
+      `Refusing to seed: missing required environment variables: ${missing.join(', ')}.`,
+    );
+    process.exit(1);
+  }
+
+  return {
+    adminEmail: process.env.SEED_ADMIN_EMAIL!.trim(),
+    adminPassword: process.env.SEED_ADMIN_PASSWORD!,
+    techEmail: process.env.SEED_TECH_EMAIL!.trim(),
+    techPassword: process.env.SEED_TECH_PASSWORD!,
+  };
+}
+
 async function main() {
+  const config = readSeedConfig();
+
   console.log('Seeding database...');
 
   // Clean existing data in reverse dependency order
@@ -15,27 +65,35 @@ async function main() {
   await prisma.requestItem.deleteMany();
   await prisma.purchaseRequest.deleteMany();
   await prisma.passwordResetToken.deleteMany();
+
+  const stalePlaceholders = LEGACY_PLACEHOLDER_EMAILS.filter(
+    (email) => email !== config.adminEmail && email !== config.techEmail,
+  );
+  if (stalePlaceholders.length > 0) {
+    await prisma.user.deleteMany({
+      where: { email: { in: stalePlaceholders } },
+    });
+  }
   console.log('Cleaned existing data.');
 
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const hashedPassword = await bcrypt.hash(config.adminPassword, 10);
 
   const admin = await prisma.user.upsert({
-    where: { email: 'aarongtxd@gmail.com' },
-    update: {},
+    where: { email: config.adminEmail },
+    update: { password_hash: hashedPassword, role: 'ADMIN' },
     create: {
-      email: 'aarongtxd@gmail.com',
+      email: config.adminEmail,
       password_hash: hashedPassword,
       role: 'ADMIN',
     },
   });
 
-  const techPassword = await bcrypt.hash('tech123', 10);
-  await prisma.user.deleteMany({ where: { email: 'staff@example.com' } });
+  const techPassword = await bcrypt.hash(config.techPassword, 10);
   await prisma.user.upsert({
-    where: { email: 'tech@example.com' },
+    where: { email: config.techEmail },
     update: { password_hash: techPassword, role: 'TECHNICIAN' },
     create: {
-      email: 'tech@example.com',
+      email: config.techEmail,
       password_hash: techPassword,
       role: 'TECHNICIAN',
     },

@@ -10,6 +10,7 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
+    "restore:backup": "tsx scripts/restore-backup.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",

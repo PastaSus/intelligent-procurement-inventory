@@ -69,7 +69,12 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/procurement
       SESSION_SECRET: ci-session-secret-not-for-production
-      E2E_ADMIN_EMAIL: aarongtxd@gmail.com
+      ALLOW_SEED: "true"
+      SEED_ADMIN_EMAIL: admin@example.com
+      SEED_ADMIN_PASSWORD: admin123
+      SEED_TECH_EMAIL: tech@example.com
+      SEED_TECH_PASSWORD: tech123
+      E2E_ADMIN_EMAIL: admin@example.com
       E2E_ADMIN_PASSWORD: admin123
     steps:
       - uses: actions/checkout@v4

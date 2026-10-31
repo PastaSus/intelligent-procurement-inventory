@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { Building2, Monitor, AlertTriangle, ShoppingCart, Wrench, Cpu, Package, Boxes } from 'lucide-react';
 import { getDashboardStats } from '@/app/_actions/dashboard';
+import { getSession } from '@/lib/auth';
+import { DataBackupCard } from './components/DataBackupCard';
 
 function StatCard({ icon: Icon, label, value, variant, href }: { icon: React.ElementType; label: string; value: number; variant: 'primary' | 'warning' | 'secondary' | 'info'; href: string }) {
   const variantStyles = {
@@ -29,7 +31,10 @@ function StatCard({ icon: Icon, label, value, variant, href }: { icon: React.Ele
 }
 
 export default async function DashboardPage() {
-  const statsResult = await getDashboardStats();
+  const [statsResult, session] = await Promise.all([
+    getDashboardStats(),
+    getSession(),
+  ]);
 
   if (!statsResult.success) {
     return (
@@ -69,6 +74,8 @@ export default async function DashboardPage() {
         <StatCard icon={AlertTriangle} label="Needs Replacement" value={stats.needsReplacement} variant="warning" href="/dashboard/component-status" />
         <StatCard icon={ShoppingCart} label="Pending Requests" value={stats.pendingRequests} variant="secondary" href="/dashboard/purchase-requests" />
       </div>
+
+      {session?.role === 'ADMIN' && <DataBackupCard />}
     </div>
   );
 }
