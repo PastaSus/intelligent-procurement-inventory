@@ -1,4 +1,13 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Procurvin — Intelligent Procurement & Inventory
+
+Procurvin is a lab asset management app for tracking laboratory rooms, computer
+units, components, spare parts, purchase requests, and hardware/software reports.
+
+## Documentation
+
+- [Backup and restore guide](./docs/backup-and-restore.md) — in-app JSON backups,
+  `pg_dump`/`pg_restore` for Neon, restore procedure, and scratch-database testing.
+- [Database schema](./docs/SCHEMA.md)
 
 ## Getting Started
 
