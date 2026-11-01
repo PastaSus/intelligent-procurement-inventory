@@ -105,11 +105,13 @@ export function planPageSlices(
 
 export function collectBreakOffsets(node: HTMLElement): number[] {
   const rootRect = node.getBoundingClientRect();
+  const layoutWidth = node.offsetWidth || rootRect.width;
+  const scaleFactor = layoutWidth > 0 && rootRect.width > 0 ? rootRect.width / layoutWidth : 1;
   const offsets: number[] = [];
 
   node.querySelectorAll('tr, .signature-blocks').forEach((element) => {
     const rect = element.getBoundingClientRect();
-    if (rect.height > 0) offsets.push(Math.round(rect.bottom - rootRect.top));
+    if (rect.height > 0) offsets.push(Math.round((rect.bottom - rootRect.top) / scaleFactor));
   });
 
   return [...new Set(offsets)].sort((a, b) => a - b);

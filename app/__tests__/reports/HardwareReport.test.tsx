@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HardwareReport } from '@/app/dashboard/reports/components/HardwareReport';
+import { exportNodeAsPdf, exportNodeAsPng } from '@/lib/print-export';
 
 const toastMocks = vi.hoisted(() => ({ addToast: vi.fn() }));
 vi.mock('@/lib/toast-context', () => ({ useToast: vi.fn(() => toastMocks) }));
@@ -99,7 +100,7 @@ describe('HardwareReport', () => {
     render(<HardwareReport initialRooms={initialRooms} roomOptions={roomOptions} />);
 
     expect(screen.getByText('Hardware Inventory Report')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /print/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^print$/i })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /filter by room/i })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /filter by status/i })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /filter by component type/i })).toBeInTheDocument();
@@ -348,13 +349,14 @@ describe('HardwareReport', () => {
     expect(all.length).toBeGreaterThan(0);
     // The screen version must not be inside the print-only div
     expect(all.some((el) => !el.closest('.print-only'))).toBe(true);
+    expect(screen.getByRole('button', { name: /print preview/i })).toBeDisabled();
   });
 
   it('calls window.print when the Print button is clicked', async () => {
     const user = userEvent.setup();
     render(<HardwareReport initialRooms={initialRooms} roomOptions={roomOptions} />);
 
-    await user.click(screen.getByRole('button', { name: /print/i }));
+    await user.click(screen.getByRole('button', { name: /^print$/i }));
     expect(window.print).toHaveBeenCalledTimes(1);
   });
 
@@ -367,5 +369,81 @@ describe('HardwareReport', () => {
     await user.click(screen.getByRole('option', { name: 'Laboratory 101' }));
 
     expect(mockedGetHardwareReport).toHaveBeenLastCalledWith({ roomId: 'room-1' });
+  });
+
+  describe('print preview dialog', () => {
+    it('opens the dialog with the hardware report letterhead layout', async () => {
+      const user = userEvent.setup();
+      render(<HardwareReport initialRooms={initialRooms} roomOptions={roomOptions} />);
+
+      await user.click(screen.getByRole('button', { name: /print preview/i }));
+
+      const dialog = screen.getByRole('dialog');
+      expect(within(dialog).getByText('HARDWARE INVENTORY REPORT')).toBeInTheDocument();
+      expect(within(dialog).getByText('College of Computer Studies')).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: /as pdf/i })).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: /as image/i })).toBeInTheDocument();
+    });
+
+    it('exports the dialog paper node rather than the on-screen report section', async () => {
+      const user = userEvent.setup();
+      vi.mocked(exportNodeAsPdf).mockResolvedValue(undefined);
+      const { container } = render(<HardwareReport initialRooms={initialRooms} roomOptions={roomOptions} />);
+
+      await user.click(screen.getByRole('button', { name: /print preview/i }));
+      const dialog = screen.getByRole('dialog');
+      await user.click(within(dialog).getByRole('button', { name: /as pdf/i }));
+
+      expect(exportNodeAsPdf).toHaveBeenCalledTimes(1);
+      const [node, filename] = vi.mocked(exportNodeAsPdf).mock.calls[0];
+      const paper = node as HTMLElement;
+      expect(paper.className).toContain('pr-print-letter');
+      expect(paper.className).not.toContain('report-no-print');
+      expect(paper).not.toBe(container.querySelector('.report-no-print'));
+      expect(paper).toHaveTextContent('HARDWARE INVENTORY REPORT');
+      expect(filename).toMatch(/^procurvin-hardware-report-\d{4}-\d{2}-\d{2}\.pdf$/);
+    });
+
+    it('shows a preparing state and disables both downloads while exporting', async () => {
+      const user = userEvent.setup();
+      let finishExport: (() => void) | undefined;
+      vi.mocked(exportNodeAsPng).mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            finishExport = resolve;
+          }),
+      );
+      render(<HardwareReport initialRooms={initialRooms} roomOptions={roomOptions} />);
+
+      await user.click(screen.getByRole('button', { name: /print preview/i }));
+      const dialog = screen.getByRole('dialog');
+      const pdfButton = within(dialog).getByRole('button', { name: /as pdf/i });
+      await user.click(within(dialog).getByRole('button', { name: /as image/i }));
+
+      expect(await screen.findByText('Preparing…')).toBeInTheDocument();
+      expect(pdfButton).toBeDisabled();
+
+      finishExport?.();
+      await waitFor(() =>
+        expect(within(dialog).getByRole('button', { name: /as image/i })).toHaveTextContent('Download Image'),
+      );
+    });
+
+    it('shows an error toast when the dialog export fails', async () => {
+      const user = userEvent.setup();
+      vi.mocked(exportNodeAsPdf).mockRejectedValue(new Error('render failed'));
+      render(<HardwareReport initialRooms={initialRooms} roomOptions={roomOptions} />);
+
+      await user.click(screen.getByRole('button', { name: /print preview/i }));
+      const dialog = screen.getByRole('dialog');
+      await user.click(within(dialog).getByRole('button', { name: /as pdf/i }));
+
+      await waitFor(() =>
+        expect(toastMocks.addToast).toHaveBeenCalledWith(
+          'Could not generate the file. Please try again.',
+          'error',
+        ),
+      );
+    });
   });
 });

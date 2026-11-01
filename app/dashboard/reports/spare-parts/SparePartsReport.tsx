@@ -1,21 +1,16 @@
 'use client';
 
-import { useCallback, useRef, useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, CheckCircle, Package, Printer, Wrench, FileDown, ImageDown, Loader2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Package, Printer, Wrench, Eye } from 'lucide-react';
 import { getSparePartsReport, type SparePartsReportRow } from '@/app/_actions/reports';
 import { SparePartsReportPrint } from './SparePartsReportPrint';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { COMPONENT_TYPE_ORDER } from '@/lib/spare-parts';
 import { printDocument } from '@/lib/print';
-import {
-  exportNodeAsPdf,
-  exportNodeAsPng,
-  sparePartsReportFileName,
-  type DocumentExtension,
-} from '@/lib/print-export';
-import { useToast } from '@/lib/toast-context';
+import { sparePartsReportFileName } from '@/lib/print-export';
+import { PrintPreviewDialog } from '@/components/PrintPreviewDialog';
 
 interface RoomOption {
   id: string;
@@ -63,34 +58,8 @@ export function SparePartsReport({
   const [isPending, startTransition] = useTransition();
   const [generatedAt, setGeneratedAt] = useState(() => initialGeneratedAt);
   const [filterError, setFilterError] = useState<string | null>(null);
-  const [pendingExport, setPendingExport] = useState<DocumentExtension | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const requestRef = useRef(0);
-  const reportRef = useRef<HTMLDivElement>(null);
-  const { addToast } = useToast();
-
-  const handleExport = useCallback(
-    async (extension: DocumentExtension) => {
-      const node = reportRef.current;
-      if (!node || pendingExport) return;
-
-      setPendingExport(extension);
-      try {
-        const filename = sparePartsReportFileName(new Date(), extension);
-        if (extension === 'pdf') {
-          await exportNodeAsPdf(node, filename);
-        } else {
-          await exportNodeAsPng(node, filename);
-        }
-      } catch {
-        addToast('Could not generate the file. Please try again.', 'error');
-      } finally {
-        setPendingExport(null);
-      }
-    },
-    [addToast, pendingExport],
-  );
-
-  const exportDisabled = pendingExport !== null;
 
   function applyFilters(next: Filters) {
     const requestId = ++requestRef.current;
@@ -154,7 +123,7 @@ export function SparePartsReport({
 
   return (
     <div className="space-y-6 hardware-report">
-      <div className="report-no-print space-y-6" ref={reportRef} aria-busy={isPending}>
+      <div className="report-no-print space-y-6" aria-busy={isPending}>
         <div className="flex flex-col items-start gap-3 text-left sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-3xl font-bold">Spare Parts &amp; Replacement Report</h2>
@@ -177,32 +146,12 @@ export function SparePartsReport({
             <Button
               type="button"
               variant="outline"
-              onClick={() => void handleExport('pdf')}
-              disabled={exportDisabled || isPending}
+              onClick={() => setIsPreviewOpen(true)}
+              disabled={rows.length === 0 || isPending}
               className="gap-2"
-              aria-label="Download spare parts report as PDF"
             >
-              {pendingExport === 'pdf' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <FileDown className="h-4 w-4" />
-              )}
-              {pendingExport === 'pdf' ? 'Preparing…' : 'Download PDF'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void handleExport('png')}
-              disabled={exportDisabled || isPending}
-              className="gap-2"
-              aria-label="Download spare parts report as image"
-            >
-              {pendingExport === 'png' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ImageDown className="h-4 w-4" />
-              )}
-              {pendingExport === 'png' ? 'Preparing…' : 'Download Image'}
+              <Eye className="h-4 w-4" />
+              Print Preview
             </Button>
           </div>
         </div>
@@ -429,6 +378,26 @@ export function SparePartsReport({
           showingLabel={showingLabel}
         />
       </div>
+
+      {isPreviewOpen && (
+        <PrintPreviewDialog
+          title="Print Preview — Spare Parts & Replacement Report"
+          fileName={(extension) => sparePartsReportFileName(new Date(), extension)}
+          onClose={() => setIsPreviewOpen(false)}
+          canExport={rows.length > 0 && !isPending}
+        >
+          <SparePartsReportPrint
+            embedded
+            rows={rows}
+            requestRows={requestRows}
+            totals={totals}
+            generatedAt={generatedAt}
+            roomLabel={roomLabel}
+            typeLabel={typeLabel}
+            showingLabel={showingLabel}
+          />
+        </PrintPreviewDialog>
+      )}
     </div>
   );
 }
