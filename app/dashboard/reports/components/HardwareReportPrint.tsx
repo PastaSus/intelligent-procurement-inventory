@@ -17,6 +17,7 @@ interface HardwareReportPrintProps {
   roomLabel: string;
   statusLabel: string;
   typeLabel: string;
+  embedded?: boolean;
 }
 
 function humanize(value: string): string {
@@ -30,6 +31,7 @@ export function HardwareReportPrint({
   roomLabel,
   statusLabel,
   typeLabel,
+  embedded = false,
 }: HardwareReportPrintProps) {
   const totals = getReportTotals(rooms);
   const detailedRows = detail === 'detailed' ? getDetailedRows(rooms) : [];
@@ -41,7 +43,13 @@ export function HardwareReportPrint({
   });
 
   return (
-    <div className="hardware-report-print pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto">
+    <div
+      className={
+        embedded
+          ? 'hardware-report-print pr-print-letter pr-print-letter-paged bg-white text-black'
+          : 'hardware-report-print pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto'
+      }
+    >
       <div className="border-b-4 border-double border-black pb-4 mb-5">
         <div className="flex items-center justify-between gap-4">
           <img

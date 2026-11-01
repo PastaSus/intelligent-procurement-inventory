@@ -38,3 +38,8 @@
 - "Generated" timestamp after a filter refetch uses the client clock instead of the server action's timestamp — mirrors `HardwareReport`; consider returning `generatedAt` with the payload.
 - Print-media hiding/showing is verified only by class assertions, not an actual print-media rendering test — needs Playwright print emulation if desired.
 - Integration tests mock `groupBy` results without evaluating the `where` clause; they assert query shape plus returned values, not true filtering behavior.
+
+## Deferred from: review of print-layout download fix (2026-11-01)
+
+- `waitForImage` in `lib/print-export.ts` only resolves early when `image.complete && naturalWidth > 0`; an image that already failed (404) is `complete` but never fires `load`/`error` again, so every export stalls the full 10s asset timeout. Pre-existing; guard with `if (image.complete) return Promise.resolve();` in a focused change.
+- Filename dates use click time while the document header uses render time; preview left open across midnight can disagree — pre-existing pattern shared with the single-PR preview.

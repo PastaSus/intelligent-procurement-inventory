@@ -16,6 +16,7 @@ interface SparePartsReportPrintProps {
   roomLabel: string;
   typeLabel: string;
   showingLabel: string;
+  embedded?: boolean;
 }
 
 export function SparePartsReportPrint({
@@ -26,6 +27,7 @@ export function SparePartsReportPrint({
   roomLabel,
   typeLabel,
   showingLabel,
+  embedded = false,
 }: SparePartsReportPrintProps) {
   const dateStr = generatedAt.toLocaleDateString('en-US', {
     month: 'long',
@@ -34,7 +36,13 @@ export function SparePartsReportPrint({
   });
 
   return (
-    <div className="hardware-report-print pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto">
+    <div
+      className={
+        embedded
+          ? 'hardware-report-print pr-print-letter pr-print-letter-paged bg-white text-black'
+          : 'hardware-report-print pr-print-letter pr-print-letter-paged bg-white text-black p-8 max-w-[210mm] mx-auto'
+      }
+    >
       <div className="border-b-4 border-double border-black pb-4 mb-5">
         <div className="flex items-center justify-between gap-4">
           <img

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SparePartsReport } from '@/app/dashboard/reports/spare-parts/SparePartsReport';
+import { exportNodeAsPdf, exportNodeAsPng } from '@/lib/print-export';
 
 const toastMocks = vi.hoisted(() => ({ addToast: vi.fn() }));
 vi.mock('@/lib/toast-context', () => ({ useToast: vi.fn(() => toastMocks) }));
@@ -133,7 +134,7 @@ describe('SparePartsReport', () => {
     const user = userEvent.setup();
     renderReport();
 
-    await user.click(screen.getByRole('button', { name: /print/i }));
+    await user.click(screen.getByRole('button', { name: /^print$/i }));
     expect(window.print).toHaveBeenCalledTimes(1);
   });
 
@@ -248,7 +249,7 @@ describe('SparePartsReport', () => {
     const noPrint = container.querySelector('.report-no-print');
     expect(noPrint).not.toBeNull();
     expect(noPrint).toContainElement(screen.getByRole('combobox', { name: /filter by room/i }));
-    expect(noPrint).toContainElement(screen.getByRole('button', { name: /print/i }));
+    expect(noPrint).toContainElement(screen.getByRole('button', { name: /^print$/i }));
     expect(noPrint).toContainElement(
       screen.getByRole('table', { name: /spare parts and replacement by category/i }),
     );
@@ -325,5 +326,95 @@ describe('SparePartsReport', () => {
     expect(container.querySelector('.print-only')?.textContent).toContain(
       'No shortages to request; spare stock covers all replacement needs.',
     );
+  });
+
+  describe('print preview dialog', () => {
+    it('opens the dialog with the spare parts letterhead layout', async () => {
+      const user = userEvent.setup();
+      renderReport();
+
+      await user.click(screen.getByRole('button', { name: /print preview/i }));
+
+      const dialog = screen.getByRole('dialog');
+      expect(within(dialog).getByText('SPARE PARTS & REPLACEMENT REPORT')).toBeInTheDocument();
+      expect(within(dialog).getByText('College of Computer Studies')).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: /as pdf/i })).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: /as image/i })).toBeInTheDocument();
+    });
+
+    it('exports the dialog paper node rather than the on-screen report section', async () => {
+      const user = userEvent.setup();
+      vi.mocked(exportNodeAsPdf).mockResolvedValue(undefined);
+      const { container } = renderReport();
+
+      await user.click(screen.getByRole('button', { name: /print preview/i }));
+      const dialog = screen.getByRole('dialog');
+      await user.click(within(dialog).getByRole('button', { name: /as pdf/i }));
+
+      expect(exportNodeAsPdf).toHaveBeenCalledTimes(1);
+      const [node, filename] = vi.mocked(exportNodeAsPdf).mock.calls[0];
+      const paper = node as HTMLElement;
+      expect(paper.className).toContain('pr-print-letter');
+      expect(paper.className).not.toContain('report-no-print');
+      expect(paper).not.toBe(container.querySelector('.report-no-print'));
+      expect(paper).toHaveTextContent('SPARE PARTS & REPLACEMENT REPORT');
+      expect(filename).toMatch(/^procurvin-spare-parts-report-\d{4}-\d{2}-\d{2}\.pdf$/);
+    });
+
+    it('shows a preparing state and disables both downloads while exporting', async () => {
+      const user = userEvent.setup();
+      let finishExport: (() => void) | undefined;
+      vi.mocked(exportNodeAsPng).mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            finishExport = resolve;
+          }),
+      );
+      renderReport();
+
+      await user.click(screen.getByRole('button', { name: /print preview/i }));
+      const dialog = screen.getByRole('dialog');
+      const pdfButton = within(dialog).getByRole('button', { name: /as pdf/i });
+      await user.click(within(dialog).getByRole('button', { name: /as image/i }));
+
+      expect(await screen.findByText('Preparing…')).toBeInTheDocument();
+      expect(pdfButton).toBeDisabled();
+
+      finishExport?.();
+      await waitFor(() =>
+        expect(within(dialog).getByRole('button', { name: /as image/i })).toHaveTextContent('Download Image'),
+      );
+    });
+
+    it('shows an error toast when the dialog export fails', async () => {
+      const user = userEvent.setup();
+      vi.mocked(exportNodeAsPdf).mockRejectedValue(new Error('render failed'));
+      renderReport();
+
+      await user.click(screen.getByRole('button', { name: /print preview/i }));
+      const dialog = screen.getByRole('dialog');
+      await user.click(within(dialog).getByRole('button', { name: /as pdf/i }));
+
+      await waitFor(() =>
+        expect(toastMocks.addToast).toHaveBeenCalledWith(
+          'Could not generate the file. Please try again.',
+          'error',
+        ),
+      );
+    });
+
+    it('disables Print Preview when there are no rows', () => {
+      render(
+        <SparePartsReport
+          rows={[]}
+          requestRows={[]}
+          totals={{ forReplacement: 0, spareQty: 0, netShortage: 0 }}
+          roomOptions={roomOptions}
+          generatedAt={new Date('2026-10-23')}
+        />
+      );
+
+      expect(screen.getByRole('button', { name: /print preview/i })).toBeDisabled();
+    });
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { getHardwareReport } from '@/app/_actions/reports';
 import { ReportSummary } from './ReportSummary';
@@ -17,15 +17,10 @@ import {
 } from './report-rows';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Printer, Cpu, Package, FileDown, ImageDown, Loader2 } from 'lucide-react';
+import { Printer, Cpu, Package, Eye } from 'lucide-react';
 import { printDocument } from '@/lib/print';
-import {
-  exportNodeAsPdf,
-  exportNodeAsPng,
-  hardwareReportFileName,
-  type DocumentExtension,
-} from '@/lib/print-export';
-import { useToast } from '@/lib/toast-context';
+import { hardwareReportFileName } from '@/lib/print-export';
+import { PrintPreviewDialog } from '@/components/PrintPreviewDialog';
 
 interface RoomOption {
   id: string;
@@ -60,33 +55,7 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
   const [isPending, startTransition] = useTransition();
   const [generatedAt, setGeneratedAt] = useState(() => new Date());
   const [filterError, setFilterError] = useState<string | null>(null);
-  const [pendingExport, setPendingExport] = useState<DocumentExtension | null>(null);
-  const reportRef = useRef<HTMLDivElement>(null);
-  const { addToast } = useToast();
-
-  const handleExport = useCallback(
-    async (extension: DocumentExtension) => {
-      const node = reportRef.current;
-      if (!node || pendingExport) return;
-
-      setPendingExport(extension);
-      try {
-        const filename = hardwareReportFileName(new Date(), extension);
-        if (extension === 'pdf') {
-          await exportNodeAsPdf(node, filename);
-        } else {
-          await exportNodeAsPng(node, filename);
-        }
-      } catch {
-        addToast('Could not generate the file. Please try again.', 'error');
-      } finally {
-        setPendingExport(null);
-      }
-    },
-    [addToast, pendingExport],
-  );
-
-  const exportDisabled = pendingExport !== null;
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   function applyFilters(next?: { roomId?: string; status?: string; componentType?: string }) {
     const f = {
@@ -133,7 +102,7 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
 
   return (
     <div className="space-y-6 hardware-report">
-      <div className="report-no-print space-y-6" ref={reportRef}>
+      <div className="report-no-print space-y-6">
         <div className="flex flex-col items-start gap-3 text-left sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-3xl font-bold">Hardware Inventory Report</h2>
@@ -156,32 +125,12 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
             <Button
               type="button"
               variant="outline"
-              onClick={() => void handleExport('pdf')}
-              disabled={exportDisabled}
+              onClick={() => setIsPreviewOpen(true)}
+              disabled={!hasRows || isPending}
               className="gap-2"
-              aria-label="Download hardware report as PDF"
             >
-              {pendingExport === 'pdf' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <FileDown className="h-4 w-4" />
-              )}
-              {pendingExport === 'pdf' ? 'Preparing…' : 'Download PDF'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void handleExport('png')}
-              disabled={exportDisabled}
-              className="gap-2"
-              aria-label="Download hardware report as image"
-            >
-              {pendingExport === 'png' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ImageDown className="h-4 w-4" />
-              )}
-              {pendingExport === 'png' ? 'Preparing…' : 'Download Image'}
+              <Eye className="h-4 w-4" />
+              Print Preview
             </Button>
           </div>
         </div>
@@ -350,6 +299,25 @@ export function HardwareReport({ initialRooms, roomOptions }: HardwareReportProp
           typeLabel={typeLabel}
         />
       </div>
+
+      {isPreviewOpen && (
+        <PrintPreviewDialog
+          title="Print Preview — Hardware Inventory Report"
+          fileName={(extension) => hardwareReportFileName(new Date(), extension)}
+          onClose={() => setIsPreviewOpen(false)}
+          canExport={hasRows && !isPending}
+        >
+          <HardwareReportPrint
+            embedded
+            rooms={visibleRooms}
+            detail={detail}
+            generatedAt={generatedAt}
+            roomLabel={roomLabel}
+            statusLabel={statusLabel}
+            typeLabel={typeLabel}
+          />
+        </PrintPreviewDialog>
+      )}
     </div>
   );
 }
