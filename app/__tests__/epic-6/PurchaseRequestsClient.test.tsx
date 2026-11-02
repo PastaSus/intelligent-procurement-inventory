@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PurchaseRequestsClient } from '@/app/dashboard/purchase-requests/PurchaseRequestsClient';
-import { exportNodeAsPdf, exportNodeAsPng } from '@/lib/print-export';
+import { exportNodeAsPdf } from '@/lib/print-export';
 
 const toastMocks = vi.hoisted(() => ({ addToast: vi.fn() }));
 
@@ -14,7 +14,6 @@ vi.mock('@/lib/print-export', async (importOriginal) => {
   return {
     ...actual,
     exportNodeAsPdf: vi.fn(),
-    exportNodeAsPng: vi.fn(),
   };
 });
 vi.mock('@/app/_actions/purchase-requests', () => ({
@@ -359,7 +358,6 @@ describe('PurchaseRequestsClient', () => {
       expect(within(dialog).getByText('PR-20260705-ABCD')).toBeInTheDocument();
       expect(within(dialog).getByText('College of Computer Studies')).toBeInTheDocument();
       expect(within(dialog).getByRole('button', { name: /download print preview — approved requests as pdf/i })).toBeInTheDocument();
-      expect(within(dialog).getByRole('button', { name: /download print preview — approved requests as image/i })).toBeInTheDocument();
     });
 
     it('exports the visible dialog paper as a PDF', async () => {
@@ -378,13 +376,12 @@ describe('PurchaseRequestsClient', () => {
       expect((node as HTMLElement).className).not.toContain('report-no-print');
       expect(node).toHaveTextContent('PR-20260705-ABCD');
       expect(filename).toMatch(/^procurvin-approved-requests-\d{4}-\d{2}-\d{2}\.pdf$/);
-      expect(exportNodeAsPng).not.toHaveBeenCalled();
     });
 
     it('shows a preparing state while exporting from the dialog', async () => {
       const user = userEvent.setup();
       let finishExport: (() => void) | undefined;
-      vi.mocked(exportNodeAsPng).mockImplementation(
+      vi.mocked(exportNodeAsPdf).mockImplementation(
         () =>
           new Promise<void>((resolve) => {
             finishExport = resolve;
@@ -396,17 +393,13 @@ describe('PurchaseRequestsClient', () => {
       await user.click(screen.getByRole('button', { name: /print preview/i }));
       const dialog = screen.getByRole('dialog');
       const pdfButton = within(dialog).getByRole('button', { name: /download print preview — approved requests as pdf/i });
-      await user.click(within(dialog).getByRole('button', { name: /download print preview — approved requests as image/i }));
+      await user.click(pdfButton);
 
       expect(await screen.findByText('Preparing…')).toBeInTheDocument();
       expect(pdfButton).toBeDisabled();
 
       finishExport?.();
-      await waitFor(() =>
-        expect(
-          within(dialog).getByRole('button', { name: /download print preview — approved requests as image/i }),
-        ).toHaveTextContent('Download Image'),
-      );
+      await waitFor(() => expect(pdfButton).toHaveTextContent('Download PDF'));
     });
 
     it('shows an error toast when the dialog export fails', async () => {

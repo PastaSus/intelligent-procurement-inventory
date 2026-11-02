@@ -4,7 +4,6 @@ import {
   approvedRequestsFileName,
   deliverBlob,
   exportNodeAsPdf,
-  exportNodeAsPng,
   planPageSlices,
   requestDocumentFileName,
 } from './print-export';
@@ -14,9 +13,6 @@ const mocks = vi.hoisted(() => {
     width: 2382,
     height: 3369,
     toDataURL: vi.fn(() => 'data:image/png;base64,AAAA'),
-    toBlob: vi.fn((callback: (blob: Blob | null) => void) =>
-      callback(new Blob(['png'], { type: 'image/png' })),
-    ),
   };
   const doc = {
     addPage: vi.fn(),
@@ -51,20 +47,16 @@ describe('A4 paper constants', () => {
 describe('document file names', () => {
   it('uses the PR number for request documents', () => {
     expect(requestDocumentFileName('PR-20261008-ABCD', 'pdf')).toBe('PR-20261008-ABCD.pdf');
-    expect(requestDocumentFileName('PR-20261008-ABCD', 'png')).toBe('PR-20261008-ABCD.png');
   });
 
   it('sanitizes unsafe characters and falls back to a default name', () => {
     expect(requestDocumentFileName('PR 2026/10 #4', 'pdf')).toBe('PR-2026-10-4.pdf');
-    expect(requestDocumentFileName('   ', 'png')).toBe('document.png');
+    expect(requestDocumentFileName('   ', 'pdf')).toBe('document.pdf');
   });
 
   it('dates the approved requests list in local time', () => {
     expect(approvedRequestsFileName(new Date(2026, 9, 8), 'pdf')).toBe(
       'procurvin-approved-requests-2026-10-08.pdf',
-    );
-    expect(approvedRequestsFileName(new Date(2026, 0, 5), 'png')).toBe(
-      'procurvin-approved-requests-2026-01-05.png',
     );
   });
 });
@@ -109,7 +101,7 @@ describe('planPageSlices', () => {
   });
 });
 
-describe('PDF and image export', () => {
+describe('PDF export', () => {
   let downloadSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
@@ -154,15 +146,6 @@ describe('PDF and image export', () => {
     ]);
   });
 
-  it('downloads a PNG named after the request', async () => {
-    await exportNodeAsPng(makeNode(), 'PR-20261008-ABCD.png');
-
-    expect((mocks as unknown as { downloads: string[] }).downloads).toEqual([
-      'PR-20261008-ABCD.png',
-    ]);
-    expect(mocks.doc.addImage).not.toHaveBeenCalled();
-  });
-
   it('prefers the Web Share sheet when files can be shared on mobile', async () => {
     const share = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'userAgent', {
@@ -173,7 +156,7 @@ describe('PDF and image export', () => {
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: share });
 
-    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
 
     expect(share).toHaveBeenCalledWith(
       expect.objectContaining({ files: [expect.any(File)] }),
@@ -191,12 +174,12 @@ describe('PDF and image export', () => {
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: share });
 
-    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
 
     expect(share).not.toHaveBeenCalled();
     expect(downloadSpy).toHaveBeenCalledTimes(1);
     expect((mocks as unknown as { downloads: string[] }).downloads).toEqual([
-      'PR-20261008-ABCD.png',
+      'PR-20261008-ABCD.pdf',
     ]);
   });
 
@@ -211,7 +194,7 @@ describe('PDF and image export', () => {
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: share });
 
-    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
 
     expect(share).toHaveBeenCalledTimes(1);
     expect(downloadSpy).not.toHaveBeenCalled();
@@ -224,11 +207,11 @@ describe('PDF and image export', () => {
         'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
     });
 
-    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
 
     expect(downloadSpy).toHaveBeenCalledTimes(1);
     expect((mocks as unknown as { downloads: string[] }).downloads).toEqual([
-      'PR-20261008-ABCD.png',
+      'PR-20261008-ABCD.pdf',
     ]);
   });
 
@@ -242,12 +225,12 @@ describe('PDF and image export', () => {
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: share });
 
-    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
 
     expect(share).toHaveBeenCalledTimes(1);
     expect(downloadSpy).toHaveBeenCalledTimes(1);
     expect((mocks as unknown as { downloads: string[] }).downloads).toEqual([
-      'PR-20261008-ABCD.png',
+      'PR-20261008-ABCD.pdf',
     ]);
   });
 
@@ -263,7 +246,7 @@ describe('PDF and image export', () => {
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: share });
 
-    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
 
     expect(share).toHaveBeenCalledTimes(1);
     expect(downloadSpy).not.toHaveBeenCalled();

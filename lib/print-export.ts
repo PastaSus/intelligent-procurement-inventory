@@ -13,7 +13,7 @@ export const A4 = {
 const RENDER_PIXEL_RATIO = 3;
 const ASSET_TIMEOUT_MS = 10000;
 
-export type DocumentExtension = 'pdf' | 'png';
+export type DocumentExtension = 'pdf';
 
 export interface PageSlice {
   sourceY: number;
@@ -157,15 +157,6 @@ export async function renderNodeToCanvas(node: HTMLElement): Promise<HTMLCanvasE
   });
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement, type = 'image/png'): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error('Could not encode the document image.'));
-    }, type);
-  });
-}
-
 function isIosSafari(): boolean {
   if (typeof navigator === 'undefined') return false;
 
@@ -222,13 +213,6 @@ export async function deliverBlob(blob: Blob, filename: string): Promise<void> {
   anchor.click();
   anchor.remove();
   setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
-}
-
-export async function exportNodeAsPng(node: HTMLElement, filename: string): Promise<void> {
-  const canvas = await renderNodeToCanvas(node);
-  const blob = await canvasToBlob(canvas);
-
-  await deliverBlob(blob, filename);
 }
 
 function createPageCanvas(

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PurchaseRequestPrint } from '@/app/dashboard/purchase-requests/components/PurchaseRequestPrint';
-import { exportNodeAsPdf, exportNodeAsPng } from '@/lib/print-export';
+import { exportNodeAsPdf } from '@/lib/print-export';
 
 const toastMocks = vi.hoisted(() => ({ addToast: vi.fn() }));
 
@@ -15,7 +15,6 @@ vi.mock('@/lib/print-export', async (importOriginal) => {
   return {
     ...actual,
     exportNodeAsPdf: vi.fn(),
-    exportNodeAsPng: vi.fn(),
   };
 });
 
@@ -154,9 +153,7 @@ describe('PurchaseRequestPrint', () => {
       expect(
         screen.getByRole('button', { name: /download pr-20261008-abcd as pdf/i }),
       ).toBeEnabled();
-      expect(
-        screen.getByRole('button', { name: /download pr-20261008-abcd as image/i }),
-      ).toBeEnabled();
+      expect(screen.queryByRole('button', { name: /as image/i })).not.toBeInTheDocument();
     });
 
     it.each(['REJECTED', 'FULFILLED'])('disables downloads for %s requests', (status) => {
@@ -165,9 +162,7 @@ describe('PurchaseRequestPrint', () => {
       expect(
         screen.getByRole('button', { name: /download pr-20261008-abcd as pdf/i }),
       ).toBeDisabled();
-      expect(
-        screen.getByRole('button', { name: /download pr-20261008-abcd as image/i }),
-      ).toBeDisabled();
+      expect(screen.queryByRole('button', { name: /as image/i })).not.toBeInTheDocument();
     });
 
     it('exports the previewed letter as a PDF', async () => {
@@ -182,13 +177,12 @@ describe('PurchaseRequestPrint', () => {
       expect((node as HTMLElement).className).toContain('pr-print-letter');
       expect(node).toHaveTextContent('PURCHASE REQUEST');
       expect(filename).toBe('PR-20261008-ABCD.pdf');
-      expect(exportNodeAsPng).not.toHaveBeenCalled();
     });
 
-    it('shows a preparing state and blocks both exports while working', async () => {
+    it('shows a preparing state and blocks the export while working', async () => {
       const user = userEvent.setup();
       let finishExport: (() => void) | undefined;
-      vi.mocked(exportNodeAsPng).mockImplementation(
+      vi.mocked(exportNodeAsPdf).mockImplementation(
         () =>
           new Promise<void>((resolve) => {
             finishExport = resolve;
@@ -197,18 +191,16 @@ describe('PurchaseRequestPrint', () => {
       render(<PurchaseRequestPrint request={makeRequest()} onClose={() => {}} />);
 
       const pdfButton = screen.getByRole('button', { name: /download pr-20261008-abcd as pdf/i });
-      const imageButton = screen.getByRole('button', { name: /download pr-20261008-abcd as image/i });
 
-      await user.click(imageButton);
+      await user.click(pdfButton);
 
       expect(await screen.findByText('Preparing…')).toBeInTheDocument();
-      expect(imageButton).toBeDisabled();
       expect(pdfButton).toBeDisabled();
 
       finishExport?.();
 
-      await waitFor(() => expect(imageButton).toHaveTextContent('Download Image'));
-      expect(imageButton).toBeEnabled();
+      await waitFor(() => expect(pdfButton).toHaveTextContent('Download PDF'));
+      expect(pdfButton).toBeEnabled();
     });
 
     it('shows an error toast when an export fails', async () => {

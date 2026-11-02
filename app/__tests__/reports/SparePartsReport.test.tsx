@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SparePartsReport } from '@/app/dashboard/reports/spare-parts/SparePartsReport';
-import { exportNodeAsPdf, exportNodeAsPng } from '@/lib/print-export';
+import { exportNodeAsPdf } from '@/lib/print-export';
 
 const toastMocks = vi.hoisted(() => ({ addToast: vi.fn() }));
 vi.mock('@/lib/toast-context', () => ({ useToast: vi.fn(() => toastMocks) }));
@@ -12,7 +12,6 @@ vi.mock('@/lib/print-export', async (importOriginal) => {
   return {
     ...actual,
     exportNodeAsPdf: vi.fn(),
-    exportNodeAsPng: vi.fn(),
   };
 });
 
@@ -339,7 +338,6 @@ describe('SparePartsReport', () => {
       expect(within(dialog).getByText('SPARE PARTS & REPLACEMENT REPORT')).toBeInTheDocument();
       expect(within(dialog).getByText('College of Computer Studies')).toBeInTheDocument();
       expect(within(dialog).getByRole('button', { name: /as pdf/i })).toBeInTheDocument();
-      expect(within(dialog).getByRole('button', { name: /as image/i })).toBeInTheDocument();
     });
 
     it('exports the dialog paper node rather than the on-screen report section', async () => {
@@ -361,10 +359,10 @@ describe('SparePartsReport', () => {
       expect(filename).toMatch(/^procurvin-spare-parts-report-\d{4}-\d{2}-\d{2}\.pdf$/);
     });
 
-    it('shows a preparing state and disables both downloads while exporting', async () => {
+    it('shows a preparing state and disables the download while exporting', async () => {
       const user = userEvent.setup();
       let finishExport: (() => void) | undefined;
-      vi.mocked(exportNodeAsPng).mockImplementation(
+      vi.mocked(exportNodeAsPdf).mockImplementation(
         () =>
           new Promise<void>((resolve) => {
             finishExport = resolve;
@@ -375,15 +373,13 @@ describe('SparePartsReport', () => {
       await user.click(screen.getByRole('button', { name: /print preview/i }));
       const dialog = screen.getByRole('dialog');
       const pdfButton = within(dialog).getByRole('button', { name: /as pdf/i });
-      await user.click(within(dialog).getByRole('button', { name: /as image/i }));
+      await user.click(pdfButton);
 
       expect(await screen.findByText('Preparing…')).toBeInTheDocument();
       expect(pdfButton).toBeDisabled();
 
       finishExport?.();
-      await waitFor(() =>
-        expect(within(dialog).getByRole('button', { name: /as image/i })).toHaveTextContent('Download Image'),
-      );
+      await waitFor(() => expect(pdfButton).toHaveTextContent('Download PDF'));
     });
 
     it('shows an error toast when the dialog export fails', async () => {
