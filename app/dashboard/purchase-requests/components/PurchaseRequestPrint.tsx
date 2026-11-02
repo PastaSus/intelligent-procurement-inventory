@@ -212,11 +212,11 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
         }}
       >
         <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-card shadow-xl">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
-            <h3 id="purchase-request-print-title" className="min-w-0 flex-1 break-words text-lg font-semibold">
+          <div className="flex flex-col items-stretch gap-3 border-b p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <h3 id="purchase-request-print-title" className="min-w-0 break-words text-lg font-semibold sm:flex-1">
               Print Preview — {request.pr_number}
             </h3>
-            <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
               <Button
                 type="button"
                 variant="outline"

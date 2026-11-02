@@ -147,14 +147,14 @@ export function PrintPreviewDialog({
         onKeyDown={handleTab}
         className="flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-card shadow-xl outline-none"
       >
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
+        <div className="flex flex-col items-stretch gap-3 border-b p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <h3
             id="print-preview-dialog-title"
-            className="min-w-0 flex-1 break-words text-lg font-semibold"
+            className="min-w-0 break-words text-lg font-semibold sm:flex-1"
           >
             {title}
           </h3>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <Button
               type="button"
               variant="outline"
