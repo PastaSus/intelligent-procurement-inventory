@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PrintPreviewDialog } from '@/components/PrintPreviewDialog';
-import { exportNodeAsPdf, exportNodeAsPng } from '@/lib/print-export';
+import { exportNodeAsPdf, type DocumentExtension } from '@/lib/print-export';
 
 const toastMocks = vi.hoisted(() => ({ addToast: vi.fn() }));
 
@@ -15,11 +15,10 @@ vi.mock('@/lib/print-export', async (importOriginal) => {
   return {
     ...actual,
     exportNodeAsPdf: vi.fn(),
-    exportNodeAsPng: vi.fn(),
   };
 });
 
-const fileName = (extension: 'pdf' | 'png') => `procurvin-test.${extension}`;
+const fileName = (extension: DocumentExtension) => `procurvin-test.${extension}`;
 
 function renderDialog(overrides: { canExport?: boolean; onClose?: () => void } = {}) {
   return render(
@@ -38,7 +37,6 @@ describe('PrintPreviewDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(exportNodeAsPdf).mockResolvedValue(undefined);
-    vi.mocked(exportNodeAsPng).mockResolvedValue(undefined);
     window.print = vi.fn();
   });
 
@@ -48,7 +46,7 @@ describe('PrintPreviewDialog', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Print Preview — Test' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /download print preview — test as pdf/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /download print preview — test as image/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /as image/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^print$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /close/i })).toBeInTheDocument();
   });
@@ -64,20 +62,6 @@ describe('PrintPreviewDialog', () => {
     expect((node as HTMLElement).className).toContain('pr-print-letter');
     expect(node).toHaveTextContent('Preview content');
     expect(filename).toBe('procurvin-test.pdf');
-    expect(exportNodeAsPng).not.toHaveBeenCalled();
-  });
-
-  it('exports the visible paper node as an image', async () => {
-    const user = userEvent.setup();
-    renderDialog();
-
-    await user.click(screen.getByRole('button', { name: /download print preview — test as image/i }));
-
-    expect(exportNodeAsPng).toHaveBeenCalledTimes(1);
-    const [node, filename] = vi.mocked(exportNodeAsPng).mock.calls[0];
-    expect((node as HTMLElement).className).toContain('pr-print-letter');
-    expect(filename).toBe('procurvin-test.png');
-    expect(exportNodeAsPdf).not.toHaveBeenCalled();
   });
 
   it('calls window.print when the Print button is clicked', async () => {
@@ -88,10 +72,10 @@ describe('PrintPreviewDialog', () => {
     expect(window.print).toHaveBeenCalledTimes(1);
   });
 
-  it('shows a preparing state and disables both downloads while exporting', async () => {
+  it('shows a preparing state and disables the download while exporting', async () => {
     const user = userEvent.setup();
     let finishExport: (() => void) | undefined;
-    vi.mocked(exportNodeAsPng).mockImplementation(
+    vi.mocked(exportNodeAsPdf).mockImplementation(
       () =>
         new Promise<void>((resolve) => {
           finishExport = resolve;
@@ -100,19 +84,16 @@ describe('PrintPreviewDialog', () => {
     renderDialog();
 
     const pdfButton = screen.getByRole('button', { name: /download print preview — test as pdf/i });
-    const imageButton = screen.getByRole('button', { name: /download print preview — test as image/i });
 
-    await user.click(imageButton);
+    await user.click(pdfButton);
 
     expect(await screen.findByText('Preparing…')).toBeInTheDocument();
-    expect(imageButton).toBeDisabled();
     expect(pdfButton).toBeDisabled();
     expect(screen.getByRole('button', { name: /close/i })).toBeDisabled();
 
     finishExport?.();
 
-    await waitFor(() => expect(imageButton).toHaveTextContent('Download Image'));
-    expect(imageButton).toBeEnabled();
+    await waitFor(() => expect(pdfButton).toHaveTextContent('Download PDF'));
     expect(pdfButton).toBeEnabled();
     expect(screen.getByRole('button', { name: /close/i })).toBeEnabled();
   });
@@ -164,6 +145,5 @@ describe('PrintPreviewDialog', () => {
     renderDialog({ canExport: false });
 
     expect(screen.getByRole('button', { name: /download print preview — test as pdf/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /download print preview — test as image/i })).toBeDisabled();
   });
 });

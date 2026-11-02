@@ -7,13 +7,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { FileDown, ImageDown, Loader2, Printer, X } from "lucide-react";
+import { FileDown, Loader2, Printer, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { printDocument } from "@/lib/print";
 import {
   A4,
   exportNodeAsPdf,
-  exportNodeAsPng,
   type DocumentExtension,
 } from "@/lib/print-export";
 import { useToast } from "@/lib/toast-context";
@@ -42,9 +41,7 @@ export function PrintPreviewDialog({
   const exportingRef = useRef(false);
   const [scale, setScale] = useState(1);
   const [paperHeight, setPaperHeight] = useState<number>(A4.heightPx);
-  const [pendingExport, setPendingExport] = useState<DocumentExtension | null>(
-    null,
-  );
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -90,29 +87,22 @@ export function PrintPreviewDialog({
     return () => observer.disconnect();
   }, []);
 
-  const handleExport = useCallback(
-    async (extension: DocumentExtension) => {
-      const node = paperRef.current;
-      if (!node || exportingRef.current) return;
+  const handleExport = useCallback(async () => {
+    const node = paperRef.current;
+    if (!node || exportingRef.current) return;
 
-      exportingRef.current = true;
-      setPendingExport(extension);
-      try {
-        const filename = fileName(extension);
-        if (extension === "pdf") {
-          await exportNodeAsPdf(node, filename);
-        } else {
-          await exportNodeAsPng(node, filename);
-        }
-      } catch {
-        addToast("Could not generate the file. Please try again.", "error");
-      } finally {
-        exportingRef.current = false;
-        setPendingExport(null);
-      }
-    },
-    [addToast, fileName],
-  );
+    exportingRef.current = true;
+    setIsExporting(true);
+    try {
+      const filename = fileName("pdf");
+      await exportNodeAsPdf(node, filename);
+    } catch {
+      addToast("Could not generate the file. Please try again.", "error");
+    } finally {
+      exportingRef.current = false;
+      setIsExporting(false);
+    }
+  }, [addToast, fileName]);
 
   const handleTab = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -138,8 +128,8 @@ export function PrintPreviewDialog({
     [],
   );
 
-  const exportDisabled = pendingExport !== null || !canExport;
-  const closeDisabled = pendingExport !== null;
+  const exportDisabled = isExporting || !canExport;
+  const closeDisabled = isExporting;
 
   return (
     <div
@@ -168,32 +158,17 @@ export function PrintPreviewDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => void handleExport("pdf")}
+              onClick={() => void handleExport()}
               disabled={exportDisabled}
               className="gap-2"
               aria-label={`Download ${title} as PDF`}
             >
-              {pendingExport === "pdf" ? (
+              {isExporting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <FileDown className="h-4 w-4" />
               )}
-              {pendingExport === "pdf" ? "Preparing…" : "Download PDF"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void handleExport("png")}
-              disabled={exportDisabled}
-              className="gap-2"
-              aria-label={`Download ${title} as image`}
-            >
-              {pendingExport === "png" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ImageDown className="h-4 w-4" />
-              )}
-              {pendingExport === "png" ? "Preparing…" : "Download Image"}
+              {isExporting ? "Preparing…" : "Download PDF"}
             </Button>
             <Button type="button" onClick={printDocument} className="gap-2">
               <Printer className="h-4 w-4" />

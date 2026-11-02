@@ -39,6 +39,10 @@
 - Print-media hiding/showing is verified only by class assertions, not an actual print-media rendering test — needs Playwright print emulation if desired.
 - Integration tests mock `groupBy` results without evaluating the `where` clause; they assert query shape plus returned values, not true filtering behavior.
 
+## Deferred from: quick-dev review of Download Image removal (2026-11-02)
+
+- Single purchase-request preview still allows Escape, backdrop click, and Close during an in-flight PDF export, so the paper node can unmount mid-capture; `PrintPreviewDialog` already disables those paths while exporting. Pre-existing inconsistency, not introduced by the image-removal change — align the two in a focused fix if export reliability in that dialog becomes a concern.
+
 ## Deferred from: review of print-layout download fix (2026-11-01)
 
 - `waitForImage` in `lib/print-export.ts` only resolves early when `image.complete && naturalWidth > 0`; an image that already failed (404) is `complete` but never fires `load`/`error` again, so every export stalls the full 10s asset timeout. Pre-existing; guard with `if (image.complete) return Promise.resolve();` in a focused change.

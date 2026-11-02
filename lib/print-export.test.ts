@@ -1,10 +1,9 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
   A4,
   approvedRequestsFileName,
   deliverBlob,
   exportNodeAsPdf,
-  exportNodeAsPng,
   planPageSlices,
   requestDocumentFileName,
 } from './print-export';
@@ -14,9 +13,6 @@ const mocks = vi.hoisted(() => {
     width: 2382,
     height: 3369,
     toDataURL: vi.fn(() => 'data:image/png;base64,AAAA'),
-    toBlob: vi.fn((callback: (blob: Blob | null) => void) =>
-      callback(new Blob(['png'], { type: 'image/png' })),
-    ),
   };
   const doc = {
     addPage: vi.fn(),
@@ -51,20 +47,16 @@ describe('A4 paper constants', () => {
 describe('document file names', () => {
   it('uses the PR number for request documents', () => {
     expect(requestDocumentFileName('PR-20261008-ABCD', 'pdf')).toBe('PR-20261008-ABCD.pdf');
-    expect(requestDocumentFileName('PR-20261008-ABCD', 'png')).toBe('PR-20261008-ABCD.png');
   });
 
   it('sanitizes unsafe characters and falls back to a default name', () => {
     expect(requestDocumentFileName('PR 2026/10 #4', 'pdf')).toBe('PR-2026-10-4.pdf');
-    expect(requestDocumentFileName('   ', 'png')).toBe('document.png');
+    expect(requestDocumentFileName('   ', 'pdf')).toBe('document.pdf');
   });
 
   it('dates the approved requests list in local time', () => {
     expect(approvedRequestsFileName(new Date(2026, 9, 8), 'pdf')).toBe(
       'procurvin-approved-requests-2026-10-08.pdf',
-    );
-    expect(approvedRequestsFileName(new Date(2026, 0, 5), 'png')).toBe(
-      'procurvin-approved-requests-2026-01-05.png',
     );
   });
 });
@@ -109,7 +101,7 @@ describe('planPageSlices', () => {
   });
 });
 
-describe('PDF and image export', () => {
+describe('PDF export', () => {
   let downloadSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
@@ -123,6 +115,13 @@ describe('PDF and image export', () => {
         downloads.push(this.download);
       });
     Object.assign(mocks, { downloads });
+  });
+
+  afterEach(() => {
+    delete (navigator as { userAgent?: unknown }).userAgent;
+    delete (navigator as { maxTouchPoints?: unknown }).maxTouchPoints;
+    delete (navigator as { canShare?: unknown }).canShare;
+    delete (navigator as { share?: unknown }).share;
   });
 
   it('places a single-page letter on one A4 PDF page and downloads it', async () => {
@@ -147,28 +146,109 @@ describe('PDF and image export', () => {
     ]);
   });
 
-  it('downloads a PNG named after the request', async () => {
-    await exportNodeAsPng(makeNode(), 'PR-20261008-ABCD.png');
-
-    expect((mocks as unknown as { downloads: string[] }).downloads).toEqual([
-      'PR-20261008-ABCD.png',
-    ]);
-    expect(mocks.doc.addImage).not.toHaveBeenCalled();
-  });
-
-  it('prefers the Web Share sheet when files can be shared', async () => {
+  it('prefers the Web Share sheet when files can be shared on mobile', async () => {
     const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+    });
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: share });
 
-    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
 
     expect(share).toHaveBeenCalledWith(
       expect.objectContaining({ files: [expect.any(File)] }),
     );
     expect(downloadSpy).not.toHaveBeenCalled();
+  });
 
-    delete (navigator as { canShare?: unknown }).canShare;
-    delete (navigator as { share?: unknown }).share;
+  it('downloads instead of sharing on a desktop user agent', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
+
+    expect(share).not.toHaveBeenCalled();
+    expect(downloadSpy).toHaveBeenCalledTimes(1);
+    expect((mocks as unknown as { downloads: string[] }).downloads).toEqual([
+      'PR-20261008-ABCD.pdf',
+    ]);
+  });
+
+  it('treats an iPadOS desktop-mode user agent as mobile', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+    });
+    Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 5 });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
+
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(downloadSpy).not.toHaveBeenCalled();
+  });
+
+  it('downloads on a mobile user agent without file sharing support', async () => {
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+    });
+
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
+
+    expect(downloadSpy).toHaveBeenCalledTimes(1);
+    expect((mocks as unknown as { downloads: string[] }).downloads).toEqual([
+      'PR-20261008-ABCD.pdf',
+    ]);
+  });
+
+  it('downloads on a mobile user agent when sharing rejects without AbortError', async () => {
+    const share = vi.fn().mockRejectedValue(new Error('share failed'));
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+    });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
+
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(downloadSpy).toHaveBeenCalledTimes(1);
+    expect((mocks as unknown as { downloads: string[] }).downloads).toEqual([
+      'PR-20261008-ABCD.pdf',
+    ]);
+  });
+
+  it('stays silent on a mobile user agent when sharing is aborted', async () => {
+    const share = vi
+      .fn()
+      .mockRejectedValue(new DOMException('Share canceled', 'AbortError'));
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+    });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+
+    await deliverBlob(new Blob(['x'], { type: 'application/pdf' }), 'PR-20261008-ABCD.pdf');
+
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(downloadSpy).not.toHaveBeenCalled();
   });
 });

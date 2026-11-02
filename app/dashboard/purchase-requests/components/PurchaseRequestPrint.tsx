@@ -1,16 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FileDown, ImageDown, Loader2, Printer, X } from 'lucide-react';
+import { FileDown, Loader2, Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { printDocument } from '@/lib/print';
 import { formatPeso } from '@/lib/format';
 import {
   A4,
   exportNodeAsPdf,
-  exportNodeAsPng,
   requestDocumentFileName,
-  type DocumentExtension,
 } from '@/lib/print-export';
 import { useToast } from '@/lib/toast-context';
 import { SignatoryBlocks } from './SignatoryBlocks';
@@ -143,9 +141,10 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
   const { addToast } = useToast();
   const paperRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
+  const exportingRef = useRef(false);
   const [scale, setScale] = useState(1);
   const [paperHeight, setPaperHeight] = useState<number>(A4.heightPx);
-  const [pendingExport, setPendingExport] = useState<DocumentExtension | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -179,29 +178,24 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
     return () => observer.disconnect();
   }, []);
 
-  const handleExport = useCallback(
-    async (extension: DocumentExtension) => {
-      const node = paperRef.current;
-      if (!node || pendingExport) return;
+  const handleExport = useCallback(async () => {
+    const node = paperRef.current;
+    if (!node || exportingRef.current) return;
 
-      setPendingExport(extension);
-      try {
-        const filename = requestDocumentFileName(request.pr_number, extension);
-        if (extension === 'pdf') {
-          await exportNodeAsPdf(node, filename);
-        } else {
-          await exportNodeAsPng(node, filename);
-        }
-      } catch {
-        addToast('Could not generate the file. Please try again.', 'error');
-      } finally {
-        setPendingExport(null);
-      }
-    },
-    [addToast, pendingExport, request.pr_number],
-  );
+    exportingRef.current = true;
+    setIsExporting(true);
+    try {
+      const filename = requestDocumentFileName(request.pr_number, 'pdf');
+      await exportNodeAsPdf(node, filename);
+    } catch {
+      addToast('Could not generate the file. Please try again.', 'error');
+    } finally {
+      exportingRef.current = false;
+      setIsExporting(false);
+    }
+  }, [addToast, request.pr_number]);
 
-  const exportDisabled = !canPrint || pendingExport !== null;
+  const exportDisabled = !canPrint || isExporting;
   const exportTitle = canPrint
     ? 'Download this request letter'
     : 'Only approved requests can be downloaded';
@@ -226,34 +220,18 @@ export function PurchaseRequestPrint({ request, onClose }: PurchaseRequestPrintP
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => void handleExport('pdf')}
+                onClick={() => void handleExport()}
                 disabled={exportDisabled}
                 className="gap-2"
                 aria-label={`Download ${request.pr_number} as PDF`}
                 title={exportTitle}
               >
-                {pendingExport === 'pdf' ? (
+                {isExporting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <FileDown className="h-4 w-4" />
                 )}
-                {pendingExport === 'pdf' ? 'Preparing…' : 'Download PDF'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void handleExport('png')}
-                disabled={exportDisabled}
-                className="gap-2"
-                aria-label={`Download ${request.pr_number} as image`}
-                title={exportTitle}
-              >
-                {pendingExport === 'png' ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ImageDown className="h-4 w-4" />
-                )}
-                {pendingExport === 'png' ? 'Preparing…' : 'Download Image'}
+                {isExporting ? 'Preparing…' : 'Download PDF'}
               </Button>
               <Button
                 type="button"
