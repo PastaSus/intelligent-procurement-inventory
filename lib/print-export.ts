@@ -176,13 +176,24 @@ function isIosSafari(): boolean {
   return isIos && isSafari;
 }
 
+function isMobileDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+
+  const userAgent = navigator.userAgent;
+  if (/Android|iPhone|iPad|iPod|Mobile|Opera Mini|IEMobile|Windows Phone/i.test(userAgent)) {
+    return true;
+  }
+
+  return /Macintosh/.test(userAgent) && navigator.maxTouchPoints > 1;
+}
+
 export async function deliverBlob(blob: Blob, filename: string): Promise<void> {
   const canShareFiles =
     typeof navigator !== 'undefined' &&
     typeof navigator.canShare === 'function' &&
     typeof File === 'function';
 
-  if (canShareFiles) {
+  if (canShareFiles && isMobileDevice()) {
     const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
 
     if (navigator.canShare({ files: [file] })) {

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
   A4,
   approvedRequestsFileName,
@@ -125,6 +125,13 @@ describe('PDF and image export', () => {
     Object.assign(mocks, { downloads });
   });
 
+  afterEach(() => {
+    delete (navigator as { userAgent?: unknown }).userAgent;
+    delete (navigator as { maxTouchPoints?: unknown }).maxTouchPoints;
+    delete (navigator as { canShare?: unknown }).canShare;
+    delete (navigator as { share?: unknown }).share;
+  });
+
   it('places a single-page letter on one A4 PDF page and downloads it', async () => {
     await exportNodeAsPdf(makeNode(), 'PR-20261008-ABCD.pdf');
 
@@ -156,8 +163,13 @@ describe('PDF and image export', () => {
     expect(mocks.doc.addImage).not.toHaveBeenCalled();
   });
 
-  it('prefers the Web Share sheet when files can be shared', async () => {
+  it('prefers the Web Share sheet when files can be shared on mobile', async () => {
     const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+    });
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: share });
 
@@ -167,8 +179,93 @@ describe('PDF and image export', () => {
       expect.objectContaining({ files: [expect.any(File)] }),
     );
     expect(downloadSpy).not.toHaveBeenCalled();
+  });
 
-    delete (navigator as { canShare?: unknown }).canShare;
-    delete (navigator as { share?: unknown }).share;
+  it('downloads instead of sharing on a desktop user agent', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+
+    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+
+    expect(share).not.toHaveBeenCalled();
+    expect(downloadSpy).toHaveBeenCalledTimes(1);
+    expect((mocks as unknown as { downloads: string[] }).downloads).toEqual([
+      'PR-20261008-ABCD.png',
+    ]);
+  });
+
+  it('treats an iPadOS desktop-mode user agent as mobile', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+    });
+    Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 5 });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+
+    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(downloadSpy).not.toHaveBeenCalled();
+  });
+
+  it('downloads on a mobile user agent without file sharing support', async () => {
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+    });
+
+    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+
+    expect(downloadSpy).toHaveBeenCalledTimes(1);
+    expect((mocks as unknown as { downloads: string[] }).downloads).toEqual([
+      'PR-20261008-ABCD.png',
+    ]);
+  });
+
+  it('downloads on a mobile user agent when sharing rejects without AbortError', async () => {
+    const share = vi.fn().mockRejectedValue(new Error('share failed'));
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+    });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+
+    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(downloadSpy).toHaveBeenCalledTimes(1);
+    expect((mocks as unknown as { downloads: string[] }).downloads).toEqual([
+      'PR-20261008-ABCD.png',
+    ]);
+  });
+
+  it('stays silent on a mobile user agent when sharing is aborted', async () => {
+    const share = vi
+      .fn()
+      .mockRejectedValue(new DOMException('Share canceled', 'AbortError'));
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+    });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+
+    await deliverBlob(new Blob(['x'], { type: 'image/png' }), 'PR-20261008-ABCD.png');
+
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(downloadSpy).not.toHaveBeenCalled();
   });
 });
